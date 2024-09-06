@@ -17,8 +17,8 @@ const resolvers = {
     },
 
     Mutation: {
-        login: async (parent, { email, password }) => {
-            const user = await User.findOne({ email });
+        login: async (parent, { username, password }) => {
+            const user = await User.findOne({ username });
             if (!user) {
                 throw new AuthenticationError("Incorrect credentials");
             }
@@ -30,10 +30,12 @@ const resolvers = {
             return { token, user };
         },
         signup: async (parent, { username, email, password }) => {
-            const user = await User.create({ username, email, password });
+            console.log(username, email, password);
+            const user = new User({ username, email, password });
+            await user.save();
             const token = signInToken(user);
             return { token, user };
-        },
+          },
     }
 }
 module.exports = resolvers;

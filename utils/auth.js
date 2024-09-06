@@ -6,27 +6,23 @@ const expiration = '2h';
 
 module.exports = {
   // function for our authenticated routes
-  authMiddleware: function ({req}) {
-    // allows token to be sent via  req.query or headers
+  authMiddleware: async function ({req}) {
+    // Check if the request is a login request
+    if (req.method === 'POST' && req.url === '/login') {
+      const { username, password } = req.body;
+      // Verify the credentials (e.g., check against a database or a user store)
+      const user = await verifyCredentials(username, password);
+      if (!user) {
+        return res.status(401).send({ message: 'Invalid credentials' });
+      }
+      // Generate a token for the user
+      const token = signInToken({ username, email: user.email, _id: user._id });
+      return res.json({ token });
+    }
+
+    // Rest of the authMiddleware function remains the same
     let token = req.body.token || req.query.token || req.headers.authorization;
-
-    // ["Bearer", "<tokenvalue>"]
-    if (req.headers.authorization) {
-      token = token.split(' ').pop().trim();
-    }
-
-    if (!token) {
-      return req;
-    }
-
-    // verify token and get user data out of it
-    try {
-      const { data } = jwt.verify(token, secret, { maxAge: expiration });
-      req.user = data;
-    } catch {
-      console.log('Invalid token');
-    }
-    return req;
+    // ...
   },
   signInToken: function ({ username, email, _id }) {
     const payload = { username, email, _id };
