@@ -4,8 +4,10 @@ const bcrypt = require('bcrypt');
 
 exports.login = async (req, res) => {
     const { username, password } = req.body;
+
     try {
-        const user = await User.findOne({ username });
+        const user = await User.findOne({ username: req.body.username });
+        console.log('Found user')
         if (user && await bcrypt.compare(password, user.password)) {
             req.session.userId = user._id;
             res.status(200).json({ message: 'Login successful' });
@@ -13,6 +15,8 @@ exports.login = async (req, res) => {
             res.status(401).json({ message: 'Invalid username or password' });
         }
     } catch (error) {
+        console.error('Error logging in:', error.message);
+        console.error('Error stack:', error.stack);
         res.status(500).json({ message: 'Error logging in' });
     }
 };
