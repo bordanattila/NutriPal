@@ -19,7 +19,9 @@ document.getElementById('loginForm').addEventListener('submit', async (event) =>
                 const errorMessage = await response.json();
                 alert(errorMessage.message); 
             } else {
-                alert('Login failed due to response');
+                const errorMessage = await response.json();
+                console.log(errorMessage.message);
+                alert('Login failed');
             }
         }
     } catch (error) {
