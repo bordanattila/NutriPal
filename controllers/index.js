@@ -8,10 +8,7 @@ router.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '../public/views/index.html'));
 });
 
+router.use('/', userRoutes);
 router.use("/api", apiRoutes);
-
-router.get('/home', userRoutes.home);
-router.post('/login', userRoutes.login);
-router.post('/signup', userRoutes.signup);
 
 module.exports = router;

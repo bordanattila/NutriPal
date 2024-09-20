@@ -1,8 +1,10 @@
 const User = require('../models/User');
 const path = require('path');
 const bcrypt = require('bcrypt');
+const express = require('express');
+const router = express.Router();
 
-exports.login = async (req, res) => {
+router.post('/login', async (req, res) => {
     const { username, password } = req.body;
 
     try {
@@ -19,9 +21,9 @@ exports.login = async (req, res) => {
         console.error('Error stack:', error.stack);
         res.status(500).json({ message: 'Error logging in' });
     }
-};
+});
 
-exports.signup = async (req, res) => {
+router.post('/signup', async (req, res) => {
     const { username, email, password } = req.body;
     const existingUser = await User.findOne({ username });
     if (existingUser) {
@@ -32,12 +34,14 @@ exports.signup = async (req, res) => {
         req.session.userId = newUser._id;
         res.status(201).redirect('/home');
     }
-};
+});
 
-exports.home = (req, res) => {
+router.get('/home', (req, res) => {
     if (req.session.userId) {
         res.sendFile(path.join(__dirname, '../public/views/home.html'));
     } else {
         res.redirect('/');
     }
-};
+});
+
+module.exports = router;

@@ -1,23 +1,47 @@
-const urlParams = new URLSearchParams(window.location.search);
-const foodData = JSON.parse(urlParams.get('food_id'));
-
-
-fetch(`/api/foodDetails/${food_id}`)
-.then(response => response.json())
-.then(foodData => {
-    // Update the HTML elements with the food data
-    document.getElementById('food_name').innerHTML = foodData.foods.food.food_name
-    document.getElementById('food_description').innerHTML = foodData.foods.food.food_description
-    // document.getElementById('food-info').innerHTML = `
-    //   <p><strong>Food Name:</strong> ${foodData.foodName}</p>
-    //   <p><strong>Calories:</strong> ${foodData.calories}</p>
-    //   <p><strong>Macronutrients:</strong> ${foodData.macronutrients}</p>
-    //   <!-- Add more fields as needed -->
-    // `;
+try {
+  const response = await fetch('/api/foodDetails/${foodId}', {
+    // method: 'POST',
+    // headers: {
+    //   'Content-Type': 'application/json'
+    // },
   })
-  .catch(error => {
-    console.error(`Error: ${error.message}`);
+
+  if (response.ok) {
+    const selectedFood = await response.json(); // Get the food data from the response
+    console.log("got response", selectedFood);
+
+
+    // const searchResultsContainer = document.getElementById('searchResults');
+    // searchResultsContainer.innerHTML = ``;
+
+    // foodData.foods.food.forEach(foodItem => {
+    //   const foodItemElement = `
+    //   <a id='selectedFood' class='food' href='/api/foodDetails/${foodItem.food_id}'>
+    //     <p><strong>Food Name:</strong> ${foodItem.food_name}</p>
+    //     <p><strong>Type:</strong> ${foodItem.food_type}</p>
+    //     <p><strong>Description:</strong> ${foodItem.food_description}</p>
+    //   </a>
+    //    <hr>
+    //   `;
+    //   searchResultsContainer.innerHTML += foodItemElement;
+    // });
+
+    // Pass the food data to the foodDetails.html page
+    // window.location.href = `/api/foodDetails`;
+  } else {
     // Handle error responses
-  });
+    if (response.status >= 200 && response.status < 300) {
+      console.log('food ok');
+    } else {
+      const errorMessage = await response.json();
+      alert(errorMessage.message);
+    }
+  }
+} catch (error) {
+  console.error(`Error: ${error.message}`);
+  alert(`Entry failed: ${error.message}`);
+  // Send error report to server, if desired
+  // fetch('/error-report', { method: 'POST', body: JSON.stringify(error) });
+};
 
 console.log(foodData);

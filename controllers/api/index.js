@@ -3,13 +3,9 @@ const router = express.Router();
 const foodSearch = require('./foodSearch');
 const foodRoutes = require('./foodRoutes');
 
-// router.get('/api/scanBarcode', (req, res) => {
-//   res.sendFile(path.join(__dirname, '../public/views/foodDetails.html'));
-// });
+router.use('/foodDetails', foodRoutes);
+router.use('/foodSearch', foodSearch);
 
-router.get('/foodDetails', foodRoutes.foodDetails);
-
-router.post('/scanBarcode', foodSearch.scanBarcode);
 // router.post('/log', foodRoutes.logFood);
 // router.get('/frequent', foodRoutes.getFrequentFoods);
 // router.post('/recipe', foodRoutes.saveRecipe);

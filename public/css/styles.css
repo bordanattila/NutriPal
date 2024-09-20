@@ -9,13 +9,6 @@ body {
     text-align: center;
 }
 
-.container {
-    border: 1px solid #ccc;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-}
-
 input {
     margin: 10px 0;
     padding: 10px;
@@ -27,4 +20,19 @@ button {
     padding: 10px 20px;
     margin-top: 10px;
     cursor: pointer;
+}
+
+#noEntry:popover-open {
+    color: chartreuse;
+}
+
+.container {
+    border: 1px solid #ccc;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.food {
+    text-align: left;
 }

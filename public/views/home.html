@@ -3,17 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../css/styles.css">
     <title>Home</title>
 </head>
 <body>
     <h1>Home screen</h1>
-    <p>scan</p>
-    <label for="manualEntry">
+    <label for="foodName">
         Manual Entry
-        <input type="text" id="foodName" name="foodName">
-        <button type="submit" id="manualButton">Scan</button>
+        <input type="text" id="foodName" name="foodName" popovertarget="noEntry">
+        <div id="noEntry" class='show' popover>No food to search</div>
+        <button popovertarget="noEntry"type="submit" id="manualButton">Scan</button>
         <div id="searchResults" class="searchResults"></div>
     </label>
+    <footer>
+        <a href="https://www.fatsecret.com">
+            <img src="https://platform.fatsecret.com/api/static/images/powered_by_fatsecret.png" alt='fatsecretsicon' srcset="https://platform.fatsecret.com/api/static/images/powered_by_fatsecret_2x.png 2x, https://platform.fatsecret.com/api/static/images/powered_by_fatsecret_3x.png 3x" border="0"/>
+        </a>
+    </footer>
     <script src="../js/scan.js"></script>
 </body>
 </html>
