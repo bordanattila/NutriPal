@@ -21,7 +21,7 @@ async function getFoodDetailsById(accessToken, foodId) {
           'Authorization': `Bearer ${accessToken}`
         }
       }
-    )
+    ).json()
     console.log('Food Detail API response:', response.data);
     return response.data;
   } catch (error) {
@@ -35,7 +35,7 @@ router.get('/foodDetails/:foodId', async (req, res) => {
   console.log(`Received request for food ID: ${foodId}`);
   try {
     const accessToken = await getAccessTokenValue();
-    console.log(`Access token: ${accessToken}`);
+    console.log(`Got access token`);
     const detailsFromApi = await getFoodDetailsById(accessToken, foodId);
     console.log(detailsFromApi)
     console.log('Servings')

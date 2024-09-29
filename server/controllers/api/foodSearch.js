@@ -5,7 +5,7 @@ const express = require('express');
 const router = express.Router();
 
 // Function to make a FatSecret API call
-async function searchFood(accessToken, searchExpression = foodName) {
+async function searchFoodByName(accessToken, searchExpression = foodName) {
   const searchUrl = 'https://platform.fatsecret.com/rest/foods/search/v1';
   try {
     const response = await axios.post(
@@ -24,16 +24,15 @@ async function searchFood(accessToken, searchExpression = foodName) {
       }
     );
 
-    console.log('FatSecret API response:', response.data);
-    const searchData = response.data;
-    return searchData;
+    console.log(response.data.foods.food[0])
+    return response.data;
   } catch (error) {
     console.error('Error searching for food:', error.response ? error.response.data : error.message);
   }
 };
 
 // Use the access token to call the API
-router.post('/scanBarcode', async (req, res) => {
+router.post('/searchFoodByName', async (req, res) => {
   const foodName = req.body.foodName;
   if (!foodName) {
     console.error('req.body.foodName is undefined');
@@ -45,8 +44,13 @@ router.post('/scanBarcode', async (req, res) => {
   if (accessToken) {
     try {
       // Call function with access token
-      const searchData = await searchFood(accessToken, foodName);
-      res.json(searchData);
+      const searchResults = await searchFoodByName(accessToken, foodName);
+      if (searchResults) {
+        const foodArray = searchResults.foods.food
+        res.json(foodArray);
+      } else {
+        res.status(500).json({ error: 'Internal Server Error' });
+      }
     } catch (error) {
       console.error('Error searching for food:', error);
       res.status(500).json({ error: 'Internal Server Error' });
