@@ -22,7 +22,6 @@ async function getAccessToken() {
     });
 
     accessToken = response.data.access_token;
-    console.log('Access Token:', accessToken);
     return accessToken;
   } catch (error) {
     console.error('Error fetching access token:', error.response ? error.response.data : error.message);

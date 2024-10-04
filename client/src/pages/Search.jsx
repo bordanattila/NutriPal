@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import ky from 'ky';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+// import { useNavigate } from 'react-router-dom';
 
 const Search = () => {
     const [foodName, setFoodName] = useState('');
     const [foodArray, setFoodArray] = useState([]);
     const [error, setError] = useState(null);
-    const navigate = useNavigate();
+    // const navigate = useNavigate();
 
     const handleSearch = async (e) => {
         e.preventDefault();
@@ -47,11 +48,14 @@ const Search = () => {
                 <ul>
                     {foodArray.map((food, index) => (
                         <li key={index}>
-                            <strong>{food.food_name}</strong><br />
-                            Type: {food.food_type}<br />
-                            URL: <a href={food.food_url} target="_blank" rel="noopener noreferrer">{food.food_url}</a>
+                            <Link to={`/foodById/${food.food_id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                                <strong>{food.food_name}</strong><br />
+                                Type: {food.food_type}<br />
+                                URL: <a href={food.food_url} target="_blank" rel="noopener noreferrer">For detailed nutrition information click here</a>
+                            </Link>
                         </li>
                     ))}
+                    <hr></hr>
                 </ul>
             )}
         </div >

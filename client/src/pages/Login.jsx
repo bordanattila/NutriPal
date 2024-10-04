@@ -1,37 +1,54 @@
 import React, { useState } from 'react';
 import ky from 'ky';
 import { useNavigate } from 'react-router-dom';
+// import Auth from '../utils/auth';
 
+// Create a ky instance with a prefix URL
 const api = ky.create({
   prefixUrl: 'http://localhost:3000', 
 });
 
+// Define the Login component
 const Login = () => {
+   // Initialize state for username and password
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const navigate = useNavigate(); // Initialize history
+  // Add a state for error messages
+  const [error, setError] = useState(null); 
+  // Initialize history
+  const navigate = useNavigate(); 
 
+  // Define the handleSubmit function
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      // Make a POST request to the login endpoint
       const response = await api.post('login', {
-        json: { username, password }
+        json: { username, password },
       });
+      // Auth.login(response.login.token);
+      // Check if the response is OK
       if (response.ok) {
         const data = await response.json();
+        // Check if there's an error in the response data
         if (data.error) {
-          console.error(data.error);
+          // Update the error state
+          setError(data.error);
         } else {
-          // Store the user's ID in the session
-          const userId = data.userId;
+          // Store the user's ID in local storage (not session, as it's a client-side app)
+          localStorage.setItem('userId', data.userId);
+          localStorage.setItem('loggedIn', true);
+
           // Navigate to the dashboard page
           navigate('/dashboard');
         }
       } else {
-        console.error('Error logging in:', response.status);
+        // Update the error state
+        setError(`Error logging in: ${response.status}`); 
       }
     } catch (error) {
-      console.error('Error logging in:', error.message);
+      // Update the error state
+      setError(`Error logging in: ${error.message}`); 
     }
   };
 
@@ -55,7 +72,9 @@ const Login = () => {
           onChange={(e) => setPassword(e.target.value)}
           required
         />
+        {/* Display error messages */}
         <button type="submit">Login</button>
+        {error && <p style={{ color: 'red' }}>{error}</p>} 
       </form>
     </div>
   );

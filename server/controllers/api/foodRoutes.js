@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const axios = require('axios');
 const { getAccessTokenValue } = require('../../utils/apiAuth')
-const fs = require('fs').promises;
 
 async function getFoodDetailsById(accessToken, foodId) {
   console.log('FoodID = ' + foodId)
@@ -21,28 +20,28 @@ async function getFoodDetailsById(accessToken, foodId) {
           'Authorization': `Bearer ${accessToken}`
         }
       }
-    ).json()
-    console.log('Food Detail API response:', response.data);
+    );
+    
     return response.data;
   } catch (error) {
-    console.error('Error fetching food details:', error.response ? error.response.data : error.message);
-    throw error;
+    res.status(500).json({ error: 'Error fetching food details' });
   }
 };
 
-router.get('/foodDetails/:foodId', async (req, res) => {
+router.get('/foodById/:foodId', async (req, res) => {
   const foodId = req.params.foodId;
-  console.log(`Received request for food ID: ${foodId}`);
+  if (!foodId) {
+    console.error('req.body.foodName is undefined');
+    res.status(400).json({ error: 'Nincs foodId' });
+    return;
+  }
   try {
     const accessToken = await getAccessTokenValue();
-    console.log(`Got access token`);
     const detailsFromApi = await getFoodDetailsById(accessToken, foodId);
-    console.log(detailsFromApi)
-    console.log('Servings')
     console.log(detailsFromApi.food.servings)
-    res.render('foodDetails', { detailsFromApi })
+    res.json(detailsFromApi);
   } catch (error) {
-    console.error(`Error in /foodDetails/:foodId route: ${error}`);
+    console.error(`Error in /foodById/:foodId route: ${error}`);
     res.status(500).send('Error fetching food details');
   }
 });

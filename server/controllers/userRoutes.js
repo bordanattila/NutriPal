@@ -17,9 +17,14 @@ router.post('/login', async (req, res) => {
     if (!isValidPassword) {
       return res.status(401).json({ message: 'Invalid username or password' });
     }
-
     req.session.userId = user._id;
-    res.json({ message: 'Login successful' });
+    res.status(201).json({ message: 'Login successful' });
+    // req.session.save(() => {
+    //   req.session.loggedIn = true;
+    //   req.session.userId = user._id;
+    //   res.json({ user: user, message: 'Login successful' });
+    // });
+
   } catch (error) {
     console.error('Error logging in:', error.message);
     console.error('Error stack:', error.stack);

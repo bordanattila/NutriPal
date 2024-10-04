@@ -27,7 +27,6 @@ app.use(session({
   cookie: { secure: false } // Set to true if using HTTPS
 }));
 
-// app.use('/api', require('./controllers/api'));
 app.use('/', require('./controllers/'));
 
 // Serve static files from the React app

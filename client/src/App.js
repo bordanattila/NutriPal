@@ -9,8 +9,6 @@ import Footer from './components/Footer';
 import Navbar from './components/Navigation';
 import Search from './pages/Search'
 
-console.log('App component rendered'); 
-
 const routes = [
   {
     path: '/',
@@ -33,7 +31,7 @@ const routes = [
     element: <Search />,
   },
   {
-    path: '/foodDetails/:foodId',
+    path: '/foodById/:foodId',
     element: <FoodDetails />,
   },
 ];
