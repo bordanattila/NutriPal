@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import ky from 'ky';
+import { Label, Listbox, ListboxButton, ListboxOption, ListboxOptions } from '@headlessui/react'
+import { CheckIcon, ChevronUpDownIcon } from '@heroicons/react/20/solid'
 
 const api = ky.create({
   prefixUrl: 'http://localhost:3000',
@@ -9,6 +11,9 @@ const api = ky.create({
 const FoodDetails = () => {
   const [foodDetails, setFoodDetails] = useState(null);
   const { foodId } = useParams();
+  const [error, setError] = useState(null);
+  const [selected, setSelected] = useState(null);
+
   useEffect(() => {
     const fetchFoodDetails = async () => {
       try {
@@ -16,8 +21,11 @@ const FoodDetails = () => {
         const contentType = response.headers.get('content-type');
         if (contentType && contentType.includes('application/json')) {
           const responseData = await response.json();
-          console.log('API Response:', responseData);
           setFoodDetails(responseData);
+          
+          if (responseData.food.servings.serving.length > 0) {
+            setSelected(responseData.food.servings.serving[0]);
+          }
         } else {
           console.error('Expected JSON, got:', contentType);
           const text = await response.text();
@@ -26,30 +34,83 @@ const FoodDetails = () => {
         }
       } catch (error) {
         console.error('Error fetching food details:', error);
+        setError(error);
       }
     };
-
     fetchFoodDetails();
   }, []);
 
   if (!foodDetails) return <div>Loading...</div>;
+  if (error) return <div>Error: {error.message}</div>;
 
   return (
-    <div>
-      <h1>Food Details</h1>
+    <>
+      <div className="flex flex-col items-center justify-center bg-gray-100">
+        <h1 className='text-3xl font-bold mb-4'>Food Details</h1>
+      </div>
       <p><strong>{foodDetails.food.food_name}</strong></p>
       <p><strong>{foodDetails.food.food_type}</strong></p>
-      <label htmlFor="selectServing">Select serving size</label>
-      <select name="serving" id="selectServing">
-        {foodDetails.food.servings.serving.map((serving, index) => (
-          <option key={index} value={serving.serving_description}>
-            {serving.serving_description}
-          </option>
-        ))}
-      </select>
-      <p>{foodDetails.food.food_url}</p>
-    </div>
+     
+      <Listbox value={selected} onChange={setSelected}>
+        <Label className="block text-sm font-medium leading-6 text-gray-900">Select serving</Label>
+        <div className="relative mt-2">
+          <ListboxButton className="relative w-full cursor-default rounded-md bg-white py-1.5 pl-3 pr-10 text-left text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 sm:text-sm sm:leading-6">
+            <span className="flex items-center">
+              <span className="ml-3 block truncate">{selected.serving_description}</span>
+            </span>
+            <span className="pointer-events-none absolute inset-y-0 right-0 ml-3 flex items-center pr-2">
+              <ChevronUpDownIcon className="h-5 w-5 text-gray-400" />
+            </span>
+          </ListboxButton>
+
+          <ListboxOptions
+            transition
+            className="absolute z-10 mt-1 max-h-56 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none data-[closed]:data-[leave]:opacity-0 data-[leave]:transition data-[leave]:duration-100 data-[leave]:ease-in sm:text-sm"
+          >
+            {foodDetails.food.servings.serving.map((serving) => (
+              <ListboxOption
+                key={serving.serving_id}
+                value={serving}
+                className="group relative cursor-default select-none py-2 pl-3 pr-9 text-gray-900 data-[focus]:bg-indigo-600 data-[focus]:text-white"
+              >
+                <div className="flex items-center">
+                  <span className="ml-3 block truncate font-normal group-data-[selected]:font-semibold">
+                    {serving.serving_description}
+                  </span>
+                </div>
+
+                <span className="absolute inset-y-0 right-0 flex items-center pr-4 text-indigo-600 group-data-[focus]:text-white [.group:not([data-selected])_&]:hidden">
+                  <CheckIcon aria-hidden="true" className="h-5 w-5" />
+                </span>
+              </ListboxOption>
+            ))}
+          </ListboxOptions>
+        </div>
+      </Listbox>
+      {/* <Menu as="div" className="relative inline-block text-left">
+      <div>
+        <MenuButton className="inline-flex w-full justify-center gap-x-1.5 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+          Select serving
+          <ChevronDownIcon className="-mr-1 h-5 w-5 text-gray-400" />
+        </MenuButton>
+        <MenuItems
+          transition
+          className="absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 transition focus:outline-none data-[closed]:scale-95 data-[closed]:transform data-[closed]:opacity-0 data-[enter]:duration-100 data-[leave]:duration-75 data-[enter]:ease-out data-[leave]:ease-in"
+        >
+          {foodDetails.food.servings.serving.map((serving, index) => (
+            <div key={index} className="py-1">
+              <MenuItem>
+                {serving.serving_description}
+              </MenuItem>
+            </div>
+          ))}
+          <p>{foodDetails.food.food_url}</p>
+        </MenuItems>
+      </div>
+    </Menu> */}
+    </>
   );
 };
+
 
 export default FoodDetails;

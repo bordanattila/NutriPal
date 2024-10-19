@@ -4,7 +4,6 @@ const axios = require('axios');
 const { getAccessTokenValue } = require('../../utils/apiAuth')
 
 async function getFoodDetailsById(accessToken, foodId) {
-  console.log('FoodID = ' + foodId)
   const searchUrl = 'https://platform.fatsecret.com/rest/food/v4';
   try {
     const response = await axios.get(

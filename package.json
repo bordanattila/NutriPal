@@ -12,9 +12,14 @@
   "author": "Attila",
   "license": "ISC",
   "devDependencies": {
-    "concurrently": "^9.0.1"
+    "concurrently": "^9.0.1",
+    "tailwindcss": "^3.4.13"
   },
   "engines": {
     "node": "20.x"
+  },
+  "dependencies": {
+    "@headlessui/react": "^2.1.9",
+    "@heroicons/react": "^2.1.5"
   }
 }

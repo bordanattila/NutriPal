@@ -32,7 +32,7 @@ const Search = () => {
     };
 
     return (
-        <div>
+        <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
             <form onSubmit={handleSearch}>
                 <input
                     type="text"
@@ -41,7 +41,7 @@ const Search = () => {
                     onChange={(e) => setFoodName(e.target.value)}
                     placeholder="Search"
                 />
-                <button type="submit">Search</button>
+                <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" type="submit">Search</button>
                 {error && <div style={{ color: 'red' }}>{error}</div>}
             </form>
             {foodArray.length > 0 && (

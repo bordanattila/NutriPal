@@ -53,8 +53,8 @@ const Login = () => {
   };
 
   return (
-    <div>
-      <h1>Login</h1>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+      <h1 className="text-2xl font-medium text-gray-600 mb-8">Login</h1>
       <form onSubmit={handleSubmit}>
         <label htmlFor="username">Username:</label>
         <input
@@ -73,7 +73,7 @@ const Login = () => {
           required
         />
         {/* Display error messages */}
-        <button type="submit">Login</button>
+        <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" type="submit">Login</button>
         {error && <p style={{ color: 'red' }}>{error}</p>} 
       </form>
     </div>

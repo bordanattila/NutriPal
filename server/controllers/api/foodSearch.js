@@ -24,8 +24,12 @@ async function searchFoodByName(accessToken, searchExpression = foodName) {
       }
     );
 
-    console.log(response.data.foods.food[0])
-    return response.data;
+    if (response.data && response.data.foods && Array.isArray(response.data.foods.food)) {
+      return response.data;
+    } else {
+      console.error('Unexpected response structure:', response.data);
+      return null;  // Return null if the structure is not as expected
+    }
   } catch (error) {
     console.error('Error searching for food:', error.response ? error.response.data : error.message);
   }
