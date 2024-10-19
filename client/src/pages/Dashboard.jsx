@@ -1,4 +1,9 @@
+import React from "react";
+import Auth from '../utils/auth';
+
 const Dashboard = () => {
+
+  const token = Auth.loggedIn() ? Auth.getToken() : null;
   
     return (
       <div>

@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import ky from 'ky';
 import { useNavigate } from 'react-router-dom';
-// import Auth from '../utils/auth';
+import { useMutation } from "@apollo/client";
+import { LOGIN_USER } from "../utils/mutations";
+import Auth from "../utils/auth";
 
 // Create a ky instance with a prefix URL
 const api = ky.create({
@@ -10,47 +12,42 @@ const api = ky.create({
 
 // Define the Login component
 const Login = () => {
-   // Initialize state for username and password
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  // Add a state for error messages
-  const [error, setError] = useState(null); 
-  // Initialize history
-  const navigate = useNavigate(); 
+  // Initialize state for username and password
+ const [username, setUsername] = useState('');
+ const [password, setPassword] = useState('');
+ // Add a state for error messages
+ const [error, setError] = useState(null); 
+ // Initialize history
+ const navigate = useNavigate(); 
 
-  // Define the handleSubmit function
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      // Make a POST request to the login endpoint
-      const response = await api.post('login', {
-        json: { username, password },
-      });
-      // Auth.login(response.login.token);
-      // Check if the response is OK
-      if (response.ok) {
-        const data = await response.json();
-        // Check if there's an error in the response data
-        if (data.error) {
-          // Update the error state
-          setError(data.error);
-        } else {
-          // Store the user's ID in local storage (not session, as it's a client-side app)
-          localStorage.setItem('userId', data.userId);
-          localStorage.setItem('loggedIn', true);
+ // Define the handleSubmit function
+ const handleSubmit = async (e) => {
+   e.preventDefault();
+   setError(null);
+   try {
+     // Make a POST request to the login endpoint
+     const response = await api.post('login', {
+       json: { username, password },
+     });
 
-          // Navigate to the dashboard page
-          navigate('/dashboard');
-        }
-      } else {
-        // Update the error state
-        setError(`Error logging in: ${response.status}`); 
-      }
-    } catch (error) {
-      // Update the error state
-      setError(`Error logging in: ${error.message}`); 
+     // Check if the response is OK
+    //  if (response.ok) {
+      const data = await response.json();
+      console.log('Login response:', data);
+      if (data && data.login && data.login.token) {
+      // Store the token using Auth service
+      Auth.login(data.login.token); // Assuming the token is in data.login.token
+      navigate('/dashboard'); // Navigate to the dashboard
+    } else {
+      // Handle non-200 responses
+      const errorData = await response.json();
+      setError(errorData.error || `Error logging in: ${response.status}`);
     }
-  };
+  } catch (error) {
+    // Handle network or other errors
+    setError(`Error logging in: ${error.message}`);
+  }
+ };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">

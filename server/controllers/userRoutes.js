@@ -2,6 +2,7 @@ const User = require('../models/User');
 const bcrypt = require('bcrypt');
 const express = require('express');
 const router = express.Router();
+const { signToken } = require('../utils/auth');
 
 // Login route
 router.post('/login', async (req, res) => {
@@ -17,13 +18,12 @@ router.post('/login', async (req, res) => {
     if (!isValidPassword) {
       return res.status(401).json({ message: 'Invalid username or password' });
     }
-    req.session.userId = user._id;
-    res.status(201).json({ message: 'Login successful' });
-    // req.session.save(() => {
-    //   req.session.loggedIn = true;
-    //   req.session.userId = user._id;
-    //   res.json({ user: user, message: 'Login successful' });
-    // });
+    // Sign a token for the user
+    const token = signToken({ username: user.username, email: user.email, _id: user._id });
+
+    // Respond with the token and user information
+    res.status(200).json({ login: { token, user: { _id: user._id, username: user.username } } });
+    
 
   } catch (error) {
     console.error('Error logging in:', error.message);
