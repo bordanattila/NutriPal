@@ -1,8 +1,14 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import Auth from "../utils/auth";
 
 const Home = () => {
   const navigate = useNavigate();
+  
+  if (Auth.loggedIn()) {
+    // If the user is already logged in, redirect them to the dashboard
+    navigate('/dashboard');
+  }
 
   const handleLoginClick = () => {
     navigate('/login');
@@ -13,8 +19,8 @@ const Home = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-      <h1 className="text-4xl font-bold text-gray-800 mb-4">Welcome to Food Tracker</h1>
+    <div className="flex flex-col items-center justify-center min-h-96 bg-gray-100">
+      <h1 className="text-4xl font-bold text-gray-800 mb-4">Welcome to NutryPal</h1>
       <h2 className="text-2xl font-medium text-gray-600 mb-8">The #1 nutrition app</h2>
       <button onClick={handleLoginClick} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Login</button>
       <h3 className="text-xl font-medium text-gray-600 mt-4 mb-4">Not a member yet? Sign up</h3>

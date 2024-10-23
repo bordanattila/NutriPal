@@ -1,50 +1,51 @@
-// Decode a token and get the user's information out of it
-import  { jwtDecode } from 'jwt-decode';
+import { jwtDecode } from 'jwt-decode';
 
-// Create a new class to instantiate for a user
 class AuthService {
-  // get user data
-  getProfile() {
-    return jwtDecode(this.getToken());
-  }
+  // Retrieve user data from the decoded token
+  getProfile = () => {
+    return this.decodeToken(this.getToken());
+  };
 
-  // Check if user's logged in
-  loggedIn() {
-    // Checks if there is a saved token and it's still valid
+  // Check if the user is logged in
+  loggedIn = () => {
     const token = this.getToken();
-    return !!token && !this.isTokenExpired(token); // handwaiving here
-  }
+    return !!token && !this.isTokenExpired(token);
+  };
 
-  // Check if token is expired
-  isTokenExpired(token) {
-    try {
-      const decoded = jwtDecode(token);
-      if (decoded.exp < Date.now() / 1000) {
-        return true;
-      } else return false;
-    } catch (err) {
-      return false;
-    }
-  }
+  // Check if the token is expired
+  isTokenExpired = (token) => {
+    const decoded = this.decodeToken(token);
+    const isExpired = decoded ? decoded.exp < Date.now() / 1000 : true; // Return true if token is invalid or expired
+    return isExpired;
+  };
 
-  getToken() {
-    // Retrieves the user token from localStorage
+  // Retrieve the user token from localStorage
+  getToken = () => {
+    const token = localStorage.getItem('id_token');
     return localStorage.getItem('id_token');
-  }
+  };
 
-  login(idToken) {
-    // Saves user token to localStorage
+  // Save user token to localStorage and redirect to dashboard
+  login = (idToken) => {
     localStorage.setItem('id_token', idToken);
     window.location.assign('/dashboard');
-  }
+  };
 
-  logout() {
-    // Clear user token and profile data from localStorage
+  // Clear user token and redirect to home
+  logout = () => {
     localStorage.removeItem('id_token');
-    // This will reload the page and reset the state of the application
     window.location.assign('/home');
-  }
-  
+  };
+
+  // Decode the token with error handling
+  decodeToken = (token) => {
+    try {
+      return jwtDecode(token);
+    } catch (err) {
+      console.error('Token decoding failed:', err);
+      return null; // Return null if decoding fails
+    }
+  };
 }
 
 export default new AuthService();

@@ -8,6 +8,7 @@ import FoodDetails from './components/FoodDetails';
 import Footer from './components/Footer';
 import Navbar from './components/Navigation';
 import Search from './pages/Search'
+import NotFound from './components/NotFound';
 
 const routes = [
   {
@@ -34,6 +35,10 @@ const routes = [
     path: '/foodById/:foodId',
     element: <FoodDetails />,
   },
+  {
+    path: '*',
+    element: <NotFound />,
+  },
 ];
 
 const App = () => {
@@ -46,7 +51,8 @@ const App = () => {
         ))}
       </Routes>
       <div>
-        <Navbar />
+        {/* Check if the current route is the home page */}
+        {window.location.pathname !== '/' && <Navbar />}
       </div>
       <div>
         <Footer />

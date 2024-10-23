@@ -1,15 +1,36 @@
-import React from "react";
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from "react-router-dom";
 import Auth from '../utils/auth';
+import { useQuery } from '@apollo/client';
+import { GET_USER } from '../utils/mutations';
+import Header from '../components/Header';
 
 const Dashboard = () => {
+  const navigate = useNavigate();
 
-  const token = Auth.loggedIn() ? Auth.getToken() : null;
-  
-    return (
-      <div>
-        <h1>Dashboard</h1>
-      </div>
-    );
-  };
+  const { loading, data, error } = useQuery(GET_USER, {
+    context: {
+      headers: {
+        Authorization: `Bearer ${Auth.getToken()}`,
+      },
+    },
+    onError: () => {
+      navigate('/login');
+    }
+  });
 
-  export default Dashboard;
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error.message}</div>;
+
+  const { username } = data?.user || {};
+
+  // Render the dashboard page with the fetched username
+  return (
+    <div>
+      <h1>Dashboard</h1>
+      <p>Welcome, {username}!</p>
+    </div>
+  );
+};
+
+export default Dashboard;

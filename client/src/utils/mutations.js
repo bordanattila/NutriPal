@@ -24,3 +24,12 @@ export const CREATE_USER = gql`
     }
   }
 `;
+
+export const GET_USER = gql`
+  query getUser {
+    user {
+      _id
+      username
+    }
+  }
+`;
