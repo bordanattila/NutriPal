@@ -1,8 +1,8 @@
 const jwt = require('jsonwebtoken');
+require('dotenv').config();
 
 // Set token secret and expiration date
-const secret = 'mysecretsshhhhh';
-const expiration = '2h';
+const secret = process.env.TOKEN_SECRET;
 
 module.exports = {
   // Function for our authenticated routes
@@ -21,16 +21,15 @@ module.exports = {
 
     // Verify token and get user data out of it
     try {
-      const { data } = jwt.verify(token, secret, { maxAge: expiration });
+      const { data } = jwt.verify(token, secret, { algorithm: 'HS256', expiresIn: '1h' });
       req.user = data;
     } catch {
-      console.log('Invalid token');
+      console.log('Invalid token', err);
     }
     return req;
   },
-  signToken: function ({ username, email, _id }) {
+  signInToken: function ({ username, email, _id }) {
     const payload = { username, email, _id };
-
-    return jwt.sign({ data: payload }, secret, { expiresIn: expiration });
+    return jwt.sign({ data: payload }, secret, { algorithm: 'HS256', expiresIn: '1h' });
   },
 };

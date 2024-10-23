@@ -1,15 +1,15 @@
 const { AuthenticationError } = require("apollo-server-express");
-const { User } = require("../models");
+const User = require("../models/User");
 const { signInToken } = require("../utils/auth");
 
 const resolvers = {
     Query: {
         user: async (parent, args, context) => {
-            // check if user exist. if not throw error
+            // Check if user is still logged in. If not throw error
             if (!context.user) {
               throw new AuthenticationError('You need to be logged in!');
             }
-            // if the user exist retrieve it's data
+            // If the user exist retrieve it's data
             const userData = await User.findById(context.user._id)
               .select('-__v -password');
             return userData;
@@ -38,5 +38,6 @@ const resolvers = {
           },
     }
 }
+
 module.exports = resolvers;
 

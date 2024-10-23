@@ -6,7 +6,6 @@ const path = require('path');
 const cors = require('cors');
 require('dotenv').config();
 
-
 // Set up database
 const { typeDefs, resolvers } = require('./schemas');
 const db = require('./config/connection');
@@ -23,14 +22,14 @@ const server = new ApolloServer({
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, 'public')));
+// app.use(express.static(path.join(__dirname, 'public')));
 
 // Configure session middleware
 app.use(session({
   secret: process.env.SECRET_KEY,
   resave: false,
   saveUninitialized: true,
-  cookie: { secure: false } // Set to true if using HTTPS
+  cookie: { secure: false, sameSite: 'lax' } // Set to true if using HTTPS
 }));
 
 app.use('/', require('./controllers/'));
