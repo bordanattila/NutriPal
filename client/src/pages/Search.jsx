@@ -2,6 +2,10 @@ import React, { useState } from 'react';
 import ky from 'ky';
 import { Link } from 'react-router-dom';
 
+const api = ky.create({
+    prefixUrl: 'http://localhost:3000',
+});
+
 const Search = () => {
     const [foodName, setFoodName] = useState('');
     const [foodArray, setFoodArray] = useState([]);
@@ -10,7 +14,7 @@ const Search = () => {
     const handleSearch = async (e) => {
         e.preventDefault();
         try {
-            const response = await fetch(`/api/search?searchExpression=${foodName}`);
+            const response = await api.get(`api/foodByName?searchExpression=${foodName}`);
             const data = await response.json();
             setFoodArray(data.foods.food);
             setError(null);

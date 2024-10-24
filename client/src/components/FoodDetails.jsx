@@ -9,38 +9,36 @@ const api = ky.create({
 });
 
 const FoodDetails = () => {
-  const [foodDetails, setFoodDetails] = useState(null);
   const { foodId } = useParams();
+  const [foodDetails, setFoodDetails] = useState(null);
   const [error, setError] = useState(null);
   const [selected, setSelected] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchFoodDetails = async () => {
+      setLoading(true);
       try {
-        const response = await api.get(`api/foodDetails/foodById/${foodId}`);
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('application/json')) {
-          const responseData = await response.json();
-          setFoodDetails(responseData);
-          
-          if (responseData.food.servings.serving.length > 0) {
-            setSelected(responseData.food.servings.serving[0]);
-          }
-        } else {
-          console.error('Expected JSON, got:', contentType);
-          const text = await response.text();
-          console.error('Response text:', text);
-          throw new Error(`Invalid response: ${contentType}`);
+        const response = await api.get(`api/foodById?food_id=${foodId}`);
+        const responseData = await response.json();
+        setFoodDetails(responseData);
+
+        // The purpose of this line is to ensure that there is at least one serving available before proceeding to set the selected serving in the state. 
+        // It prevents potential errors that could occur if the code tries to access properties of undefined or null.
+        if (responseData.food?.servings?.serving?.length > 0) {
+          setSelected(responseData.food.servings.serving[0]);
         }
       } catch (error) {
         console.error('Error fetching food details:', error);
         setError(error);
+      } finally {
+        setLoading(false);
       }
     };
     fetchFoodDetails();
-  }, []);
+  }, [foodId]);
 
-  if (!foodDetails) return <div>Loading...</div>;
+  if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error.message}</div>;
 
   return (
@@ -50,7 +48,7 @@ const FoodDetails = () => {
       </div>
       <p><strong>{foodDetails.food.food_name}</strong></p>
       <p><strong>{foodDetails.food.food_type}</strong></p>
-     
+
       <Listbox value={selected} onChange={setSelected}>
         <Label className="block text-sm font-medium leading-6 text-gray-900">Select serving</Label>
         <div className="relative mt-2">
@@ -87,27 +85,6 @@ const FoodDetails = () => {
           </ListboxOptions>
         </div>
       </Listbox>
-      {/* <Menu as="div" className="relative inline-block text-left">
-      <div>
-        <MenuButton className="inline-flex w-full justify-center gap-x-1.5 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
-          Select serving
-          <ChevronDownIcon className="-mr-1 h-5 w-5 text-gray-400" />
-        </MenuButton>
-        <MenuItems
-          transition
-          className="absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 transition focus:outline-none data-[closed]:scale-95 data-[closed]:transform data-[closed]:opacity-0 data-[enter]:duration-100 data-[leave]:duration-75 data-[enter]:ease-out data-[leave]:ease-in"
-        >
-          {foodDetails.food.servings.serving.map((serving, index) => (
-            <div key={index} className="py-1">
-              <MenuItem>
-                {serving.serving_description}
-              </MenuItem>
-            </div>
-          ))}
-          <p>{foodDetails.food.food_url}</p>
-        </MenuItems>
-      </div>
-    </Menu> */}
     </>
   );
 };

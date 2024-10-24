@@ -22,7 +22,7 @@ async function getAccessToken() {
     });
 
     accessToken = response.data.access_token;
-    console.log('Access token is here'+accessToken)
+    tokenExpiration = Date.now() + response.data.expires_in * 1000;
     return accessToken;
   } catch (error) {
     console.error('Error fetching access token:', error.response ? error.response.data : error.message);
@@ -31,7 +31,7 @@ async function getAccessToken() {
 
 // Function to share accessToken with other API calls
 async function getAccessTokenValue() {
-  if (!accessToken) {
+  if (!accessToken || Date.now() >= tokenExpiration) {
     console.log('Waiting for access token')
     await getAccessToken();
   }
