@@ -29,7 +29,7 @@ const Search = () => {
     };
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+        <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-teal-200 via-cyan-300 to-blue-300 p-6">
             <form onSubmit={handleSearch} className="mb-4">
                 <input
                     type="text"

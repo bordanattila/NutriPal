@@ -19,12 +19,23 @@ const Home = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-96 bg-gray-100">
-      <h1 className="text-4xl font-bold text-gray-800 mb-4">Welcome to NutryPal</h1>
-      <h2 className="text-2xl font-medium text-gray-600 mb-8">The #1 nutrition app</h2>
-      <button onClick={handleLoginClick} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Login</button>
-      <h3 className="text-xl font-medium text-gray-600 mt-4 mb-4">Not a member yet? Sign up</h3>
-      <button onClick={handleSignupClick} className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Signup</button>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-teal-200 via-cyan-300 to-blue-300 p-6">
+      <h1 className="text-5xl font-extrabold text-gray-800 mb-4 tracking-tight text-center">Welcome to NutryPal</h1>
+      <h2 className="text-2xl font-medium text-gray-700 mb-8 text-center">Your #1 Nutrition Companion</h2>
+      
+      <button 
+        onClick={handleLoginClick} 
+        className="w-full sm:w-1/2 bg-gradient-to-r from-blue-400 to-indigo-500 hover:from-blue-500 hover:to-indigo-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition duration-300 ease-in-out mb-6">
+        Login
+      </button>
+      
+      <h3 className="text-lg font-normal text-gray-600 mt-2 mb-4 text-center">Not a member yet? Sign up below</h3>
+      
+      <button 
+        onClick={handleSignupClick} 
+        className="w-full sm:w-1/2 bg-gradient-to-r from-green-400 to-teal-500 hover:from-green-500 hover:to-teal-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition duration-300 ease-in-out">
+        Signup
+      </button>
     </div>
   );
 };

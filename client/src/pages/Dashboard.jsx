@@ -26,7 +26,7 @@ const Dashboard = () => {
 
   // Render the dashboard page with the fetched username
   return (
-    <div>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-teal-200 via-cyan-300 to-blue-300 p-6">
       <h1>Dashboard</h1>
       <p>Welcome, {username}!</p>
     </div>

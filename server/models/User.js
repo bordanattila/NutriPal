@@ -17,7 +17,8 @@ const userSchema = new Schema(
         password: {
             type: String,
             required: true
-        }
+        },
+        daily_log: [daily_log_Schema],
     }
 );
 
