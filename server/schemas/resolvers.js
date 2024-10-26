@@ -30,12 +30,26 @@ const resolvers = {
             return { token, user };
         },
         signup: async (parent, { username, email, password }) => {
-            console.log(username, email, password);
-            const user = new User({ username, email, password });
+          console.log(username, email, password);
+          
+          // Check if username or email already exists
+          const existingUser  = await User.findOne({ $or: [{ username }, { email }] });
+          if (existingUser ) {
+            console.error("User already exists:", existingUser);
+            throw new Error('Username or email already taken. Please choose a different one.');
+          }
+    
+          const user = new User({ username, email, password });
+          try {
             await user.save();
-            const token = signInToken(user);
-            return { token, user };
-          },
+          } catch (error) {
+            console.error('Error saving user:', error);
+            throw new Error('User  creation failed. Please try again.');
+          }
+          
+          const token = signInToken(user);
+          return { token, user };
+        },
     }
 }
 

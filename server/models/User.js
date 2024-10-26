@@ -1,5 +1,6 @@
 const { Schema, model } = require("mongoose");
 const bcrypt = require("bcrypt");
+const dailyLogSchema = require('./DailyLog');
 
 const userSchema = new Schema(
     {
@@ -18,7 +19,10 @@ const userSchema = new Schema(
             type: String,
             required: true
         },
-        daily_log: [daily_log_Schema],
+        daily_log: [{
+            type: Schema.Types.ObjectId,
+            ref: 'DailyLog'
+        }],
     }
 );
 
