@@ -25,7 +25,7 @@ class AuthService {
   // Retrieve the user token from localStorage
   getToken = () => {
     const token = localStorage.getItem('id_token');
-    return localStorage.getItem('id_token');
+    return token;
   };
 
   // Save user token to localStorage and redirect to dashboard
