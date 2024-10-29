@@ -29,7 +29,7 @@ const navigationItems = [
 
 const Navigation = () => {
   return (
-    <div className="flex flex-row justify-evenly min-h-96 p-2 bg-gradient-to-r from-green-400 to-teal-500 shadow-lg my-1">
+    <div className="flex flex-row justify-evenly p-2 bg-gradient-to-r from-green-400 to-teal-500 shadow-lg my-1">
       {navigationItems.map((item, index) => {
         const content = (
           <>

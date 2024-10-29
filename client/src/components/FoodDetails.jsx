@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useParams } from 'react-router-dom';
 import ky from 'ky';
 import DropdownMenu from './Dropdown';
@@ -6,6 +7,7 @@ import Auth from '../utils/auth';
 import { useQuery } from '@apollo/client';
 import { GET_USER } from '../utils/mutations';
 import { useNavigate } from "react-router-dom";
+import DonutChart from './Donut';
 
 const api = ky.create({
   prefixUrl: 'http://localhost:3000',
@@ -42,7 +44,11 @@ const FoodDetails = () => {
   });
   const [userID, setUserID] = useState(null);
 
-  
+  //   const regex = /\b(small|medium|large)\b/i;
+
+  // // Filter the servingArray based on the regex
+  // const filteredServingArray = servingArray?.filter(serving => regex.test(serving.serving_description)) || [];
+  // console.log(filteredServingArray)
 
   useEffect(() => {
     const fetchFoodDetails = async () => {
@@ -69,19 +75,26 @@ const FoodDetails = () => {
     fetchFoodDetails();
   }, [foodId]);
 
-    // Set user ID from log data
-    useEffect(() => {
-      if (logData?.user) {
-        setUserID(logData.user.destructuredID);
-      }
-    }, [logData]);
+  // Set user ID from log data
+  useEffect(() => {
+    if (logData?.user) {
+      setUserID(logData.user.destructuredID);
+    }
+  }, [logData]);
 
   // Set serving_id when a serving is selected
   const handleServingChange = (serving) => {
     setSelectedServing(serving);
     setServingID(serving.serving_id);
-    console.log(servingID)
   };
+
+   // Prepare stats for chart
+  const statsForChart = selectedServing ? [
+    { name: 'Carbs', value: selectedServing.carbohydrate || 0 },
+    { name: 'Protein', value: selectedServing.protein || 0 },
+    { name: 'Fat', value: selectedServing.fat || 0 },
+    { name: 'Calories', value: selectedServing.calories}
+  ] : [];
 
   // Handling change in serving size
   const handleServingCount = (count) => {
@@ -110,7 +123,7 @@ const FoodDetails = () => {
       saturated_fat: selectedServing.saturated_fat * servingCount,
       sodium: selectedServing.sodium * servingCount,
       fiber: selectedServing.fiber * servingCount,
-      meal_type: meal.toLocaleLowerCase(), 
+      meal_type: meal.toLocaleLowerCase(),
     };
 
     try {
@@ -121,17 +134,17 @@ const FoodDetails = () => {
       const foodData = await foodResponse.json();
 
       if (!foodResponse.ok) {
-          throw new Error('Failed to create food entry.');
+        throw new Error('Failed to create food entry.');
       }
 
       // Add the food entry to the DailyLog
       const dailyLogResponse = await api.post('api/daily-log', {
-          json: {
-              user_id: userID,
-              foods: [foodData._id], 
-              dateCreated: new Date(), 
-          },
-        });
+        json: {
+          user_id: userID,
+          foods: [foodData._id],
+          dateCreated: new Date(),
+        },
+      });
       console.log(foodEntry)
 
       if (dailyLogResponse.ok) {
@@ -144,44 +157,57 @@ const FoodDetails = () => {
       alert('Error adding food. Please try again.');
     }
   };
-  if (loading || logLoading ) return <div>Loading...</div>;
-  if (error || logError) return <div>Error: {error.message}</div>;  
+
+  // const extractServingSize = (servingDescription) => {
+  //   const regex = /^\d+\s+(small|medium|large)/i;
+  //   const match = servingDescription.match(regex);
+  //   return match ? match[0] : servingDescription; // Return matched value or original description if no match
+  // };
+
+  // const extractedSizes = servingDescriptions.map(extractServingSize);
+
+  if (loading || logLoading) return <div>Loading...</div>;
+  if (error || logError) return <div>Error: {error.message}</div>;
+
+
 
   return (
-    <>
+    <div className='pl-1 pr-1'>
       <div className="flex flex-col items-center justify-center max-h-2 bg-gradient-to-br from-teal-200 via-cyan-300 to-blue-300 p-6">
         <h1 className='text-3xl font-bold mb-4'>Food Details</h1>
       </div>
-      <p><strong>{foodDetails.food.food_name}</strong></p>
-      <p><strong>{foodDetails.food.food_type}</strong></p>
-
-      {/* Displaying the details of the selected serving */}
-      {selectedServing && servingCount && (
-        <div className="py-4">
-          <div>
-            <strong>Calories:</strong> {((selectedServing.calories * servingCount).toFixed(2))}g
+      <p className='rounded-md p-2 bg-teal-100 text-base text-center'><strong>{foodDetails.food.food_name}</strong></p>
+      <div className='flex flex-row'>
+        {/* Displaying the details of the selected serving */}
+        {selectedServing && servingCount && (
+          <div className="py-4 w-40">
+            <div>
+              <strong>Calories:</strong> {((selectedServing.calories * servingCount).toFixed(2))}g
+            </div>
+            <div>
+              <strong>Carbohydrate:</strong> {((selectedServing.carbohydrate * servingCount).toFixed(2))}g
+            </div>
+            <div>
+              <strong>Protein:</strong> {((selectedServing.protein * servingCount).toFixed(2))}g
+            </div>
+            <div>
+              <strong>Fat:</strong> {((selectedServing.fat * servingCount).toFixed(2))}g
+            </div>
+            Saturated fat: {((selectedServing.saturated_fat * servingCount).toFixed(2))}g<br />
+            Sodium: {((selectedServing.sodium * servingCount).toFixed(2))}g<br />
+            Fiber: {((selectedServing.fiber * servingCount).toFixed(2))}g<br />
           </div>
-          <div>
-            <strong>Carbohydrate:</strong> {((selectedServing.carbohydrate * servingCount).toFixed(2))}g
-          </div>
-          <div>
-            <strong>Protein:</strong> {((selectedServing.protein * servingCount).toFixed(2))}g
-          </div>
-          <div>
-            <strong>Fat:</strong> {((selectedServing.fat * servingCount).toFixed(2))}g
-          </div>
-          Saturated fat: {((selectedServing.saturated_fat * servingCount).toFixed(2))}g<br />
-          Sodium: {((selectedServing.sodium * servingCount).toFixed(2))}g<br />
-          Fiber: {((selectedServing.fiber * servingCount).toFixed(2))}g<br />
+        )}
+        <div className="py-4 w-56 h-56">
+          <DonutChart stats={statsForChart}/>
         </div>
-      )}
-
+      </div>
+      <Link to={foodDetails.food.food_url} className="text-blue-500 hover:underline" target="_blank" rel="noopener noreferrer">See nutrition label here</Link>
       {/* Dropdown for serving size */}
       <DropdownMenu
-        label="Select serving size"
+        label="Serving size"
         value={selectedServing}
         onChange={handleServingChange}
-        // options={foodDetails.food.servings.serving}
         options={servingArray}
         optionLabel={(serving) => serving.serving_description}
         optionKey={(serving) => serving.serving_id}
@@ -189,7 +215,7 @@ const FoodDetails = () => {
 
       {/* Dropdown for serving count*/}
       <DropdownMenu
-        label="Select number of servings"
+        label="Number of servings"
         value={servingCount}
         onChange={handleServingCount}
         options={[...Array(100).keys()].map(i => i + 1)}
@@ -199,7 +225,7 @@ const FoodDetails = () => {
 
       {/* Dropdown for meal type*/}
       <DropdownMenu
-        label="Select meal type"
+        label="Meal type"
         value={meal}
         onChange={handleMealChange}
         options={mealTypes}
@@ -208,11 +234,11 @@ const FoodDetails = () => {
       /><br />
 
       <button
-        onClick={handleAddFood} 
-        className="w-full sm:w-1/2 bg-gradient-to-r from-blue-400 to-indigo-500 hover:from-blue-500 hover:to-indigo-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition duration-300 ease-in-out mb-6">
+        onClick={handleAddFood}
+        className="w-full sm:w-1/2 bg-gradient-to-r from-green-400 to-white-500 hover:from-blue-500 hover:to-indigo-600 text-black font-bold py-3 px-6 rounded-lg shadow-lg transition duration-300 ease-in-out mb-6">
         Add food
       </button>
-    </>
+    </div>
   );
 };
 

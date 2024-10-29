@@ -9,8 +9,8 @@ const dailyLogSchema = new Schema (
         },
         dateCreated: {
             type: Date,
-            default: Date.now,
-            // unique: true,
+            required: true,
+            set: (date) => new Date(date.setHours(0, 0, 0, 0)), 
         },
         foods: [{
             type: Schema.Types.ObjectId,

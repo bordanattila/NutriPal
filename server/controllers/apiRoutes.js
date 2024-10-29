@@ -71,6 +71,7 @@ router.get('/foodById', async (req, res) => {
     }
 });
 
+
 // Endpoint for logging one food item
 router.post('/one-food', async (req, res) => {
     console.log(req.body);

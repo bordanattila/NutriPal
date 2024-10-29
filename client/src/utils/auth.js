@@ -1,4 +1,5 @@
 import { jwtDecode } from 'jwt-decode';
+import ky from 'ky';
 
 class AuthService {
   // Retrieve user data from the decoded token
@@ -16,9 +17,6 @@ class AuthService {
   isTokenExpired = (token) => {
     const decoded = this.decodeToken(token);
     const isExpired = decoded ? decoded.exp < Date.now() / 1000 : true; // Return true if token is invalid or expired
-    if (isExpired) {
-      localStorage.removeItem('id_token')
-    }
     return isExpired;
   };
 
@@ -32,6 +30,24 @@ class AuthService {
   login = (idToken) => {
     localStorage.setItem('id_token', idToken);
     window.location.assign('/dashboard');
+  };
+
+  // Refresh token for user
+  refreshToken = async () => {
+    const refreshToken = localStorage.getItem('refreshToken'); 
+    if (refreshToken) {
+      try {
+        const response = await ky.post('/api/auth/refresh', { refreshToken });
+        const newToken = response.data.token;
+        // Update the access token
+        localStorage.setItem('id_token', newToken); 
+        return true;
+      } catch (error) {
+        console.error('Token refresh failed:', error);
+        return false;
+      }
+    }
+    return false;
   };
 
   // Clear user token and redirect to home

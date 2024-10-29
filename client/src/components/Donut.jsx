@@ -25,7 +25,7 @@ const DonutChart = ({ stats }) => {
 
   const options = {
     // Creates the donut effect
-    cutout: '70%', 
+    cutout: '90%', 
     plugins: {
       legend: {
         // Shows the legend
@@ -46,7 +46,7 @@ const DonutChart = ({ stats }) => {
   };
 
   return (
-    <div className="relative w-64 h-64">
+    <div className="relative w-56 h-56">
       <Doughnut data={data} options={options} />
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="text-center">

@@ -66,9 +66,9 @@ const Signup = () => {
   };
 
   return (
-    <div>
+    <div className="flex flex-col items-center justify-center h-dvh bg-gradient-to-br from-teal-200 via-cyan-300 to-blue-300 p-6">
       <h1>Sign Up</h1>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} className="flex flex-col m-12 gap-8 space-y-4">
         <label htmlFor="username">Username:</label>
         <input
           type="text"
@@ -76,6 +76,7 @@ const Signup = () => {
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           required
+          className="border p-2 rounded"
         />
         <label htmlFor="email">Email:</label>
         <input
@@ -84,6 +85,7 @@ const Signup = () => {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
+          className="border p-2 rounded"
         />
         <label htmlFor="password">Password:</label>
         <input
@@ -92,9 +94,16 @@ const Signup = () => {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
+          className="border p-2 rounded"
         />
-        <button type="submit">Sign Up</button>
-        {error && <div style={{ color: 'red' }}>{error}</div>}
+       <button 
+          type="submit" 
+          disabled={loading} 
+          className={`w-full sm:w-1/2 bg-gradient-to-r from-green-400 to-teal-500 hover:from-green-500 hover:to-teal-600 text-white font-bold py-3 px-6 rounded-full shadow-lg transition duration-300 ease-in-out ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+        >
+          {loading ? 'Signing up in...' : 'Signup'}
+        </button>
+        {error && <p className="text-red-500">{error}</p>}
       </form>
     </div>
   );
