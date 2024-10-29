@@ -14,6 +14,9 @@ const resolvers = {
               .select('-__v -password');
             return userData;
           },
+          getDailyLog: async (_, { user_id, date }) => {
+            return DailyLog.findOne({ user_id, dateCreated: date });
+          },
     },
 
     Mutation: {
@@ -49,6 +52,14 @@ const resolvers = {
           
           const token = signInToken(user);
           return { token, user };
+        },
+        createDailyLog: async (_, { user_id, foods }) => {
+          const newLog = new DailyLog({
+            user_id,
+            dateCreated: new Date(),
+            foods
+          });
+          return await newLog.save();
         },
     }
 }

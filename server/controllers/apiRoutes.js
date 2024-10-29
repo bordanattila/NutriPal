@@ -5,6 +5,7 @@ const axios = require('axios');
 const qs = require('qs');
 const DailyLog = require('../models/DailyLog');
 const OneFood = require('../models/OneFood');
+const { createDailyLog } = require('../utils/helper');
 
 // Endpoint to get the access token
 router.get('/token', async (req, res) => {
@@ -108,14 +109,10 @@ router.post('/daily-log', async (req, res) => {
     console.log('request')
     console.log('Request Body:', req.body);
     try {
-        const { user_id, foods } = req.body; // Expecting foods to be an array of OneFood ObjectIds
+        const { user_id, dateCreated, foods } = req.body; // Expecting foods to be an array of OneFood ObjectIds
 
         // Create a new Daily Log entry
-        const newLog = new DailyLog({
-            user_id,
-            dateCreated: new Date(),
-            foods // Directly use the foods array from the request body
-        });
+        const newLog = await createDailyLog(user_id, dateCreated, foods);
 
         await newLog.save();
         console.log('Daily log success');

@@ -28,8 +28,33 @@ const typeDefs = gql`
         user: User!
     }
 
+    type DailyLog {
+        _id: ID!
+        user_id: User!
+        dateCreated: String!
+        foods: [OneFood]
+      }
+      
+      type OneFood {
+        _id: ID!
+        serving_size: String!
+        number_of_servings: Int!
+        calories: Int!
+        carbohydrate: Int!
+        protein: Int!
+        fat: Int!
+        saturated_fat: Int!
+        sodium: Int!
+        fiber: Int!
+        meal_type: String!
+      }
+
     type Query {
         user: User
+        getDailyLog(
+            user_id: ID!, 
+            date: String!
+        ): DailyLog
     }
 
     type Mutation {
@@ -43,6 +68,11 @@ const typeDefs = gql`
             username: String!
             password: String!
         ): Auth
+
+        createDailyLog(
+            user_id: ID!, 
+            foods: [ID!]!
+        ): DailyLog
     }
 `;
 

@@ -22,8 +22,7 @@ const dailyLogSchema = new Schema (
 // Create a compound index for user_id and date_created
 dailyLogSchema.index({ 
     user_id: 1, 
-    date_created: 1 }, 
-    { unique: true }
+    dateCreated: 1 }, 
 );
 
 const DailyLog = model('DailyLog', dailyLogSchema);
