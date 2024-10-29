@@ -8,6 +8,7 @@ import { useQuery } from '@apollo/client';
 import { GET_USER } from '../utils/mutations';
 import { useNavigate } from "react-router-dom";
 import DonutChart from './Donut';
+import { ArrowLeftIcon, PlusIcon } from '@heroicons/react/20/solid';
 
 const api = ky.create({
   prefixUrl: 'http://localhost:3000',
@@ -88,12 +89,12 @@ const FoodDetails = () => {
     setServingID(serving.serving_id);
   };
 
-   // Prepare stats for chart
+  // Prepare stats for chart
   const statsForChart = selectedServing ? [
     { name: 'Carbs', value: selectedServing.carbohydrate || 0 },
     { name: 'Protein', value: selectedServing.protein || 0 },
     { name: 'Fat', value: selectedServing.fat || 0 },
-    { name: 'Calories', value: selectedServing.calories}
+    { name: 'Calories', value: selectedServing.calories }
   ] : [];
 
   // Handling change in serving size
@@ -158,6 +159,10 @@ const FoodDetails = () => {
     }
   };
 
+  const goBack = () => {
+    navigate('/search')
+  };
+
   // const extractServingSize = (servingDescription) => {
   //   const regex = /^\d+\s+(small|medium|large)/i;
   //   const match = servingDescription.match(regex);
@@ -172,11 +177,19 @@ const FoodDetails = () => {
 
 
   return (
-    <div className='pl-1 pr-1'>
-      <div className="flex flex-col items-center justify-center max-h-2 bg-gradient-to-br from-teal-200 via-cyan-300 to-blue-300 p-6">
-        <h1 className='text-3xl font-bold mb-4'>Food Details</h1>
+    <div className='pb-2.5'>
+      <div className="flex flex-row items-center justify-between max-h-2 bg-gradient-to-r from-green-400 to-teal-500 px-6 pt-6 pb-9">
+        {/* <h1 className='text-3xl font-bold mb-4'>Food Details</h1> */}
+        <div>
+          <ArrowLeftIcon onClick={goBack} className='w-7 h-7' />
+        </div>
+        <div>
+          <p className='rounded-md p-2 bg-teal-100 text-base text-center'><strong>{foodDetails.food.food_name}</strong></p>
+        </div>
+        <div>
+          <PlusIcon onClick={handleAddFood} className='w-7 h-7' />
+        </div>
       </div>
-      <p className='rounded-md p-2 bg-teal-100 text-base text-center'><strong>{foodDetails.food.food_name}</strong></p>
       <div className='flex flex-row'>
         {/* Displaying the details of the selected serving */}
         {selectedServing && servingCount && (
@@ -199,10 +212,9 @@ const FoodDetails = () => {
           </div>
         )}
         <div className="py-4 w-56 h-56">
-          <DonutChart stats={statsForChart}/>
+          <DonutChart stats={statsForChart} />
         </div>
       </div>
-      <Link to={foodDetails.food.food_url} className="text-blue-500 hover:underline" target="_blank" rel="noopener noreferrer">See nutrition label here</Link>
       {/* Dropdown for serving size */}
       <DropdownMenu
         label="Serving size"
@@ -232,12 +244,10 @@ const FoodDetails = () => {
         optionLabel={(meal) => meal}
         optionKey={(meal) => meal}
       /><br />
-
-      <button
-        onClick={handleAddFood}
-        className="w-full sm:w-1/2 bg-gradient-to-r from-green-400 to-white-500 hover:from-blue-500 hover:to-indigo-600 text-black font-bold py-3 px-6 rounded-lg shadow-lg transition duration-300 ease-in-out mb-6">
-        Add food
-      </button>
+      {/* Link to nutrition label */}
+      <div>
+        <Link to={foodDetails.food.food_url} className="text-center text-blue-500 hover:underline" target="_blank" rel="noopener noreferrer">See nutrition label here</Link>
+      </div>
     </div>
   );
 };
