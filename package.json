@@ -2,26 +2,20 @@
   "name": "food_tracker",
   "version": "1.0.0",
   "description": "calorie tracking app",
-  "main": "server.js",
+  "main": "server/server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server/server.js",
+    "develop": "concurrently \"cd server && npm run watch\" \"cd client && npm start\"",
+    "install": "cd server && npm i && cd ../client && npm i",
+    "build": "cd client && npm run build"
   },
   "author": "Attila",
   "license": "ISC",
-  "dependencies": {
-    "@apollo/client": "^3.11.6",
-    "apollo-server-express": "^3.13.0",
-    "axios": "^1.7.7",
-    "bcrypt": "^5.1.1",
-    "dotenv": "^16.4.5",
-    "express": "^4.19.2",
-    "express-async-errors": "^3.1.1",
-    "express-session": "^1.18.0",
-    "graphql": "^16.9.0",
-    "jsonwebtoken": "^9.0.2",
-    "jwt-decode": "^4.0.0",
-    "mongoose": "^8.6.0",
-    "qs": "^6.13.0",
-    "request": "^2.88.2"
+  "devDependencies": {
+    "concurrently": "^9.0.1",
+    "tailwindcss": "^3.4.13"
+  },
+  "engines": {
+    "node": "20.x"
   }
 }
