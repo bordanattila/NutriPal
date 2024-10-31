@@ -9,6 +9,8 @@ import { GET_USER } from '../utils/mutations';
 import { useNavigate } from "react-router-dom";
 import DonutChart from './Donut';
 import { ArrowLeftIcon, PlusIcon } from '@heroicons/react/20/solid';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css'; 
 
 const api = ky.create({
   prefixUrl: 'http://localhost:3000',
@@ -152,13 +154,13 @@ const FoodDetails = () => {
       console.log(foodEntry)
 
       if (dailyLogResponse.ok) {
-        alert('Food added successfully!');
+        toast.success('Food added successfully!');
       } else {
-        alert('Failed to add food.');
+        toast.error('Failed to add food.');
       }
     } catch (error) {
       console.error('Error adding food:', error);
-      alert('Error adding food. Please try again.');
+      toast.error('Error adding food. Please try again.');
     }
   };
 
@@ -251,6 +253,10 @@ const FoodDetails = () => {
       <div className='text-center'>
         <Link to={foodDetails.food.food_url} className=" text-blue-500 hover:underline" target="_blank" rel="noopener noreferrer">See nutrition label here</Link>
       </div>
+      <div>
+    {/* Toaster to provide feedback to user */}
+    <ToastContainer autoClose={2000} />
+  </div>
     </div>
   );
 };
