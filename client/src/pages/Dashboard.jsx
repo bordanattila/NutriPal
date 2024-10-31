@@ -4,7 +4,7 @@ import Auth from '../utils/auth';
 import { useQuery } from '@apollo/client';
 import { GET_USER } from '../utils/mutations';
 import DonutChart from '../components/Donut';
-import useAuth from '../hooks/useAuth';
+import useAuth from '../hooks/RefreshToken';
 
 const stats = [
   { name: 'Carb', value: '120 g' },

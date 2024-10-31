@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import Auth from '../utils/auth';
 import { useQuery } from '@apollo/client';
 import { GET_USER, GET_ONE_FOOD } from '../utils/mutations';
-import useAuth from '../hooks/useAuth';
+import useAuth from '../hooks/RefreshToken';
 
 const api = ky.create({
   prefixUrl: 'http://localhost:3000',
