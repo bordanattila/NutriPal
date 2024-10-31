@@ -8,23 +8,23 @@ import { UserCircleIcon, Cog6ToothIcon } from '@heroicons/react/24/outline'
 import NutriPalLogo from '../images/NutripalLogo.png';
 
 const Header = () => {
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
-  const { loading, data, error } = useQuery(GET_USER, {
-    context: {
-      headers: {
-        Authorization: `Bearer ${Auth.getToken()}`,
-      },
-    },
-    onError: () => {
-      navigate('/login');
-    }
-  });
+  // const { loading, data, error } = useQuery(GET_USER, {
+  //   context: {
+  //     headers: {
+  //       Authorization: `Bearer ${Auth.getToken()}`,
+  //     },
+  //   },
+  //   onError: () => {
+  //     navigate('/login');
+  //   }
+  // });
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error.message}</div>;
+  // if (loading) return <div>Loading...</div>;
+  // if (error) return <div>Error: {error.message}</div>;
 
-  const { username } = data?.user || {};
+  // const { username } = data?.user || {};
   return (
     <Disclosure as="nav" className="bg-gradient-to-r from-green-400 to-teal-500 shadow-lg">
       <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">

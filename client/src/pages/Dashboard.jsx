@@ -4,6 +4,7 @@ import Auth from '../utils/auth';
 import { useQuery } from '@apollo/client';
 import { GET_USER } from '../utils/mutations';
 import DonutChart from '../components/Donut';
+import useAuth from '../hooks/useAuth';
 
 const stats = [
   { name: 'Carb', value: '120 g' },
@@ -15,6 +16,8 @@ const stats = [
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  // Validate token and refresh if needed
+  useAuth();
 
   const { loading, data, error } = useQuery(GET_USER, {
     context: {

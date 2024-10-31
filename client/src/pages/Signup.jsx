@@ -57,7 +57,7 @@ const Signup = () => {
       } else if (error.message.includes("validation failed")) {
         setError('Please ensure all fields are filled out correctly.');
       } else {
-        setError('An unexpected error occurred. Please try again.');
+        setError('An unexpected error occurred with key. Please try again.');
       }
       console.error('Error signing up:', error);
     } finally {

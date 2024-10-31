@@ -6,12 +6,14 @@ import { useNavigate } from "react-router-dom";
 import Auth from '../utils/auth';
 import { useQuery } from '@apollo/client';
 import { GET_USER, GET_ONE_FOOD } from '../utils/mutations';
+import useAuth from '../hooks/useAuth';
 
 const api = ky.create({
   prefixUrl: 'http://localhost:3000',
 });
 
 const Search = () => {
+  useAuth();
   const [foodName, setFoodName] = useState('');
   const [foodArray, setFoodArray] = useState([]);
   const [error, setError] = useState(null);
@@ -28,12 +30,14 @@ const Search = () => {
       navigate('/login');
     }
   });
-  const { userId } = data?.user || {};
+
   // Get the last 5 food logs for the user
+  
+  const userId  = data.user._id;
+  
   useEffect(() => {
     const fetchLogHistory = async () => {
       try {
-        const userId = "671c072b87515418de3bcdab"; // Replace with actual user ID or fetch dynamically
         const response = await api.get(`api/recent-foods/${userId}`);
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
