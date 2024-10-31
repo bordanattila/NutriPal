@@ -1,6 +1,10 @@
 import { jwtDecode } from 'jwt-decode';
 import ky from 'ky';
 
+const api = ky.create({
+  prefixUrl: 'http://localhost:3000',
+}); 
+
 class AuthService {
   // Retrieve user data from the decoded token
   getProfile = () => {
@@ -37,7 +41,7 @@ class AuthService {
     const refreshToken = localStorage.getItem('refreshToken'); 
     if (refreshToken) {
       try {
-        const response = await ky.post('/api/auth/refresh', { refreshToken });
+        const response = await api.post('api/auth/refresh', { refreshToken });
         const newToken = response.data.token;
         // Update the access token
         localStorage.setItem('id_token', newToken); 
@@ -53,7 +57,7 @@ class AuthService {
   // Clear user token and redirect to home
   logout = () => {
     localStorage.removeItem('id_token');
-    window.location.assign('/home');
+    window.location.assign('/');
   };
 
   // Decode the token with error handling

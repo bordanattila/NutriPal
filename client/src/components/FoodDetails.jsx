@@ -115,6 +115,9 @@ const FoodDetails = () => {
     }
     const foodEntry = {
       user_id: userID,
+      food_id: foodDetails.food.food_id,
+      food_name: foodDetails.food.food_name,
+      serving_id: selectedServing.serving_id,
       serving_size: selectedServing.serving_description,
       number_of_servings: servingCount,
       calories: selectedServing.calories * servingCount,
@@ -245,8 +248,8 @@ const FoodDetails = () => {
         optionKey={(meal) => meal}
       /><br />
       {/* Link to nutrition label */}
-      <div>
-        <Link to={foodDetails.food.food_url} className="text-center text-blue-500 hover:underline" target="_blank" rel="noopener noreferrer">See nutrition label here</Link>
+      <div className='text-center'>
+        <Link to={foodDetails.food.food_url} className=" text-blue-500 hover:underline" target="_blank" rel="noopener noreferrer">See nutrition label here</Link>
       </div>
     </div>
   );

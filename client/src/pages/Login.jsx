@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Auth from "../utils/auth";
 import { useMutation } from "@apollo/client";
@@ -11,6 +11,21 @@ const Login = () => {
   const navigate = useNavigate();
   
   const [login] = useMutation(LOGIN_USER);
+
+  useEffect(() => {
+      // Check and refresh token if necessary on component mount
+      const refreshTokenIfNeeded = async () => {
+        const loggedIn = Auth.loggedIn();
+        if (loggedIn && Auth.isTokenExpired(Auth.getToken())) {
+          const refreshSuccess = await Auth.refreshToken();
+          if (!refreshSuccess) {
+            // Log out if token refresh fails
+            Auth.logout(); 
+          }
+        }
+      };
+      refreshTokenIfNeeded();
+    }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

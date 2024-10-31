@@ -5,7 +5,6 @@ const axios = require('axios');
 const qs = require('qs');
 const DailyLog = require('../models/DailyLog');
 const OneFood = require('../models/OneFood');
-const { createDailyLog } = require('../utils/helper');
 
 // Endpoint to get the access token
 router.get('/token', async (req, res) => {
@@ -78,11 +77,15 @@ router.post('/one-food', async (req, res) => {
     console.log(req.body);
     try {
         // Destructure the required fields from the request body
-        const { user_id, serving_size, number_of_servings, calories, carbohydrate, protein, fat, saturated_fat, sodium, fiber, meal_type } = req.body;
+        const { user_id, food_id, food_name, serving_id, serving_size, number_of_servings, calories, carbohydrate, protein, fat, saturated_fat, sodium, fiber, meal_type } = req.body;
 
         // Create a new OneFood entry
         const newFood = new OneFood({
-            user_id, // Assuming you want to associate the food with a user
+            user_id, 
+            created: new Date(),
+            food_id,
+            food_name,
+            serving_id,
             serving_size,
             number_of_servings,
             calories,
@@ -92,7 +95,8 @@ router.post('/one-food', async (req, res) => {
             saturated_fat,
             sodium,
             fiber,
-            meal_type: meal_type.toLowerCase() // Normalize to lowercase
+            // Convert to lowercase
+            meal_type: meal_type.toLowerCase() 
         });
 
         console.log('one-food success');
@@ -100,7 +104,7 @@ router.post('/one-food', async (req, res) => {
         res.status(201).json(newFood);
     } catch (error) {
         console.error('Error creating food entry:', error);
-        res.status(400).json({ message: 'Error creating food entry', error: error.message });
+        res.status(400).json({ message: 'Error message for creating food entry', error: error.message });
     }
 });
 
@@ -109,10 +113,15 @@ router.post('/daily-log', async (req, res) => {
     console.log('request')
     console.log('Request Body:', req.body);
     try {
-        const { user_id, dateCreated, foods } = req.body; // Expecting foods to be an array of OneFood ObjectIds
+        const { user_id, foods } = req.body; 
 
         // Create a new Daily Log entry
-        const newLog = await createDailyLog(user_id, dateCreated, foods);
+        const newLog = new DailyLog({
+            user_id,
+            dateCreated: new Date(),
+            // Directly use the foods array from the request body
+            foods 
+        });
 
         await newLog.save();
         console.log('Daily log success');
@@ -122,5 +131,25 @@ router.post('/daily-log', async (req, res) => {
         res.status(500).json({ message: 'Error creating daily log', error: error.message });
     }
 });
+
+// Endpoint to query the last 5 food logs for a user
+router.get('/recent-foods/:user_id', async (req, res) => {
+    console.log(req.params)
+    try {
+      const userId = req.params.user_id;
+      const recentFoods = await OneFood.find({ user_id: userId })
+      // Sort by 'created' field in descending order
+        .sort({ created: -1 }) 
+        // Limit to 5 items
+        .limit(5); 
+        console.log(recentFoods)
+      res.json(recentFoods);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'Server error' });
+    }
+  });
+  
+ 
 
 module.exports = router;
