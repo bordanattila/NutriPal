@@ -37,6 +37,10 @@ const typeDefs = gql`
       
       type OneFood {
         _id: ID!
+        created: String!
+        food_id: String!
+        food_name: String!
+        serving_id: String!
         serving_size: String!
         number_of_servings: Int!
         calories: Int!
@@ -55,6 +59,11 @@ const typeDefs = gql`
             user_id: ID!, 
             date: String!
         ): DailyLog
+        getOneFood(
+            user_id: ID!,
+            food_id: ID!,
+            created: String!,
+        ): OneFood
     }
 
     type Mutation {

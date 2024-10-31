@@ -7,6 +7,23 @@ const oneFoodSchema = new Schema({
     ref: 'User', 
     required: true,
   },
+  created: {
+    type: Date,
+    default: Date.now,
+    required: true,
+  },
+  food_id: {
+    type: String,
+    required: true,
+  },
+  food_name: {
+    type: String,
+    required: true,
+    },
+  serving_id: {
+    type: String,
+    required: true,
+  },
   serving_size: {
     type: String,
     required: true,

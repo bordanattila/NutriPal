@@ -17,6 +17,9 @@ const resolvers = {
           getDailyLog: async (_, { user_id, date }) => {
             return DailyLog.findOne({ user_id, dateCreated: date });
           },
+          getOneFood: async (_, { user_id, food_id }) => {
+            return OneFood.findOne({ _id: food_id, user_id, created });
+          }
     },
 
     Mutation: {
