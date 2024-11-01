@@ -47,7 +47,7 @@ const Header = () => {
                   <a href="#" className="block px-4 py-2 text-sm text-gray-700">Settings</a>
                 </MenuItem>
                 <MenuItem>
-                  <a href="#" className="block px-4 py-2 text-sm text-gray-700" onClick={Auth.logout}>Sign out</a>
+                  <a href="#" className="block px-4 py-2 text-sm text-gray-700" onClick={Auth.logout}>Log out</a>
                 </MenuItem>
               </MenuItems>
             </Menu>

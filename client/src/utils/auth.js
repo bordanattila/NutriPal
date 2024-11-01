@@ -3,7 +3,10 @@ import ky from 'ky';
 
 const api = ky.create({
   prefixUrl: 'http://localhost:3000',
-}); 
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
 
 class AuthService {
   // Retrieve user data from the decoded token
@@ -32,26 +35,29 @@ class AuthService {
 
   // Save user token to localStorage and redirect to dashboard
   login = (idToken) => {
+    localStorage.removeItem('id_token');
     localStorage.setItem('id_token', idToken);
     window.location.assign('/dashboard');
   };
 
   // Refresh token for user
   refreshToken = async () => {
-    const refreshToken = localStorage.getItem('refreshToken'); 
+    console.log('refreshtoken called');
+    const refreshToken = localStorage.getItem('refreshToken');
     if (refreshToken) {
       try {
-        const response = await api.post('api/auth/refresh', { refreshToken });
-        const newToken = response.data.token;
+        const response = await api.post('api/refresh', {
+          json: { refreshToken }
+        }).json();
+        const newToken = response.token;
         // Update the access token
-        localStorage.setItem('id_token', newToken); 
-        return true;
+        localStorage.setItem('id_token', newToken);
+        return true; // Return true on success
       } catch (error) {
         console.error('Token refresh failed:', error);
-        return false;
+        return false; // Return false on failure
       }
     }
-    return false;
   };
 
   // Clear user token and redirect to home
