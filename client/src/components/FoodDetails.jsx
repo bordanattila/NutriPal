@@ -13,7 +13,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css'; 
 
 const api = ky.create({
-  prefixUrl: 'http://localhost:3000',
+  prefixUrl: process.env.REACT_APP_API_URL,
 });
 
 const mealTypes = ['Breakfast', 'Lunch', 'Dinner', 'Snack'];
@@ -255,7 +255,7 @@ const FoodDetails = () => {
       </div>
       <div>
     {/* Toaster to provide feedback to user */}
-    <ToastContainer autoClose={2000} />
+    <ToastContainer autoClose={500} />
   </div>
     </div>
   );

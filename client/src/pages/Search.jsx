@@ -9,7 +9,7 @@ import { GET_USER, GET_ONE_FOOD } from '../utils/mutations';
 import useAuth from '../hooks/RefreshToken';
 
 const api = ky.create({
-  prefixUrl: 'http://localhost:3000',
+  prefixUrl: process.env.REACT_APP_API_URL,
 });
 
 const Search = () => {

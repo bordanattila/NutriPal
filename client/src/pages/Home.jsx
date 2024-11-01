@@ -19,7 +19,7 @@ const Home = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-teal-200 via-cyan-300 to-blue-300 p-6">
+    <div className="flex flex-col items-center justify-center min-h-[500px] max-h-dvh bg-gradient-to-br from-teal-200 via-cyan-300 to-blue-300 p-6">
       <h1 className="text-5xl font-extrabold text-gray-800 mb-4 tracking-tight text-center">Welcome to NutryPal</h1>
       <h2 className="text-2xl font-medium text-gray-700 mb-8 text-center">Your #1 Nutrition Companion</h2>
       

@@ -1,30 +1,11 @@
 import React from 'react';
-import { useNavigate } from "react-router-dom";
 import Auth from '../utils/auth';
-import { useQuery } from '@apollo/client';
-import { GET_USER } from '../utils/mutations';
 import { Disclosure, Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
 import { UserCircleIcon, Cog6ToothIcon } from '@heroicons/react/24/outline'
 import NutriPalLogo from '../images/NutripalLogo.png';
 
 const Header = () => {
-  // const navigate = useNavigate();
 
-  // const { loading, data, error } = useQuery(GET_USER, {
-  //   context: {
-  //     headers: {
-  //       Authorization: `Bearer ${Auth.getToken()}`,
-  //     },
-  //   },
-  //   onError: () => {
-  //     navigate('/login');
-  //   }
-  // });
-
-  // if (loading) return <div>Loading...</div>;
-  // if (error) return <div>Error: {error.message}</div>;
-
-  // const { username } = data?.user || {};
   return (
     <Disclosure as="nav" className="bg-gradient-to-r from-green-400 to-teal-500 shadow-lg">
       <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
@@ -47,7 +28,7 @@ const Header = () => {
                   <a href="#" className="block px-4 py-2 text-sm text-gray-700">Settings</a>
                 </MenuItem>
                 <MenuItem>
-                  <a href="#" className="block px-4 py-2 text-sm text-gray-700" onClick={Auth.logout}>Sign out</a>
+                  <a href="#" className="block px-4 py-2 text-sm text-gray-700" onClick={Auth.logout}>Log out</a>
                 </MenuItem>
               </MenuItems>
             </Menu>

@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Auth from "../utils/auth";
-import { useMutation } from "@apollo/client";
-import { LOGIN_USER } from "../utils/mutations";
+import ky from 'ky';
+
+const api = ky.create({
+  prefixUrl: process.env.REACT_APP_API_URL,
+});
 
 const Login = () => {
-  const [formData, setFormData] = useState({ username: '', password: '' });
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  
-  const [login] = useMutation(LOGIN_USER);
 
   useEffect(() => {
       // Check and refresh token if necessary on component mount
@@ -27,23 +29,19 @@ const Login = () => {
       refreshTokenIfNeeded();
     }, []);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
-
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
 
     try {
-      const { data } = await login({
-        variables: { username: formData.username, password: formData.password },
+      // Make a POST request to the login endpoint
+      const response = await api.post('user/login', {
+        json: { username, password },
       });
-
-      if (data?.login?.token) {
-        Auth.login(data.login.token); 
+      const data = await response.json();
+      if (data?.token) {
+        Auth.login(data.token); 
         navigate('/dashboard');
       } else {
         setError('Login failed. Please try again.');
@@ -56,6 +54,8 @@ const Login = () => {
     }
   };
 
+  if (loading) return <div>Loading...</div>;
+  
   return (
     <div className="flex flex-col items-center justify-center h-dvh bg-gradient-to-br from-teal-200 via-cyan-300 to-blue-300 p-6">
       <h1>Login</h1>
@@ -67,8 +67,8 @@ const Login = () => {
             id="username"
             name="username"
             placeholder="Username"
-            value={formData.username}
-            onChange={handleChange}
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
             required
             className="border p-2 rounded"
           />
@@ -80,8 +80,8 @@ const Login = () => {
             id="password"
             name="password"
             placeholder="Password"
-            value={formData.password}
-            onChange={handleChange}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             required
             className="border p-2 rounded"
           />

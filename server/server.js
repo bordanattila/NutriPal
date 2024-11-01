@@ -4,6 +4,7 @@ const { ApolloServer } = require('apollo-server-express');
 const session = require('express-session');
 const path = require('path');
 const cors = require('cors');
+const bodyParser = require('body-parser');
 require('dotenv').config();
 
 // Set up database
@@ -19,10 +20,13 @@ const server = new ApolloServer({
   context: authMiddleware,
 });
 
-app.use(cors());
+app.use(cors({
+  origin: 'https://nutripal-83c0f3f97ebb.herokuapp.com',
+    credentials: true
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-// app.use(express.static(path.join(__dirname, 'public')));
+app.use(bodyParser.json());
 
 // Configure session middleware
 app.use(session({

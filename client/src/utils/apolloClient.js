@@ -2,7 +2,7 @@ import { ApolloClient, InMemoryCache, createHttpLink } from '@apollo/client';
 import { setContext } from '@apollo/client/link/context';
 
 const httpLink = createHttpLink({
-  uri: 'http://localhost:3000/graphql', // GraphQL endpoint
+  uri: process.env.REACT_APP_API_URL+'/graphql', // GraphQL endpoint
 });
 
 // Construct request middleware that will attach the JWT token to every request as an `authorization` header

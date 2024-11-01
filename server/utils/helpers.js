@@ -1,4 +1,6 @@
 const DailyLog = require('../models/DailyLog');
+const User = require('../models/User');
+const bcrypt = require('bcrypt');
 
 module.exports.createDailyLog = async (userId, date = null, foodIds) => {
     const logDate = date ? new Date(new Date(date).setHours(0, 0, 0, 0)) : new Date(new Date().setHours(0, 0, 0, 0)); // If no date is provided, default to today
@@ -19,4 +21,12 @@ module.exports.createDailyLog = async (userId, date = null, foodIds) => {
     }
 };
 
+// Helper function to handle user authentication
+module.exports.authenticateUser  = async (username, password) => {
+    const user = await User.findOne({ username });
+    if (!user) return null;
+
+    const isValidPassword = await bcrypt.compare(password, user.password);
+    return isValidPassword ? user : null;
+};
 
