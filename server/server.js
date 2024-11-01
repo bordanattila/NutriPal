@@ -29,6 +29,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
 // Configure session middleware
+const isHttps = req.secure || req.headers['x-forwarded-proto'] === 'https';
+
 app.use(session({
   secret: process.env.SECRET_KEY,
   resave: false,
