@@ -255,7 +255,7 @@ const FoodDetails = () => {
       </div>
       <div>
     {/* Toaster to provide feedback to user */}
-    <ToastContainer autoClose={2000} />
+    <ToastContainer autoClose={500} />
   </div>
     </div>
   );

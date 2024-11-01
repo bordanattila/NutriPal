@@ -5,6 +5,10 @@ import Auth from "../utils/auth";
 import { useMutation } from "@apollo/client";
 import { CREATE_USER } from "../utils/mutations";
 
+const api = ky.create({
+  prefixUrl: 'http://localhost:3000',
+});
+
 const Signup = () => {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
@@ -12,8 +16,6 @@ const Signup = () => {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-
-  const [signup] = useMutation(CREATE_USER);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -29,12 +31,24 @@ const Signup = () => {
     }
 
     try {
-      await signup({
-        variables: { username, email, password },
+      const response = await api.post('user/signup', {
+        json: { username, email, password },
       });
 
-      // Redirect on success
-      navigate('/dashboard');
+      // Check if the response is successful
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Signup failed.');
+      }
+
+      const data = await response.json();
+      if (data?.token) {
+        Auth.login(data.token);
+        navigate('/dashboard');
+      } else {
+        setError('Login failed. Please try again.');
+      }
+
     } catch (error) {
       console.error('Error signing up:', error);
       console.error('Error details:', error.graphQLErrors); // Log GraphQL errors
@@ -96,9 +110,9 @@ const Signup = () => {
           required
           className="border p-2 rounded"
         />
-       <button 
-          type="submit" 
-          disabled={loading} 
+        <button
+          type="submit"
+          disabled={loading}
           className={`w-full sm:w-1/2 bg-gradient-to-r from-green-400 to-teal-500 hover:from-green-500 hover:to-teal-600 text-white font-bold py-3 px-6 rounded-full shadow-lg transition duration-300 ease-in-out ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
           {loading ? 'Signing up in...' : 'Signup'}

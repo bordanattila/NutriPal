@@ -33,6 +33,7 @@ const resolvers = {
                 throw new AuthenticationError("Incorrect credentials");
             }
             const token = signInToken(user);
+            console.log(user)
             return { token, user };
         },
         signup: async (parent, { username, email, password }) => {
