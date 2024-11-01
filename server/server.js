@@ -33,7 +33,7 @@ app.use(session({
   secret: process.env.SECRET_KEY,
   resave: false,
   saveUninitialized: true,
-  cookie: { secure: false, sameSite: 'lax' } // Set to true if using HTTPS
+  cookie: { secure: isHttps, sameSite: 'lax' } 
 }));
 
 app.use('/', require('./controllers/'));
