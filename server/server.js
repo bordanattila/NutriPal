@@ -29,14 +29,19 @@ app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
 // Configure session middleware
-const isHttps = req.secure || req.headers['x-forwarded-proto'] === 'https';
+// Middleware to set secure cookie based on request
+app.use((req, res, next) => {
+  // Determine if the request is secure
+  const isHttps = req.secure || req.headers['x-forwarded-proto'] === 'https';
 
-app.use(session({
-  secret: process.env.SECRET_KEY,
-  resave: false,
-  saveUninitialized: true,
-  cookie: { secure: isHttps, sameSite: 'lax' } 
-}));
+  // Set session options dynamically
+  session({
+    secret: process.env.SECRET_KEY,
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: isHttps, sameSite: 'lax' } // Set secure based on whether the request is HTTPS
+  })(req, res, next); // Call the session middleware
+});
 
 app.use('/', require('./controllers/'));
 
