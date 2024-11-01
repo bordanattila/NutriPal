@@ -14,10 +14,14 @@ const DonutChart = ({ stats }) => {
     datasets: [
       {
         // Extracting the numerical values
-        data: macronutrients.map(item => parseInt(item.value)), 
-        // Colors for Carbs, Protein, and Fat
-        backgroundColor: ['#ff6384', '#36a2eb', '#ffcd56'], 
+        data: macronutrients.map(item => parseInt(item.value)),
+        // Colors for donut
+        backgroundColor: ['#ff6384', '#36a2eb', '#ffcd56'],
         hoverBackgroundColor: ['#ff4d71', '#2c9ce2', '#ffbf47'],
+        // Colors for later
+        // backgroundColor: ['#ff6384', '#36a2eb', '#ffcd56', '#4bc0c0', '#9966ff'],
+        // hoverBackgroundColor: ['#ff4d71', '#2c9ce2', '#ffbf47', '#3ab3b3', '#8a5ee5'],
+
         borderWidth: 1,
       },
     ],
@@ -25,11 +29,11 @@ const DonutChart = ({ stats }) => {
 
   const options = {
     // Creates the donut effect
-    cutout: '90%', 
+    cutout: '90%',
     plugins: {
       legend: {
         // Shows the legend
-        display: true, 
+        display: true,
         position: 'bottom',
       },
       tooltip: {
@@ -42,7 +46,7 @@ const DonutChart = ({ stats }) => {
     },
     responsive: true,
     // Allows responsive scaling
-    maintainAspectRatio: false, 
+    maintainAspectRatio: false,
   };
 
   return (

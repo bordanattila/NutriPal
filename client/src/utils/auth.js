@@ -2,7 +2,7 @@ import { jwtDecode } from 'jwt-decode';
 import ky from 'ky';
 
 const api = ky.create({
-  prefixUrl: 'http://localhost:3000',
+  prefixUrl: process.env.REACT_APP_API_URL,
   headers: {
     'Content-Type': 'application/json',
   },

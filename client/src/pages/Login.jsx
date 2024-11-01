@@ -4,7 +4,7 @@ import Auth from "../utils/auth";
 import ky from 'ky';
 
 const api = ky.create({
-  prefixUrl: 'http://localhost:3000',
+  prefixUrl: process.env.REACT_APP_API_URL,
 });
 
 const Login = () => {

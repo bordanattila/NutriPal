@@ -13,7 +13,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css'; 
 
 const api = ky.create({
-  prefixUrl: 'http://localhost:3000',
+  prefixUrl: process.env.REACT_APP_API_URL,
 });
 
 const mealTypes = ['Breakfast', 'Lunch', 'Dinner', 'Snack'];

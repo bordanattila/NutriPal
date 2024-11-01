@@ -6,7 +6,7 @@ import { useMutation } from "@apollo/client";
 import { CREATE_USER } from "../utils/mutations";
 
 const api = ky.create({
-  prefixUrl: 'http://localhost:3000',
+  prefixUrl: process.env.REACT_APP_API_URL,
 });
 
 const Signup = () => {

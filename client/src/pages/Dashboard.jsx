@@ -7,16 +7,8 @@ import DonutChart from '../components/Donut';
 import useAuth from '../hooks/RefreshToken';
 import ky from 'ky';
 
-// const stats = [
-//   { name: 'Carb', value: '120 g' },
-//   { name: 'Protein', value: '80 g' },
-//   { name: 'Fat', value: '36 g' },
-//   { name: 'Calories', value: calorieTotal },
-//   // { name: 'Goal', value: '2000' },
-// ]
-
 const api = ky.create({
-  prefixUrl: 'http://localhost:3000',
+  prefixUrl: process.env.REACT_APP_API_URL,
 });
 
 const Dashboard = () => {
