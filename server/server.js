@@ -6,6 +6,7 @@ const path = require('path');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 require('dotenv').config();
+const MongoStore = require('connect-mongo');
 
 // Set up database
 const { typeDefs, resolvers } = require('./schemas');
@@ -39,7 +40,16 @@ app.use((req, res, next) => {
     secret: process.env.SECRET_KEY,
     resave: false,
     saveUninitialized: true,
-    cookie: { secure: isHttps, sameSite: 'lax' } // Set secure based on whether the request is HTTPS
+    store: MongoStore.create({
+      mongoUrl: 'mongodb://localhost:27017/food_tracker', 
+      // Optional: Sets session expiration time in seconds (14 days)
+      ttl: 14 * 24 * 60 * 60 
+    }),
+    cookie: {
+      secure: process.env.NODE_ENV === 'production', 
+      // Optional: Session cookie max age in milliseconds (1 day)
+      maxAge: 1000 * 60 * 60 * 24 
+    }
   })(req, res, next); // Call the session middleware
 });
 

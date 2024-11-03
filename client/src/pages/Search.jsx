@@ -5,7 +5,7 @@ import { MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/20/solid';
 import { useNavigate } from "react-router-dom";
 import Auth from '../utils/auth';
 import { useQuery } from '@apollo/client';
-import { GET_USER, GET_ONE_FOOD } from '../utils/mutations';
+import { GET_USER } from '../utils/mutations';
 import useAuth from '../hooks/RefreshToken';
 
 const api = ky.create({
