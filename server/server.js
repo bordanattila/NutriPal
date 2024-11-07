@@ -6,7 +6,7 @@ const path = require('path');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 require('dotenv').config();
-const MongoStore = require('connect-mongo');
+const MongoStore = require('connect-mongo')(session);
 
 // Set up database
 const { typeDefs, resolvers } = require('./schemas');
