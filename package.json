@@ -16,7 +16,7 @@
     "tailwindcss": "^3.4.13"
   },
   "engines": {
-    "node": "20.x"
+    "node": "10.x"
   },
   "dependencies": {
     "connect-mongo": "^5.1.0"
