@@ -42,7 +42,7 @@ app.use((req, res, next) => {
     resave: false,
     saveUninitialized: true,
     store: MongoStore.create({
-      mongoUrl: 'mongodb://localhost:27017/food_tracker', 
+      mongoUrl: process.env.MONGODB_URI, 
       // Optional: Sets session expiration time in seconds (14 days)
       ttl: 14 * 24 * 60 * 60 
     }),
