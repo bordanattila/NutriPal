@@ -144,16 +144,15 @@ router.get('/recent-foods/:user_id', async (req, res) => {
 
 // Endpoint to query today's food logs for a user
 router.get('/todays-foods/:user_id', async (req, res) => {
-    console.log('todays req.param' + req.params.user_id)
     try {
         const userId = req.params.user_id;
         // Create variable for start of date
         const startOfDay = new Date();
-        startOfDay.setUTCDate(0, 0, 0, 0);
+        startOfDay.setUTCHours(0, 0, 0, 0);
 
         // Create variable for end of date
         const endOfDay = new Date();
-        endOfDay.setUTCDate(23, 59, 59, 999);
+        endOfDay.setUTCHours(23, 59, 59, 999);
         
         const recentFoods = await OneFood.find({
             user_id: userId,
@@ -162,6 +161,35 @@ router.get('/todays-foods/:user_id', async (req, res) => {
             // Sort by 'created' field in descending order
             .sort({ created: -1 })
         // console.log(recentFoods)
+        res.json(recentFoods);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Endpoint to query selected day's food logs for a user
+router.get('/foodByDate/:user_id/date/:created', async (req, res) => {
+    console.log('todays req.param' + req.params.user_id)
+    console.log('todays req.param' + req.params.created)
+    try {
+        const userId = req.params.user_id;
+        const selectedDate = new Date(req.params.created);
+        
+        // Create variable for start of date
+        const startOfDay = new Date(selectedDate);
+        startOfDay.setUTCHours(0, 0, 0, 0);
+
+        // Create variable for end of date
+        const endOfDay = new Date(selectedDate);
+        endOfDay.setUTCHours(23, 59, 59, 999);
+        
+        const recentFoods = await OneFood.find({
+            user_id: userId,
+            created: { $gte: startOfDay, $lte: endOfDay }
+        })
+            .sort({ created: -1 })
+            
         res.json(recentFoods);
         console.log('res sent')
         console.log(recentFoods)

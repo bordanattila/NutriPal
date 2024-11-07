@@ -37,7 +37,8 @@ const Dashboard = () => {
               navigate('/login');
             }
           } else {
-            navigate('/login'); // For other errors, navigate to login
+            // For other errors, navigate to login
+            navigate('/login'); 
           }
     }
   });
@@ -88,8 +89,6 @@ const Dashboard = () => {
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error.message}</div>;
 
-
-  // Render the dashboard page with the fetched username
   return (
     <>
       <h1 className="text-center text-4xl font-bold text-gray-800 mb-4">Dashboard</h1>

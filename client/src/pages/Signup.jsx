@@ -2,8 +2,6 @@ import React, { useState } from 'react';
 import ky from 'ky';
 import { useNavigate } from 'react-router-dom';
 import Auth from "../utils/auth";
-import { useMutation } from "@apollo/client";
-import { CREATE_USER } from "../utils/mutations";
 
 const api = ky.create({
   prefixUrl: process.env.REACT_APP_API_URL,

@@ -63,14 +63,14 @@ const Calendar = ({
       <button
         onClick={() => setOpenSelect(openSelect === type ? '' : type)}
         className={`
-          relative w-full px-4 py-3 text-left bg-white rounded-lg
+          relative w-full px-8 py-3 text-left bg-white rounded-lg
           border border-gray-200 shadow-sm
           hover:border-blue-400 transition-all duration-200
           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
           ${openSelect === type ? 'border-blue-500 ring-2 ring-blue-500' : ''}
         `}
       >
-        <span className="block truncate text-gray-700 font-medium">
+        <span className="block truncate text-gray-700 font-small">
           {format(value)}
         </span>
         <span className="absolute inset-y-0 right-0 flex items-center pr-2">
@@ -95,9 +95,9 @@ const Calendar = ({
                 setOpenSelect('');
               }}
               className={`
-                relative w-full text-left px-4 py-2
+                relative w-full text-left px-8 py-2
                 hover:bg-blue-50 transition-colors duration-150
-                ${value === option ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-700'}
+                ${value === option ? 'bg-blue-50 text-blue-600 font-small' : 'text-gray-700'}
               `}
             >
               {format(option)}
@@ -112,15 +112,9 @@ const Calendar = ({
     <div 
       className={`relative ${className}`}
       onClick={e => e.stopPropagation()}
-    >
-      <div className="flex items-center gap-4">
-        {/* Calendar icon */}
-        <div className="bg-blue-50 p-3 rounded-lg">
-          <CalendarDaysIcon className="h-6 w-6 text-blue-500" />
-        </div>
-        
+    >        
         {/* Date selects */}
-        <div className="flex-1 grid grid-cols-3 gap-2">
+        <div className="flex gap-2">
           <SelectWrapper
             type="month"
             options={months.map((_, i) => i)}
@@ -145,12 +139,6 @@ const Calendar = ({
             format={(year) => year.toString()}
           />
         </div>
-      </div>
-
-      {/* Selected date display */}
-      <div className="mt-2 text-sm text-gray-500 text-center">
-        Selected: {months[selectedMonth]} {selectedDay}, {selectedYear}
-      </div>
     </div>
   );
 };
