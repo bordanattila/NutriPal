@@ -43,12 +43,12 @@ app.use((req, res, next) => {
     saveUninitialized: true,
     store: MongoStore.create({
       mongoUrl: process.env.MONGODB_URI, 
-      // Optional: Sets session expiration time in seconds (14 days)
+      // Sets session expiration time in seconds (14 days)
       ttl: 14 * 24 * 60 * 60 
     }),
     cookie: {
       secure: process.env.NODE_ENV === 'production', 
-      // Optional: Session cookie max age in milliseconds (1 day)
+      // Session cookie max age in milliseconds (1 day)
       maxAge: 1000 * 60 * 60 * 24 
     }
   })(req, res, next); // Call the session middleware
