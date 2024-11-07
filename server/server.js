@@ -6,7 +6,7 @@ const path = require('path');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 require('dotenv').config();
-const MongoStore = require('connect-mongo')(session);
+const MongoStore = require('connect-mongo');
 
 // Set up database
 const { typeDefs, resolvers } = require('./schemas');
@@ -32,10 +32,10 @@ app.use(bodyParser.json());
 
 // Configure session middleware
 // Middleware to set secure cookie based on request
-app.use((req, res, next) => {
-  // Determine if the request is secure
-  const isHttps = req.secure || req.headers['x-forwarded-proto'] === 'https';
-
+// app.use((req, res, next) => {
+//   // Determine if the request is secure
+//   const isHttps = req.secure || req.headers['x-forwarded-proto'] === 'https';
+app.use(
   // Set session options dynamically
   session({
     secret: process.env.SECRET_KEY,
@@ -51,8 +51,9 @@ app.use((req, res, next) => {
       // Session cookie max age in milliseconds (1 day)
       maxAge: 1000 * 60 * 60 * 24 
     }
-  })(req, res, next); // Call the session middleware
-});
+  })
+  // })(req, res, next); // Call the session middleware
+);
 
 app.use('/', require('./controllers/'));
 
