@@ -30,11 +30,12 @@ module.exports.authenticateUser = async (username, password) => {
         console.log(user.password)
         if (!user) return null;
 
-        const isValidPassword = await bcrypt.compare(password, user.password);
+        const isValidPassword = await bcrypt.compare(password.trim(), user.password);
         console.log('password valid ' + isValidPassword)
         console.log('Attempting to compare password:', password);
         console.log('Stored hashed password:', user.password);
         console.log('Is valid password:', isValidPassword);
+        console.log('Password length:', password.length, 'Hashed password length:', user.password.length);
         return isValidPassword ? user : null;
     } catch (error) {
         console.error('Error during authentication:', error);
