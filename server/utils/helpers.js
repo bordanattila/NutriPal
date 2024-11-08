@@ -24,11 +24,15 @@ module.exports.createDailyLog = async (userId, date = null, foodIds) => {
 // Helper function to handle user authentication
 module.exports.authenticateUser  = async (username, password) => {
     console.log('Attempting to authenticate user:', username);
-    const user = await User.findOne({ username });
-    console.log('User  found in database:', user);
-    if (!user) return null;
-
-    const isValidPassword = await bcrypt.compare(password, user.password);
-    return isValidPassword ? user : null;
+    try {
+        const user = await User.findOne({ username });
+        if (!user) return null;
+    
+        const isValidPassword = await bcrypt.compare(password, user.password);
+        return isValidPassword ? user : null;
+    } catch (error) {
+        console.error('Error during authentication:', error);
+        throw new Error('Authentication failed');
+    }
 };
 
