@@ -12,9 +12,6 @@
   },
   "author": "Attila",
   "license": "ISC",
-  "dependencies": {
-    "tailwindcss": "^3.4.13"
-  },
   "engines": {
     "node": "20.x",
     "npm": "6.x"
