@@ -6,6 +6,7 @@ const path = require('path');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 require('dotenv').config();
+const MongoStore = require('connect-mongo');
 
 // Set up database
 const { typeDefs, resolvers } = require('./schemas');
@@ -18,6 +19,7 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   context: authMiddleware,
+  cache: 'bounded',
 });
 
 app.use(cors({
@@ -29,12 +31,25 @@ app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
 // Configure session middleware
-app.use(session({
-  secret: process.env.SECRET_KEY,
-  resave: false,
-  saveUninitialized: true,
-  cookie: { secure: false, sameSite: 'lax' } // Set to true if using HTTPS
-}));
+// Middleware to set secure cookie based on request
+app.use(
+  // Set session options dynamically
+  session({
+    secret: process.env.SECRET_KEY,
+    resave: false,
+    saveUninitialized: true,
+    store: MongoStore.create({
+      mongoUrl: process.env.MONGODB_URI, 
+      // Sets session expiration time in seconds (14 days)
+      ttl: 14 * 24 * 60 * 60 
+    }),
+    cookie: {
+      secure: process.env.NODE_ENV === 'production', 
+      // Session cookie max age in milliseconds (1 day)
+      maxAge: 1000 * 60 * 60 * 24 
+    }
+  })
+);
 
 app.use('/', require('./controllers/'));
 

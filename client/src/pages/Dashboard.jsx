@@ -37,7 +37,8 @@ const Dashboard = () => {
               navigate('/login');
             }
           } else {
-            navigate('/login'); // For other errors, navigate to login
+            // For other errors, navigate to login
+            navigate('/login'); 
           }
     }
   });
@@ -82,27 +83,31 @@ const Dashboard = () => {
     { name: 'Protein', value: proteinTotal || 0 },
     { name: 'Fat', value: fatTotal || 0 },
     { name: 'Calories', value: calorieTotal || 0 },
-    { name: 'Goal', value: '2000' },
+    // { name: 'Goal', value: '2000' },
   ]
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error.message}</div>;
 
-
-  // Render the dashboard page with the fetched username
   return (
     <>
       <h1 className="text-center text-4xl font-bold text-gray-800 mb-4">Dashboard</h1>
 
       <dl className="flex justify-center gap-8 sm:mt-20 sm:grid-cols-2 lg:grid-cols-4 bg-gradient-to-br from-teal-200 via-cyan-300 to-blue-300 p-6">
+      <div className="flex flex-row gap-5">
         {stats.map((stat) => (
-          <div key={stat.name} className="flex flex-col-reverse gap-1">
+          <div key={stat.name} >
             <dt className="text-sm text-gray-900">{stat.name}</dt>
             <dd className="text-xl font-semibold tracking-tight text-black">
               {typeof stat.value === 'number' ? stat.value.toFixed(2) : stat.value}
             </dd>
           </div>
         ))}
+        <div>
+        <dt className="text-sm text-gray-900">Goal</dt>
+        <dd className="text-xl font-semibold tracking-tight text-black">2001</dd>
+        </div>
+        </div>
       </dl>
       <div className='flex justify-center'>
         <DonutChart stats={stats} />

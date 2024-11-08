@@ -9,12 +9,12 @@ const navigationItems = [
   { icon: faBook, label: 'Recipes' },
   { to: '/dashboard', icon: faHouse, label: 'Dashboard' },
   { to: '/search', icon: faMagnifyingGlass, label: 'Search' },
-  { icon: faRegularClipboard, label: 'Daily Logs' },
+  { to: 'dailyLogs', icon: faRegularClipboard, label: 'Daily Logs' },
 ];
 
 const Navigation = () => {
   return (
-    <div className="flex flex-row justify-evenly p-2 bg-gradient-to-r from-green-400 to-teal-500 shadow-lg my-1">
+    <div className="fixed flex flex-row justify-evenly p-2 bg-gradient-to-r from-green-400 to-teal-500 shadow-lg my-1">
       {navigationItems.map((item, index) => {
         const content = (
           <>

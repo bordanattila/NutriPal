@@ -9,10 +9,11 @@ const refreshTokens = [];
 
 // Login route
 router.post('/login', async (req, res) => {
+    console.log('Login attempt:', req.body);
     const { username, password } = req.body;
     try {
         const user = await authenticateUser(username, password);
-
+        console.log('User  found:', user);
         if (!user) {
             return res.status(401).json({ message: 'Invalid username or password' });
         }
