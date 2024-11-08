@@ -12,12 +12,17 @@ router.post('/login', async (req, res) => {
     console.log('Login attempt:', req.body);
     const { username, password } = req.body;
     try {
-        const user = await authenticateUser(username, password);
+        // const user = await authenticateUser(username, password);
+        const user = await User.findOne({ username });
         console.log('User  found:', user);
         if (!user) {
             return res.status(401).json({ message: 'Invalid username or password' });
         }
-
+        // Check if the password is correct
+        const isValidPassword = await user.isCorrectPassword(password);
+        if (!isValidPassword) {
+            return res.status(401).send('Invalid password');
+        }
         console.log('user=  ' + user)
 
         // Sign a token for the user
@@ -44,8 +49,7 @@ router.post('/signup', async (req, res) => {
             return res.status(409).json({ message: 'Username already exists' });
         }
 
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const newUser = new User({ username, email, password: hashedPassword });
+        const newUser = new User({ username, email, password });
         await newUser.save();
 
         const token = signInToken({ username: newUser.username, email: newUser.email, _id: newUser._id });

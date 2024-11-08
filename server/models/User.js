@@ -47,7 +47,11 @@ userSchema.pre('save', async function (next) {
   
   // Method to compare and validate password for logging in
   userSchema.methods.isCorrectPassword = async function (password) {
-    return bcrypt.compare(password, this.password);
+    // return bcrypt.compare(password, this.password);
+    const match = await bcrypt.compare(password, this.password);
+    console.log(`Comparing password: ${password} with stored hash: ${this.password}`);
+    console.log(`Password match result: ${match}`);
+    return match;
   };
   
   const User = model('User', userSchema);
