@@ -29,6 +29,7 @@ module.exports.authenticateUser  = async (username, password) => {
         if (!user) return null;
     
         const isValidPassword = await bcrypt.compare(password, user.password);
+        console.log('password valid '+isValidPassword)
         return isValidPassword ? user : null;
     } catch (error) {
         console.error('Error during authentication:', error);
