@@ -9,7 +9,7 @@ module.exports.createDailyLog = async (userId, date = null, foodIds) => {
         user_id: userId,
         dateCreated: logDate,
         // Array of ObjectId references to OneFood
-        foods: foodIds 
+        foods: foodIds
     });
 
     try {
@@ -22,14 +22,19 @@ module.exports.createDailyLog = async (userId, date = null, foodIds) => {
 };
 
 // Helper function to handle user authentication
-module.exports.authenticateUser  = async (username, password) => {
+module.exports.authenticateUser = async (username, password) => {
     console.log('Attempting to authenticate user:', username);
     try {
         const user = await User.findOne({ username });
+        console.log(user.username)
+        console.log(user.password)
         if (!user) return null;
-    
+
         const isValidPassword = await bcrypt.compare(password, user.password);
-        console.log('password valid '+isValidPassword)
+        console.log('password valid ' + isValidPassword)
+        console.log('Attempting to compare password:', password);
+        console.log('Stored hashed password:', user.password);
+        console.log('Is valid password:', isValidPassword);
         return isValidPassword ? user : null;
     } catch (error) {
         console.error('Error during authentication:', error);
