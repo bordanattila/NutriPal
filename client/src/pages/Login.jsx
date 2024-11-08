@@ -44,8 +44,10 @@ const Login = () => {
         Auth.login(data.token); 
         navigate('/dashboard');
       } else {
-        setError('Login failed. Please try again.');
-      }
+        const errorData = await response.json();
+        console.error('Login error response:', errorData);
+        setError(errorData.message || 'Login failed. Please try again.');
+    }
     } catch (err) {
       console.error('Error logging in:', err);
       setError('Login failed. Please check your credentials and try again.');

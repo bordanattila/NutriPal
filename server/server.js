@@ -7,7 +7,6 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 require('dotenv').config();
 const MongoStore = require('connect-mongo');
-const MemoryStore = require('express-session').MemoryStore;
 
 // Set up database
 const { typeDefs, resolvers } = require('./schemas');
@@ -33,36 +32,24 @@ app.use(bodyParser.json());
 
 // Configure session middleware
 // Middleware to set secure cookie based on request
-// app.use((req, res, next) => {
-//   // Determine if the request is secure
-//   const isHttps = req.secure || req.headers['x-forwarded-proto'] === 'https';
-
-app.use(session({
-  secret: 'your-secret-key',
-  resave: false,
-  saveUninitialized: false,
-  store: new MemoryStore()
-}));
-
-// app.use(
-//   // Set session options dynamically
-//   session({
-//     secret: process.env.SECRET_KEY,
-//     resave: false,
-//     saveUninitialized: true,
-//     store: MongoStore.create({
-//       mongoUrl: process.env.MONGODB_URI, 
-//       // Sets session expiration time in seconds (14 days)
-//       ttl: 14 * 24 * 60 * 60 
-//     }),
-//     cookie: {
-//       secure: process.env.NODE_ENV === 'production', 
-//       // Session cookie max age in milliseconds (1 day)
-//       maxAge: 1000 * 60 * 60 * 24 
-//     }
-//   })
-//   // })(req, res, next); // Call the session middleware
-// );
+app.use(
+  // Set session options dynamically
+  session({
+    secret: process.env.SECRET_KEY,
+    resave: false,
+    saveUninitialized: true,
+    store: MongoStore.create({
+      mongoUrl: process.env.MONGODB_URI, 
+      // Sets session expiration time in seconds (14 days)
+      ttl: 14 * 24 * 60 * 60 
+    }),
+    cookie: {
+      secure: process.env.NODE_ENV === 'production', 
+      // Session cookie max age in milliseconds (1 day)
+      maxAge: 1000 * 60 * 60 * 24 
+    }
+  })
+);
 
 app.use('/', require('./controllers/'));
 
