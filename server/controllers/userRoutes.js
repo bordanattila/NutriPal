@@ -4,17 +4,14 @@ const express = require('express');
 const router = express.Router();
 const { signInToken } = require('../utils/auth');
 require('dotenv').config();
-const { authenticateUser } = require('../utils/helpers');
 const refreshTokens = [];
 
 // Login route
 router.post('/login', async (req, res) => {
-    console.log('Login attempt:', req.body);
     const { username, password } = req.body;
     try {
         // const user = await authenticateUser(username, password);
         const user = await User.findOne({ username });
-        console.log('User  found:', user);
         if (!user) {
             return res.status(401).json({ message: 'Invalid username or password' });
         }
@@ -23,7 +20,6 @@ router.post('/login', async (req, res) => {
         if (!isValidPassword) {
             return res.status(401).send('Invalid password');
         }
-        console.log('user=  ' + user)
 
         // Sign a token for the user
         const token = signInToken({ username: user.username, email: user.email, _id: user._id });

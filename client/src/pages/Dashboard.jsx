@@ -29,6 +29,8 @@ const Dashboard = () => {
       },
     },
     onError: (err) => {
+      console.log('dashboard error'); 
+      console.error(err); 
            // Check if the error is due to an expired token
            if (err.message.includes("Unauthorized")) {
             // Attempt to refresh the token

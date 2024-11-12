@@ -31,12 +31,7 @@ userSchema.pre('save', async function (next) {
     if (this.isNew || this.isModified('password')) {
       const saltRounds = 10;
       try {
-    //   const hashedPassword = await bcrypt.hash(this.password, saltRounds);
-      console.log('Hashing password for user:', this.username);
-      console.log('Original password:', this.password);
-    //   this.password = hashedPassword;
       this.password = await bcrypt.hash(this.password, saltRounds);
-      console.log('Hashed password:', this.password);
       } catch (error){
         return next(error);
       }
@@ -49,8 +44,6 @@ userSchema.pre('save', async function (next) {
   userSchema.methods.isCorrectPassword = async function (password) {
     // return bcrypt.compare(password, this.password);
     const match = await bcrypt.compare(password, this.password);
-    console.log(`Comparing password: ${password} with stored hash: ${this.password}`);
-    console.log(`Password match result: ${match}`);
     return match;
   };
   

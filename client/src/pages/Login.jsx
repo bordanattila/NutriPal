@@ -51,8 +51,7 @@ const Login = () => {
     }
     } catch (err) {
       console.error('Error logging in:', err);
-      // setError('Login failed. Please check your credentials and try again.');
-      setError(err);
+      setError('Login failed. Please check your credentials and try again.');
     } finally {
       setLoading(false);
     }

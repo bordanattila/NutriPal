@@ -35,7 +35,7 @@ class AuthService {
 
   // Save user token to localStorage and redirect to dashboard
   login = (idToken) => {
-    localStorage.removeItem('id_token');
+    // localStorage.removeItem('id_token');
     localStorage.setItem('id_token', idToken);
     window.location.assign('/dashboard');
   };

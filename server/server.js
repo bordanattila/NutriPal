@@ -23,7 +23,7 @@ const server = new ApolloServer({
 });
 
 app.use(cors({
-  origin: 'https://nutripal-83c0f3f97ebb.herokuapp.com',
+  origin: process.env.API_URL,
   methods: ['GET', 'POST', 'OPTIONS'],
   credentials: true
 }));
@@ -39,7 +39,7 @@ app.use((req, res, next) => {
   }
   next();
 });
-
+ 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
