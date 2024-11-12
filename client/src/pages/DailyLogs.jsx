@@ -52,24 +52,12 @@ const DailyLogs = () => {
     if (userId) fetchLogHistory();
   }, [date, userId]); 
 
-  // useEffect(() => {
-  //   const fetchLogHistory = async () => {
-  //     try {
-  //       const response = await api.get(`api/todays-foods/${userId}`);
-  //       if (!response.ok) {
-  //         throw new Error(`HTTP error! Status: ${response.status}`);
-  //       }
-  //       const data = await response.json();
-  //       setLogHistory(data);
-  //     } catch (error) {
-  //       console.error('Error fetching todays foods:', error);
-  //     }
-  //   };
-
-  //   fetchLogHistory();
-  // }, []);
-
-  console.log('this is the date'+date)
+  // Group logHistory by meal_type
+  const mealTypeOrder = ["breakfast", "lunch", "dinner", "snack"]
+  const groupedLogs = mealTypeOrder.map(mealType => ({
+    mealType,
+    foods: logHistory.filter(food => food.meal_type === mealType),
+  }));
 
   if (loading) return <div>Loading...</div>;
   if (logError) return <div>Error: {logError.message}</div>;
@@ -86,27 +74,30 @@ const DailyLogs = () => {
         />
       </div>
       <div className="flex flex-col items-center justify-center w-full p-2">
-        <div className="flex flex-col items-center justify-center w-full p-2">
-          <h2 className="text-2xl font-bold mb-4">Recent Foods</h2>
-          <div className="flex flex-col items-center justify-center w-full p-2">
-            {logHistory.length > 0 && (
-              <ul className="list-none mt-4 w-full max-w-lg">
-                {logHistory.map((food) => (
-                  <li key={food.food_id} className="py-2 ">
-                    <div className='rounded-md p-2 bg-teal-100'>
-                      <Link to={`/foodById/${food.food_id}`} className="text-blue-700 hover:underline">
-                        <strong>{food.food_name}</strong>
-                        <br />
-                        <span className='text-sm'>{food.serving_size} | Calories: {food.calories} | Carb: {food.carbohydrate} | Protein: {food.protein} | Fat: {food.fat}</span>
-                        <br />
-                      </Link>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+        {groupedLogs.map(group => (
+          <div key={group.mealType} className="flex flex-col items-center justify-center w-full p-2">
+            {group.foods.length > 0 && (
+              <>
+                <h2 className="text-2xl font-bold mb-4 capitalize">{group.mealType}</h2>
+                <ul className="list-none mt-4 w-full max-w-lg">
+                  {group.foods.map(food => (
+                    <li key={food.food_id} className="py-2 ">
+                      <div className="rounded-md p-2 bg-teal-100">
+                        <Link to={`/foodById/${food.food_id}`} className="text-blue-700 hover:underline">
+                          <strong>{food.food_name}</strong>
+                          <br />
+                          <span className="text-sm">
+                            {food.serving_size} | Calories: {food.calories} | Carb: {food.carbohydrate} | Protein: {food.protein} | Fat: {food.fat}
+                          </span>
+                        </Link>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </>
             )}
           </div>
-        </div>
+        ))}
       </div>
     </div>
   );
