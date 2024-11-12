@@ -27,6 +27,19 @@ app.use(cors({
   methods: ['GET', 'POST', 'OPTIONS'],
   credentials: true
 }));
+
+// Preflight CORS Headers
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", process.env.FRONTEND_URL);
+  res.header("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.header("Access-Control-Allow-Credentials", "true");
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204); // No Content
+  }
+  next();
+});
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
