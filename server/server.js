@@ -24,7 +24,8 @@ const server = new ApolloServer({
 
 app.use(cors({
   origin: 'https://nutripal-83c0f3f97ebb.herokuapp.com',
-    credentials: true
+  methods: ['GET', 'POST', 'OPTIONS'],
+  credentials: true
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -39,14 +40,14 @@ app.use(
     resave: false,
     saveUninitialized: true,
     store: MongoStore.create({
-      mongoUrl: process.env.MONGODB_URI, 
+      mongoUrl: process.env.MONGODB_URI,
       // Sets session expiration time in seconds (14 days)
-      ttl: 14 * 24 * 60 * 60 
+      ttl: 14 * 24 * 60 * 60
     }),
     cookie: {
-      secure: process.env.NODE_ENV === 'production', 
+      secure: process.env.NODE_ENV === 'production',
       // Session cookie max age in milliseconds (1 day)
-      maxAge: 1000 * 60 * 60 * 24 
+      maxAge: 1000 * 60 * 60 * 24
     }
   })
 );
@@ -69,15 +70,15 @@ if (process.env.NODE_ENV === 'production') {
 const startApolloServer = async (typeDefs, resolvers) => {
   await server.start();
   server.applyMiddleware({ app });
-  
+
   db.once('open', () => {
     app.listen(PORT, () => {
       console.log(`API server running on port ${PORT}!`);
       console.log(`Use GraphQL at http://localhost:${PORT}${server.graphqlPath}`);
     })
   })
-  };
-  
+};
+
 // Call the async function to start the server
-  startApolloServer(typeDefs, resolvers);
- 
+startApolloServer(typeDefs, resolvers);
+

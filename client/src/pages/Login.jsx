@@ -38,6 +38,7 @@ const Login = () => {
       // Make a POST request to the login endpoint
       const response = await api.post('user/login', {
         json: { username, password },
+        credentials: 'include',
       });
       const data = await response.json();
       if (data?.token) {
