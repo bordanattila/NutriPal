@@ -5,8 +5,9 @@ const typeDefs = gql`
         _id: ID!
         username: String!
         email: String!
-        password: String!
-        calorie_goal: Int
+        password: String
+        calorieGoal: Int
+        profilePic: String
         saved_meal: [Meal]
         saved_recipe: [Recipe]
     }
@@ -58,11 +59,12 @@ const typeDefs = gql`
         getDailyLog(
             user_id: ID!, 
             date: String!
+            calorieGoal: Int
         ): DailyLog
         getOneFood(
-            user_id: ID!,
-            food_id: ID!,
-            created: String!,
+            user_id: ID!
+            food_id: ID!
+            created: String!
         ): OneFood
     }
 
@@ -82,6 +84,13 @@ const typeDefs = gql`
             user_id: ID!, 
             foods: [ID!]!
         ): DailyLog
+
+        updateUserProfile(
+            userId: ID!,
+            calorieGoal: Int
+            password: String,
+            profilePic: String,
+        ): User
     }
 `;
 

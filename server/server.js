@@ -15,11 +15,14 @@ const db = require('./config/connection');
 // Set up Express
 const app = express();
 const PORT = process.env.PORT || 3000;
+const isProduction = process.env.NODE_ENV === 'production';
 const server = new ApolloServer({
   typeDefs,
   resolvers,
   context: authMiddleware,
   cache: 'bounded',
+  introspection: true, //!isProduction, Disable introspection in production
+  playground: true,
 });
 
 app.use(cors({
@@ -30,7 +33,7 @@ app.use(cors({
 
 // Preflight CORS Headers
 app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", process.env.FRONTEND_URL);
+  res.header("Access-Control-Allow-Origin", process.env.API_URL);
   res.header("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
   res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
   res.header("Access-Control-Allow-Credentials", "true");
@@ -60,7 +63,8 @@ app.use(
     cookie: {
       secure: process.env.NODE_ENV === 'production',
       // Session cookie max age in milliseconds (1 day)
-      maxAge: 1000 * 60 * 60 * 24
+      maxAge: 1000 * 60 * 60 * 24, 
+      httpOnly: true,
     }
   })
 );

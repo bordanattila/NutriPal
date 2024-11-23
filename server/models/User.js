@@ -17,7 +17,15 @@ const userSchema = new Schema(
         },
         password: {
             type: String,
-            required: true
+            required: false
+        },
+        calorieGoal: {
+          type: Number,
+          required: false
+        },
+        profilePic: {
+          type: String,
+          required: false
         },
         daily_log: [{
             type: Schema.Types.ObjectId,

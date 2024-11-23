@@ -21,6 +21,7 @@ const Dashboard = () => {
   const [carbTotal, setCarbTotal] = useState(0);
   const [proteinTotal, setProteinTotal] = useState(0);
   const [fatTotal, setFatTotal] = useState(0);
+  const [goal, setGoal] = useState(0);
 
   const { loading, data, error } = useQuery(GET_USER, {
     context: {
@@ -29,7 +30,6 @@ const Dashboard = () => {
       },
     },
     onError: (err) => {
-      console.log('dashboard error'); 
       console.error(err); 
            // Check if the error is due to an expired token
            if (err.message.includes("Unauthorized")) {
@@ -46,7 +46,8 @@ const Dashboard = () => {
   });
 
   const userId = data?.user?._id;
-
+  const calgoal = data?.user?.calorieGoal;
+  
   useEffect(() => {
     const fetchTodaysLog = async () => {
       if (!userId) return;
@@ -56,13 +57,12 @@ const Dashboard = () => {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
         const data = await response.json();
-        console.log(data)
         setTodaysLog(data);
       } catch (error) {
         console.error('Error fetching todays foods:', error);
       }
     };
-    console.log(todaysLog)
+    setGoal(calgoal)
     fetchTodaysLog();
   }, [userId]);
 
@@ -85,7 +85,6 @@ const Dashboard = () => {
     { name: 'Protein', value: proteinTotal || 0 },
     { name: 'Fat', value: fatTotal || 0 },
     { name: 'Calories', value: calorieTotal || 0 },
-    // { name: 'Goal', value: '2000' },
   ]
 
   if (loading) return <div>Loading...</div>;
@@ -107,7 +106,7 @@ const Dashboard = () => {
         ))}
         <div>
         <dt className="text-sm text-gray-900">Goal</dt>
-        <dd className="text-xl font-semibold tracking-tight text-black">2001</dd>
+        <dd className="text-xl font-semibold tracking-tight text-black">{goal}</dd>
         </div>
         </div>
       </dl>

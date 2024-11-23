@@ -11,6 +11,7 @@ import Search from './pages/Search'
 import NotFound from './components/NotFound';
 import Header from './components/Header';
 import DailyLogs from './pages/DailyLogs';
+import Profile from './pages/Profile';
 
 const routes = [
   {
@@ -40,6 +41,10 @@ const routes = [
   {
     path: '/foodById/:foodId',
     element: <FoodDetails />,
+  },
+  {
+    path: '/profile',
+    element: <Profile />,
   },
   {
     path: '*',

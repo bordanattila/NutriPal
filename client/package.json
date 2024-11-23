@@ -2,6 +2,8 @@
   "name": "client",
   "version": "0.1.0",
   "private": true,
+  "proxy": "http://localhost:3000",
+  "homepage": "http://localhost:3000",
   "dependencies": {
     "@apollo/client": "^3.11.8",
     "@fortawesome/fontawesome-svg-core": "^6.6.0",

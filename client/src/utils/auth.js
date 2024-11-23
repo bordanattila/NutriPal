@@ -42,7 +42,6 @@ class AuthService {
 
   // Refresh token for user
   refreshToken = async () => {
-    console.log('refreshtoken called');
     const refreshToken = localStorage.getItem('refreshToken');
     if (refreshToken) {
       try {
