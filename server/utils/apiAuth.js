@@ -7,6 +7,7 @@ let accessToken;
 
 // Function to get the OAuth 2.0 access token
 async function getAccessToken() {
+  // const tokenUrl = 'https://3.87.33.87/connect/token';
   const tokenUrl = 'https://oauth.fatsecret.com/connect/token';
   const data = qs.stringify({
     grant_type: 'client_credentials',

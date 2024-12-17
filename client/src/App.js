@@ -12,6 +12,7 @@ import NotFound from './components/NotFound';
 import Header from './components/Header';
 import DailyLogs from './pages/DailyLogs';
 import Profile from './pages/Profile';
+import Recipe from './pages/Recipe';
 
 const routes = [
   {
@@ -49,6 +50,10 @@ const routes = [
   {
     path: '*',
     element: <NotFound />,
+  },
+  {
+    path: '/recipe',
+    element: <Recipe />,
   },
 ];
 

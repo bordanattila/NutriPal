@@ -5,7 +5,7 @@ import { CalendarDaysIcon, ChevronDownIcon } from '@heroicons/react/20/solid';
 const Calendar = ({ 
   value = new Date(),
   onChange = () => {},
-  minYear = 1900,
+  minYear = 1920,
   maxYear = new Date().getFullYear(),
   className = ''
 }) => {

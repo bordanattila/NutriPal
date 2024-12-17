@@ -55,6 +55,8 @@ const resolvers = {
       const token = signInToken(user);
       return { token, user };
     },
+
+    // Create daily log mutation
     createDailyLog: async (_, { user_id, foods }) => {
       const newLog = new DailyLog({
         user_id,
@@ -63,6 +65,8 @@ const resolvers = {
       });
       return await newLog.save();
     },
+
+    // Update user profile mutation
     updateUserProfile: async (_, { userId, calorieGoal, password, profilePic }, context) => {
       if (!context.user) {
         throw new AuthenticationError('You need to be logged in!');
@@ -86,6 +90,15 @@ const resolvers = {
     
       await user.save(); // Trigger pre('save') middleware
       return user;
+    },
+
+    // Create recipe mutation
+    createDailyLog: async (_, { user_id, ingredients }) => {
+      const newRegipe = new Recipe({
+        user_id,
+        ingredients
+      });
+      return await newRecipe.save();
     },
   }
 }

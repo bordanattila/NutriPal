@@ -20,8 +20,9 @@ const typeDefs = gql`
 
     type Recipe {
         _id: ID!
-        name: String!
-        calorieCount: Int!
+        recipeNameame: String!
+        user_id: User!
+        ingredients: [OneFood]
     }
 
     type Auth {
@@ -91,6 +92,12 @@ const typeDefs = gql`
             password: String,
             profilePic: String,
         ): User
+
+        createRecipe(
+            recipeName: String,
+            userId: ID!,
+            ingredients: [String!]!,
+        ): Recipe
     }
 `;
 

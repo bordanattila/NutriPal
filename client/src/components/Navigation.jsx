@@ -6,15 +6,15 @@ import { faClipboard as faRegularClipboard } from '@fortawesome/free-regular-svg
 
 const navigationItems = [
   { icon: faUtensils, label: 'Meals' },
-  { icon: faBook, label: 'Recipes' },
+  { to: '/recipe', icon: faBook, label: 'Recipes' },
   { to: '/dashboard', icon: faHouse, label: 'Dashboard' },
   { to: '/search', icon: faMagnifyingGlass, label: 'Search' },
-  { to: 'dailyLogs', icon: faRegularClipboard, label: 'Daily Logs' },
+  { to: 'dailyLogs', icon: faRegularClipboard, label: 'Logs' },
 ];
 
 const Navigation = () => {
   return (
-    <div className="sticky flex flex-row justify-evenly p-2 bg-gradient-to-r from-green-400 to-teal-500 shadow-lg my-1">
+    <div className=" flex flex-row justify-evenly p-2 bg-gradient-to-r from-green-400 to-teal-500 shadow-lg my-1">
       {navigationItems.map((item, index) => {
         const content = (
           <>
@@ -33,7 +33,7 @@ const Navigation = () => {
           </span>
         );
       })}
-    </div>
+    </div> 
   );
 };
 

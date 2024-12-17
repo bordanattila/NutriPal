@@ -199,6 +199,43 @@ router.get('/foodByDate/:user_id/date/:created', async (req, res) => {
     }
 });
 
+// Endpoint to add a recipe
+router.post('/recipe', async (req, res) => {
+    try {
+        const { user_id, foods } = req.body;
+
+        // Create a new Recipe entry
+        const newRecipe = new Recipe({
+            user_id,
+            recipeName,
+            // Directly use the ingredients from the request body
+            ingredients
+        });
+
+        await newRecipe.save();
+        res.status(201).json(newRecipe);
+    } catch (error) {
+        console.error('Error creating recipe:', error);
+        res.status(500).json({ message: 'Error creating recipe', error: error.message });
+    }
+});
+
+// Endpoint to query recipe logs for a user
+router.get('/saved-recipes/:user_id', async (req, res) => {
+    try {
+        const userId = req.params.user_id;
+        const recentRecipes = await OneFood.find({ user_id: userId })
+            // // Sort by 'created' field in descending order
+            // .sort({ created: -1 })
+            // // Limit to 5 items
+            // .limit(5);
+        res.json(recentRecipes);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 // Endpoint to handle token refreshing
 router.post('/refresh', async (req, res) => {
     console.log('reftesh token' + req.body)

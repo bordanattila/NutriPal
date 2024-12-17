@@ -3,6 +3,7 @@ import Auth from '../utils/auth';
 import { Disclosure, Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
 import { UserCircleIcon, Cog6ToothIcon } from '@heroicons/react/24/outline'
 import NutriPalLogo from '../images/NutripalLogo.png';
+import { Link } from 'react-router-dom';
 
 const Header = () => {
 
@@ -10,8 +11,9 @@ const Header = () => {
     <Disclosure as="nav" className="bg-gradient-to-r from-green-400 to-teal-500 shadow-lg">
       <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
         <div className="relative flex h-16 items-center justify-between">
-
-          <img src={NutriPalLogo} alt="NutriPal Logo" className="h-10 w-auto" />
+          <Link to='/'>
+            <img src={NutriPalLogo} alt="NutriPal Logo" className="h-10 w-auto" />
+          </Link>
           <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
             <button className="relative rounded-full bg-teal-500 p-1 text-white hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2">
               <Cog6ToothIcon aria-hidden="true" className="h-6 w-6 text-black" />

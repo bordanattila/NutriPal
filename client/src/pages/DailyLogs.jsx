@@ -64,13 +64,11 @@ const DailyLogs = () => {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-max p-2">
-      <h1 className="text-3xl font-bold mb-4">Daily Log</h1>
+      <h1 className="text-xl font-bold mb-4">Daily Log</h1>
       <div className="p-1 max-w-2xl mx-auto">
         <Calendar
           value={date}
           onChange={setDate}
-          minYear={1900}
-          maxYear={2024}
         />
       </div>
       <div className="flex flex-col items-center justify-center w-full p-2">
@@ -78,7 +76,7 @@ const DailyLogs = () => {
           <div key={group.mealType} className="flex flex-col items-center justify-center w-full p-2">
             {group.foods.length > 0 && (
               <>
-                <h2 className="text-2xl font-bold mb-4 capitalize">{group.mealType}</h2>
+                <h2 className="text-xl font-bold mb-4 capitalize">{group.mealType}</h2>
                 <ul className="list-none mt-4 w-full max-w-lg">
                   {group.foods.map(food => (
                     <li key={food.food_id} className="py-2 ">

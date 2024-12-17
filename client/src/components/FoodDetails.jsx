@@ -119,7 +119,7 @@ const FoodDetails = () => {
       calories: selectedServing.calories * servingCount,
       carbohydrate: selectedServing.carbohydrate * servingCount,
       protein: selectedServing.protein * servingCount,
-      fat: selectedServing.fat * servingCount,
+      fat: selectedServing.fat * servingCount, 
       saturated_fat: selectedServing.saturated_fat * servingCount,
       sodium: selectedServing.sodium * servingCount,
       fiber: selectedServing.fiber * servingCount,
