@@ -10,6 +10,9 @@ import Navbar from './components/Navigation';
 import Search from './pages/Search'
 import NotFound from './components/NotFound';
 import Header from './components/Header';
+import DailyLogs from './pages/DailyLogs';
+import Profile from './pages/Profile';
+import Recipe from './pages/Recipe';
 
 const routes = [
   {
@@ -33,12 +36,24 @@ const routes = [
     element: <Search />,
   },
   {
+    path: '/dailyLogs',
+    element: <DailyLogs />,
+  },
+  {
     path: '/foodById/:foodId',
     element: <FoodDetails />,
   },
   {
+    path: '/profile',
+    element: <Profile />,
+  },
+  {
     path: '*',
     element: <NotFound />,
+  },
+  {
+    path: '/recipe',
+    element: <Recipe />,
   },
 ];
 

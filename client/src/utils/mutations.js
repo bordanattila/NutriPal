@@ -1,23 +1,11 @@
 import { gql } from "@apollo/client";
 
-export const CREATE_USER = gql`
-  mutation signup($username: String!, $email: String!, $password: String!) {
-    signup(username: $username, email: $email, password: $password) {
-      token
-      user {
-        _id
-        username
-        email
-      }
-    }
-  }
-`;
-
 export const GET_USER = gql`
   query getUser {
     user {
       _id
       username
+      calorieGoal
     }
   }
   `;
@@ -35,4 +23,26 @@ export const GET_ONE_FOOD = gql`
       fat
     }
   }
+`;
+
+export const UPDATE_USER_PROFILE = gql`
+mutation updateUserProfile(
+  $userId: ID!
+  $calorieGoal: Int
+  $password: String
+  $profilePic: String
+) {
+  updateUserProfile(
+    userId: $userId
+    calorieGoal: $calorieGoal
+    password: $password
+    profilePic: $profilePic
+  ) {
+    _id
+    username
+    email
+    calorieGoal
+    profilePic
+  }
+}
 `;

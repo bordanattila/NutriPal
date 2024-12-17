@@ -21,6 +21,7 @@ const Dashboard = () => {
   const [carbTotal, setCarbTotal] = useState(0);
   const [proteinTotal, setProteinTotal] = useState(0);
   const [fatTotal, setFatTotal] = useState(0);
+  const [goal, setGoal] = useState(0);
 
   const { loading, data, error } = useQuery(GET_USER, {
     context: {
@@ -29,6 +30,7 @@ const Dashboard = () => {
       },
     },
     onError: (err) => {
+      console.error(err); 
            // Check if the error is due to an expired token
            if (err.message.includes("Unauthorized")) {
             // Attempt to refresh the token
@@ -37,13 +39,15 @@ const Dashboard = () => {
               navigate('/login');
             }
           } else {
-            navigate('/login'); // For other errors, navigate to login
+            // For other errors, navigate to login
+            navigate('/login'); 
           }
     }
   });
 
   const userId = data?.user?._id;
-
+  const calgoal = data?.user?.calorieGoal;
+  
   useEffect(() => {
     const fetchTodaysLog = async () => {
       if (!userId) return;
@@ -53,13 +57,12 @@ const Dashboard = () => {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
         const data = await response.json();
-        console.log(data)
         setTodaysLog(data);
       } catch (error) {
         console.error('Error fetching todays foods:', error);
       }
     };
-    console.log(todaysLog)
+    setGoal(calgoal)
     fetchTodaysLog();
   }, [userId]);
 
@@ -82,27 +85,30 @@ const Dashboard = () => {
     { name: 'Protein', value: proteinTotal || 0 },
     { name: 'Fat', value: fatTotal || 0 },
     { name: 'Calories', value: calorieTotal || 0 },
-    { name: 'Goal', value: '2000' },
   ]
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error.message}</div>;
 
-
-  // Render the dashboard page with the fetched username
   return (
     <>
       <h1 className="text-center text-4xl font-bold text-gray-800 mb-4">Dashboard</h1>
 
       <dl className="flex justify-center gap-8 sm:mt-20 sm:grid-cols-2 lg:grid-cols-4 bg-gradient-to-br from-teal-200 via-cyan-300 to-blue-300 p-6">
+      <div className="flex flex-row gap-5">
         {stats.map((stat) => (
-          <div key={stat.name} className="flex flex-col-reverse gap-1">
+          <div key={stat.name} >
             <dt className="text-sm text-gray-900">{stat.name}</dt>
             <dd className="text-xl font-semibold tracking-tight text-black">
               {typeof stat.value === 'number' ? stat.value.toFixed(2) : stat.value}
             </dd>
           </div>
         ))}
+        <div>
+        <dt className="text-sm text-gray-900">Goal</dt>
+        <dd className="text-xl font-semibold tracking-tight text-black">{goal}</dd>
+        </div>
+        </div>
       </dl>
       <div className='flex justify-center'>
         <DonutChart stats={stats} />

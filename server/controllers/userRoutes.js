@@ -1,23 +1,25 @@
 const User = require('../models/User');
-const bcrypt = require('bcrypt');
 const express = require('express');
 const router = express.Router();
 const { signInToken } = require('../utils/auth');
 require('dotenv').config();
-const { authenticateUser } = require('../utils/helpers');
 const refreshTokens = [];
 
 // Login route
 router.post('/login', async (req, res) => {
     const { username, password } = req.body;
+    console.log('Session data size:', JSON.stringify(req.session).length);
     try {
-        const user = await authenticateUser(username, password);
-
+        // const user = await authenticateUser(username, password);
+        const user = await User.findOne({ username });
         if (!user) {
             return res.status(401).json({ message: 'Invalid username or password' });
         }
-
-        console.log('user=  ' + user)
+        // Check if the password is correct
+        const isValidPassword = await user.isCorrectPassword(password);
+        if (!isValidPassword) {
+            return res.status(401).send('Invalid password');
+        }
 
         // Sign a token for the user
         const token = signInToken({ username: user.username, email: user.email, _id: user._id });
@@ -43,8 +45,7 @@ router.post('/signup', async (req, res) => {
             return res.status(409).json({ message: 'Username already exists' });
         }
 
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const newUser = new User({ username, email, password: hashedPassword });
+        const newUser = new User({ username, email, password });
         await newUser.save();
 
         const token = signInToken({ username: newUser.username, email: newUser.email, _id: newUser._id });
@@ -56,5 +57,37 @@ router.post('/signup', async (req, res) => {
         res.status(500).json({ message: 'Error signing up' });
     }
 });
+
+// // Profile update route
+// router.post('/profile', async (req, res) => {
+//     const { userId, user_calorieGoal, password, profilePic } = req.body;
+
+//     try {
+//         const existingUser = await User.findById(userId);
+
+//         if (!existingUser) {
+//             return res.status(404).json({ message: "User doesn't exist" });
+//         }
+
+//         // If a new password is provided, hash it
+//         let updatedFields = { calorieGoal: user_calorieGoal, profilePic };
+//         if (password) {
+//             const saltRounds = 10;
+//             updatedFields.password = await bcrypt.hash(password, saltRounds);
+//         }
+
+//         // Update the user with the new information
+//         const updatedUser = await User.findByIdAndUpdate(
+//             userId,
+//             { $set: updatedFields },
+//             { new: true }
+//         );
+
+//         res.status(200).json({ message: 'Update successful', user: updatedUser });
+//     } catch (error) {
+//         console.error('Error updating:', error.message);
+//         res.status(500).json({ message: 'Error updating' });
+//     }
+// });
 
 module.exports = router;

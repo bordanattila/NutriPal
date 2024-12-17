@@ -35,14 +35,13 @@ class AuthService {
 
   // Save user token to localStorage and redirect to dashboard
   login = (idToken) => {
-    localStorage.removeItem('id_token');
+    // localStorage.removeItem('id_token');
     localStorage.setItem('id_token', idToken);
     window.location.assign('/dashboard');
   };
 
   // Refresh token for user
   refreshToken = async () => {
-    console.log('refreshtoken called');
     const refreshToken = localStorage.getItem('refreshToken');
     if (refreshToken) {
       try {

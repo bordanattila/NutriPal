@@ -47,12 +47,6 @@ const FoodDetails = () => {
   });
   const [userID, setUserID] = useState(null);
 
-  //   const regex = /\b(small|medium|large)\b/i;
-
-  // // Filter the servingArray based on the regex
-  // const filteredServingArray = servingArray?.filter(serving => regex.test(serving.serving_description)) || [];
-  // console.log(filteredServingArray)
-
   useEffect(() => {
     const fetchFoodDetails = async () => {
       setLoading(true);
@@ -125,7 +119,7 @@ const FoodDetails = () => {
       calories: selectedServing.calories * servingCount,
       carbohydrate: selectedServing.carbohydrate * servingCount,
       protein: selectedServing.protein * servingCount,
-      fat: selectedServing.fat * servingCount,
+      fat: selectedServing.fat * servingCount, 
       saturated_fat: selectedServing.saturated_fat * servingCount,
       sodium: selectedServing.sodium * servingCount,
       fiber: selectedServing.fiber * servingCount,
@@ -167,14 +161,6 @@ const FoodDetails = () => {
   const goBack = () => {
     navigate('/search')
   };
-
-  // const extractServingSize = (servingDescription) => {
-  //   const regex = /^\d+\s+(small|medium|large)/i;
-  //   const match = servingDescription.match(regex);
-  //   return match ? match[0] : servingDescription; // Return matched value or original description if no match
-  // };
-
-  // const extractedSizes = servingDescriptions.map(extractServingSize);
 
   if (loading || logLoading) return <div>Loading...</div>;
   if (error || logError) return <div>Error: {error.message}</div>;
