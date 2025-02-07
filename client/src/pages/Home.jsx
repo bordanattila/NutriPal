@@ -1,14 +1,16 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Auth from "../utils/auth";
 
 const Home = () => {
   const navigate = useNavigate();
   
-  if (Auth.loggedIn()) {
+  useEffect(() => {
     // If the user is already logged in, redirect them to the dashboard
-    navigate('/dashboard');
-  }
+    if (Auth.loggedIn()) {
+      navigate('/dashboard');
+    }
+  }, [navigate]);
 
   const handleLoginClick = () => {
     navigate('/login');

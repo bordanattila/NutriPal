@@ -85,7 +85,7 @@ const DailyLogs = () => {
                           <strong>{food.food_name}</strong>
                           <br />
                           <span className="text-sm">
-                            {food.serving_size} | Calories: {food.calories} | Carb: {food.carbohydrate} | Protein: {food.protein} | Fat: {food.fat}
+                             Calories: {food.calories} | Carb: {food.carbohydrate} | Protein: {food.protein} | Fat: {food.fat} | Number or servings: {food.number_of_servings} | Serving size: {food.serving_size}
                           </span>
                         </Link>
                       </div>

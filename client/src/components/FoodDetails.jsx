@@ -10,7 +10,7 @@ import { useNavigate } from "react-router-dom";
 import DonutChart from './Donut';
 import { ArrowLeftIcon, PlusIcon } from '@heroicons/react/20/solid';
 import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css'; 
+import 'react-toastify/dist/ReactToastify.css';
 
 const api = ky.create({
   prefixUrl: process.env.REACT_APP_API_URL,
@@ -29,23 +29,25 @@ const FoodDetails = () => {
   const [servingCount, setServingCount] = useState(1);
   const [meal, setMeal] = useState(mealTypes[0]);
   const navigate = useNavigate();
+
   const { data: logData, loading: logLoading, error: logError } = useQuery(GET_USER, {
     context: {
       headers: {
         Authorization: `Bearer ${Auth.getToken()}`,
       },
     },
-    onCompleted: (data) => {
-      // Set user ID after the query is completed
-      if (data && data.user && data.user._id) {
-        setUserID(data.user._id);
-      }
-    },
     onError: () => {
       navigate('/login');
     },
   });
+
   const [userID, setUserID] = useState(null);
+  // Set user ID from log data
+  useEffect(() => {
+    if (logData?.user) {
+      setUserID(logData.user._id);
+    }
+  }, [logData]);
 
   useEffect(() => {
     const fetchFoodDetails = async () => {
@@ -71,13 +73,6 @@ const FoodDetails = () => {
     };
     fetchFoodDetails();
   }, [foodId]);
-
-  // Set user ID from log data
-  useEffect(() => {
-    if (logData?.user) {
-      setUserID(logData.user.destructuredID);
-    }
-  }, [logData]);
 
   // Set serving_id when a serving is selected
   const handleServingChange = (serving) => {
@@ -119,7 +114,7 @@ const FoodDetails = () => {
       calories: selectedServing.calories * servingCount,
       carbohydrate: selectedServing.carbohydrate * servingCount,
       protein: selectedServing.protein * servingCount,
-      fat: selectedServing.fat * servingCount, 
+      fat: selectedServing.fat * servingCount,
       saturated_fat: selectedServing.saturated_fat * servingCount,
       sodium: selectedServing.sodium * servingCount,
       fiber: selectedServing.fiber * servingCount,
@@ -240,9 +235,9 @@ const FoodDetails = () => {
         <Link to={foodDetails.food.food_url} className=" text-blue-500 hover:underline" target="_blank" rel="noopener noreferrer">See nutrition label here</Link>
       </div>
       <div>
-    {/* Toaster to provide feedback to user */}
-    <ToastContainer autoClose={500} />
-  </div>
+        {/* Toaster to provide feedback to user */}
+        <ToastContainer autoClose={500} />
+      </div>
     </div>
   );
 };
