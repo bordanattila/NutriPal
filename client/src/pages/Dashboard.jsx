@@ -6,6 +6,7 @@ import { GET_USER } from '../utils/mutations';
 import DonutChart from '../components/Donut';
 import useAuth from '../hooks/RefreshToken';
 import ky from 'ky';
+import { DateTime } from "luxon";
 
 const api = ky.create({
   prefixUrl: process.env.REACT_APP_API_URL,
@@ -22,6 +23,9 @@ const Dashboard = () => {
   const [proteinTotal, setProteinTotal] = useState(0);
   const [fatTotal, setFatTotal] = useState(0);
   const [goal, setGoal] = useState(0);
+  const [date, setDate] = useState(DateTime.now());
+
+  const todaysDate = date.year+'-'+date.month+'-'+date.day
 
   const { loading, data, error } = useQuery(GET_USER, {
     context: {
@@ -52,12 +56,14 @@ const Dashboard = () => {
     const fetchTodaysLog = async () => {
       if (!userId) return;
       try {
-        const response = await api.get(`api/todays-foods/${userId}`);
+        const response = await api.get(`api/foodByDate/${userId}/date/${todaysDate}`);
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
         const data = await response.json();
-        setTodaysLog(data);
+        console.log("response for dashboard", data)
+        setTodaysLog(data.foods);
+        console.log("dashboard", data)
       } catch (error) {
         console.error('Error fetching todays foods:', error);
       }
@@ -65,13 +71,13 @@ const Dashboard = () => {
     setGoal(calgoal)
     fetchTodaysLog();
   }, [userId]);
-
+console.log("today's log", todaysLog)
   useEffect(() => {
     const totalCalories = async () => {
-      const totalCal = todaysLog.reduce((sum, item) => sum + (item.calories || 0), 0);
-      const totalCarb = todaysLog.reduce((sum, item) => sum + (item.carbohydrate || 0), 0);
-      const totalProtein = todaysLog.reduce((sum, item) => sum + (item.protein || 0), 0);
-      const totalFat = todaysLog.reduce((sum, item) => sum + (item.fat || 0), 0);
+      const totalCal = todaysLog?.reduce((sum, { calories = 0 }) => sum + calories, 0) ?? 0;
+      const totalCarb = todaysLog?.reduce((sum, { carbohydrate = 0 }) => sum + carbohydrate, 0) ?? 0;
+      const totalProtein = todaysLog?.reduce((sum, { protein = 0 }) => sum + protein, 0) ?? 0;
+      const totalFat = todaysLog?.reduce((sum, { fat = 0 }) => sum + fat, 0) ?? 0;
       setCalorieTotal(totalCal);
       setCarbTotal(totalCarb);
       setProteinTotal(totalProtein);

@@ -30,10 +30,11 @@ const Search = () => {
     }
   });
 
+  // Identify source page for FoodDetails.jsx
+  const sourcePage = 'search';
+  
   // Get the last 5 food logs for the user
-
   const userId = data.user._id;
-
   useEffect(() => {
     const fetchLogHistory = async () => {
       try {
@@ -49,7 +50,7 @@ const Search = () => {
     };
 
     fetchLogHistory();
-  }, []);
+  }, [userId]);
 
   const handleSearch = async (e) => {
     e.preventDefault();
@@ -75,13 +76,8 @@ const Search = () => {
     setFoodArray([]);
   };
 
-
-  console.log("this is the logHistory");
-  console.log(logHistory);
-
   if (loading) return <div>Loading...</div>;
   if (logError) return <div>Error: {error.message}</div>;
-
   
   return (
     <div className="flex flex-col items-center justify-center min-h-max p-6">
@@ -100,7 +96,7 @@ const Search = () => {
           {foodArray.map((food) => (
             <li key={food.food_id} className="py-2 ">
               <div className='rounded-md p-2 bg-teal-100'>
-                <Link to={`/foodById/${food.food_id}`} className="text-blue-700 hover:underline">
+                <Link to={`/${sourcePage}/foodById/${food.food_id}`} className="text-blue-700 hover:underline">
                   <strong>{food.food_name}</strong>
                   <br />
                   <span className='text-sm'>{food.food_description}</span>
@@ -117,7 +113,7 @@ const Search = () => {
             {logHistory.map((food) => (
               <li key={food.food_id} className="py-2">
                 <div className="rounded-md p-2 bg-teal-100">
-                  <Link to={`/foodById/${food.food_id}`} className="text-blue-700 hover:underline">
+                  <Link to={`/${sourcePage}/foodById/${food.food_id}`} className="text-blue-700 hover:underline">
                     <strong>{food.food_name}</strong>
                     <br />
                     <span className='text-sm'>
