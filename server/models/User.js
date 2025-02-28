@@ -31,6 +31,10 @@ const userSchema = new Schema(
             type: Schema.Types.ObjectId,
             ref: 'DailyLog'
         }],
+        recipe: [{
+            type: Schema.Types.ObjectId,
+            ref: 'DailyLog'
+        }],
     }
 );
 

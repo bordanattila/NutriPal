@@ -5,7 +5,8 @@ const axios = require('axios');
 const qs = require('qs');
 const DailyLog = require('../models/DailyLog');
 const OneFood = require('../models/OneFood');
-const calculateRecipeNutrition = require('../utils/nutritionCalculation');
+const Recipe = require('../models/Recipe');
+const { calculateRecipeNutrition } = require('../utils/nutritionCalculation');
 const { DateTime } = require('luxon');
 
 // Endpoint to get the access token
@@ -184,7 +185,6 @@ router.post('/daily-log', async (req, res) => {
         const { user_id, foods } = req.body;
 
         // Get current date and compute start and end of day.
-        const now = new Date();
         const startOfDay = DateTime.now()
             .setZone('America/New_York')
             .startOf('day')
@@ -200,7 +200,6 @@ router.post('/daily-log', async (req, res) => {
             user_id,
             dateCreated: { $gte: startOfDay, $lte: endOfDay }
         });
-        console.log("daily log check", dailyLog)
         if (dailyLog) {
             // Update the existing DailyLog by appending new foods.
             dailyLog.foods = dailyLog.foods.concat(foods);
@@ -224,14 +223,19 @@ router.post('/daily-log', async (req, res) => {
 
 // Endpoint to add a recipe
 router.post('/recipe', async (req, res) => {
-    try {
-        const { user_id, recipeName, servings, food } = req.body;
 
+    try {
+        const { user_id, recipeName, servings, ingredients } = req.body;
         // Retrieve OneFood entry by its _id
-        const ingredient = await OneFood.find({ _id: { $in: food } });
+        const ingredient = await OneFood.find({ _id: { $in: ingredients } });
 
         // Calculate the nutrition per serving
         const nutrition = calculateRecipeNutrition(ingredient, servings);
+        console.log("user_id", user_id)
+        console.log("recipeName", recipeName)
+        console.log("servings", servings)
+        console.log("ingredients", ingredients)
+        console.log("nutrition", nutrition)
 
         // Create a new Recipe entry
         const newRecipe = new Recipe({
@@ -239,7 +243,7 @@ router.post('/recipe', async (req, res) => {
             recipeName,
             servings,
             // Directly use the ingredients from the request body
-            ingredient: food,
+            ingredients,
             nutrition,
         });
 

@@ -7,6 +7,8 @@ import { useQuery } from '@apollo/client';
 import { GET_USER } from '../utils/mutations';
 import useAuth from '../hooks/RefreshToken';
 import { PlusIcon } from '@heroicons/react/20/solid';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const api = ky.create({
   prefixUrl: process.env.REACT_APP_API_URL,
@@ -36,13 +38,19 @@ const Recipe = () => {
     }
   });
 
-  console.log("ingredientsList", ingredientsList);
-  console.log("addedIngredient", addedIngredient);
-  console.log("ingredientsID", ingredientID);
+  const [userID, setUserID] = useState(null);
+  // Set user ID from log data
+  useEffect(() => {
+    if (data?.user) {
+      setUserID(data.user._id);
+    }
+  }, [data]);
 
   // Identify source page for FoodDetails.jsx
   const sourcePage = 'recipe';
 
+  // TODO
+  // make handleSeach a component for Recipe and Search
   const handleSearch = async (e) => {
     e.preventDefault();
     try {
@@ -65,33 +73,43 @@ const Recipe = () => {
     setFoodArray([]);
   };
 
-// Add ingredients and _id to local storage
-useEffect(() => {
-  if (addedIngredient && ingredientID) {
-    // Get the stored ingredients list from localStorage, if it exists.
-    const storedIngredients = localStorage.getItem('ingredientsList');
-    const currentList = storedIngredients ? JSON.parse(storedIngredients) : [];
-    
-    // Append the new ingredient to the current list.
-    const updatedList = [...currentList, addedIngredient];
-    
-    // Save the updated list back to localStorage and update state.
-    localStorage.setItem('ingredientsList', JSON.stringify(updatedList));
-    setIngredientsList(updatedList);
-  }
-}, [addedIngredient, ingredientID]);
+  // Add recipe name and num of servings to local storage
+  useEffect(() => {
+    const storedName = localStorage.getItem('recipeName');
+    const storedNumOfServings = localStorage.getItem('numOfServings');
+    if (storedName) setRecipeName(storedName);
+    if (storedNumOfServings) setNumberOfServings(storedNumOfServings);
+  }, []);
 
-useEffect(() => {
-  if (addedIngredient && ingredientID) {
-    const storedIDs = localStorage.getItem('ingredientsID');
-    const currentIDs = storedIDs ? JSON.parse(storedIDs) : [];
-    const updatedIDs = [...currentIDs, ingredientID];
-    localStorage.setItem('ingredientsID', JSON.stringify(updatedIDs));
-    setIngredientsID(updatedIDs);
-  }
-}, [addedIngredient, ingredientID]);
 
-// Get the list of ingredients Nd _ids from local storage
+  // Add ingredients to local storage
+  useEffect(() => {
+    if (addedIngredient && ingredientID) {
+      // Get the stored ingredients list from localStorage, if it exists.
+      const storedIngredients = localStorage.getItem('ingredientsList');
+      const currentList = storedIngredients ? JSON.parse(storedIngredients) : [];
+
+      // Append the new ingredient to the current list.
+      const updatedList = [...currentList, addedIngredient];
+
+      // Save the updated list back to localStorage and update state.
+      localStorage.setItem('ingredientsList', JSON.stringify(updatedList));
+      setIngredientsList(updatedList);
+    }
+  }, [addedIngredient, ingredientID]);
+
+  // Add _id to local storage
+  useEffect(() => {
+    if (addedIngredient && ingredientID) {
+      const storedIDs = localStorage.getItem('ingredientsID');
+      const currentIDs = storedIDs ? JSON.parse(storedIDs) : [];
+      const updatedIDs = [...currentIDs, ingredientID];
+      localStorage.setItem('ingredientsID', JSON.stringify(updatedIDs));
+      setIngredientsID(updatedIDs);
+    }
+  }, [addedIngredient, ingredientID]);
+
+  // Get the list of ingredients and _ids from local storage
   useEffect(() => {
     const storedIngredientsList = localStorage.getItem('ingredientsList');
     const storedIngredientsID = localStorage.getItem('ingredientsID');
@@ -103,25 +121,17 @@ useEffect(() => {
     }
   }, []);
 
-//  // Update ingredientsList list after adding new ingredient
-  // useEffect(() => {
-  //   if (addedIngredient) {
-  //     setIngredientsList(prevIngredientsList => [...prevIngredientsList, addedIngredient]);
-  //   }
-  // }, [addedIngredient]);
-
-  // // Update ingredientsID list after adding new ingredient
-  // useEffect(() => {
-  //   if (addedIngredient) {
-  //     setIngredientsID(prevIngredientsID => [...prevIngredientsID, ingredientID]);
-  //   }
-  // }, [addedIngredient]);
-
-  // const handleAddIngredient = (e) => {
-  //   e.preventDefault();
-  //   const newIngredient = ingredientName;
-  //     setIngredientsList(prevIngredientsList => [...prevIngredientsList, newIngredient]);
-  // };
+  // Clear  local storage
+  const clearIngredients = () => {
+    setIngredientsList([]);
+    setIngredientsID([]);
+    setRecipeName('');
+    setNumberOfServings('');
+    localStorage.removeItem('ingredientsList');
+    localStorage.removeItem('ingredientsID');
+    localStorage.removeItem('recipeName');
+    localStorage.removeItem('numOfServings');
+  };
 
   // TODO
   // implement remove function
@@ -129,7 +139,36 @@ useEffect(() => {
   //   setIngredientsList(ingredientsList.filter((ingredient, i) => i !== index));
   // }
 
-  const handleAddRecipe = 0;
+  const handleAddRecipe = async (req, res) => {
+    const newRecipe = {
+      recipeName: recipeName,
+      ingredients: ingredientsID,
+      servings: numberOfServings,
+      user_id: userID,
+    }
+    try {
+      // Create Recipe document
+      const recipeResponse = await api.post('api/recipe', {
+        json: newRecipe,
+      });
+      const recipeData = await recipeResponse.json();
+
+      if (!recipeResponse.ok) {
+        throw new Error('Failed to create recipe.');
+      }
+
+      if (recipeResponse.ok) {
+        clearIngredients();
+        toast.success('Recipe added successfully!');
+        setTimeout(() => { }, 1000)
+      } else {
+        toast.error('Failed to add Recipe.');
+      }
+    } catch (error) {
+      console.error('Error adding recipe creation:', error);
+      toast.error('Error adding recipe creation. Please try again.');
+    }
+  }
 
   if (loading) return <div>Loading...</div>;
   if (logError) return <div>Error: {error.message}</div>;
@@ -141,8 +180,7 @@ useEffect(() => {
           <h1>Recipes</h1>
         </div>
         <div>
-          {/* onClick={handleAddRecipe} */}
-          <PlusIcon className='w-7 h-7' />
+          <PlusIcon className='w-7 h-7' onClick={handleAddRecipe} />
         </div>
       </div>
       <div>
@@ -154,7 +192,11 @@ useEffect(() => {
           placeholder="Recipe name"
           aria-autocomplete=''
           value={recipeName}
-          onChange={(e) => setRecipeName(e.target.value)}
+          onChange={(e) => {
+            const newValue = e.target.value;
+            setRecipeName(newValue);
+            localStorage.setItem('recipeName', newValue);
+          }}
           required
           className="border p-2 rounded"
         />
@@ -168,7 +210,11 @@ useEffect(() => {
           placeholder="Number of servings"
           aria-autocomplete=''
           value={numberOfServings}
-          onChange={(ev) => setNumberOfServings(ev.target.value)}
+          onChange={(e) => {
+            const newValue = e.target.value;
+            setNumberOfServings(newValue);
+            localStorage.setItem('numOfServings', newValue);
+          }}
           required
           className="border p-2 rounded"
         />
@@ -200,8 +246,8 @@ useEffect(() => {
         {ingredientsList.length > 0 ? (
           <li>
             {
-              ingredientsList.map((ingredient) => (
-                <li key={ingredient}>{ingredient}</li>
+              ingredientsList.map((ingredient, index) => (
+                <li key={index}>{ingredient}</li>
               ))
             }
           </li>
@@ -209,6 +255,10 @@ useEffect(() => {
           <p>No ingredients found</p>
         )}
       </ul>
+      <div>
+        {/* Toaster to provide feedback to user */}
+        <ToastContainer autoClose={500} />
+      </div>
     </div>
   )
 }

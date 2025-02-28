@@ -93,12 +93,14 @@ const resolvers = {
     },
 
     // Create recipe mutation
-    createDailyLog: async (_, { user_id, ingredients }) => {
-      const newRegipe = new Recipe({
+    createRecipe: async (_, { user_id, recipeName, ingredients, nutrition }) => {
+      const recipe = new Recipe({
         user_id,
-        ingredients
+        recipeName,
+        ingredients,
+        nutrition,
       });
-      return await newRecipe.save();
+      return await recipe.save();
     },
   }
 }

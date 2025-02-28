@@ -15,10 +15,6 @@ const recipeSchema = new Schema(
             type: Schema.Types.ObjectId,
             ref: 'OneFood'
         }],
-        servings: {
-            type: Number,
-            required: true
-        },
         nutrition: {
             caloriesPerServing: { type: Number },
             carbohydratePerServing: { type: Number },
