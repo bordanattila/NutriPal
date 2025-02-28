@@ -9,6 +9,7 @@ import useAuth from '../hooks/RefreshToken';
 import { PlusIcon } from '@heroicons/react/20/solid';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { handleSearch } from '../components/SearchComponent';
 
 const api = ky.create({
   prefixUrl: process.env.REACT_APP_API_URL,
@@ -49,24 +50,16 @@ const Recipe = () => {
   // Identify source page for FoodDetails.jsx
   const sourcePage = 'recipe';
 
-  // TODO
-  // make handleSeach a component for Recipe and Search
-  const handleSearch = async (e) => {
+  const onSearchSubmit = async (e) => {
     e.preventDefault();
-    try {
-      const response = await api.get(`api/foodByName?searchExpression=${foodName}`);
-      const data = await response.json();
-      setFoodArray(data.foods.food);
-      setError(null);
-
-    } catch (error) {
-      setError(error.message);
-      console.error(`Error: ${error.message}`);
-      alert(`Entry failed: ${error.message}`);
-      // Send error report to server
-      fetch('/error-report', { method: 'POST', body: JSON.stringify(error) });
-    }
+    await handleSearch({
+      name: foodName,
+      setArray: setFoodArray,
+      setError: setError,
+    });
   };
+  // TODO
+// style the page
 
   const clearSearch = () => {
     setFoodName('');
@@ -222,7 +215,7 @@ const Recipe = () => {
       <SearchBar
         nameOfFood={foodName}
         setNameOfFood={setFoodName}
-        handleSearch={handleSearch}
+        handleSearch={onSearchSubmit}
         clearSearch={clearSearch}
         error={error}
       />

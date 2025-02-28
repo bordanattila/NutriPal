@@ -6,6 +6,7 @@ import { useQuery } from '@apollo/client';
 import { GET_USER } from '../utils/mutations';
 import useAuth from '../hooks/RefreshToken';
 import SearchBar from '../components/SearchBar';
+import { handleSearch } from '../components/SearchComponent';
 
 const api = ky.create({
   prefixUrl: process.env.REACT_APP_API_URL,
@@ -34,8 +35,9 @@ const Search = () => {
   const sourcePage = 'search';
   
   // Get the last 5 food logs for the user
-  const userId = data.user._id;
+  const userId = data?.user?._id;
   useEffect(() => {
+    if (!userId) return;
     const fetchLogHistory = async () => {
       try {
         const response = await api.get(`api/recent-foods/${userId}`);
@@ -52,21 +54,13 @@ const Search = () => {
     fetchLogHistory();
   }, [userId]);
 
-  const handleSearch = async (e) => {
+  const onSearchSubmit = async (e) => {
     e.preventDefault();
-    try {
-      const response = await api.get(`api/foodByName?searchExpression=${foodName}`);
-      const data = await response.json();
-      setFoodArray(data.foods.food);
-      setError(null);
-
-    } catch (error) {
-      setError(error.message);
-      console.error(`Error: ${error.message}`);
-      alert(`Entry failed: ${error.message}`);
-      // Send error report to server
-      fetch('/error-report', { method: 'POST', body: JSON.stringify(error) });
-    }
+    await handleSearch({
+      name: foodName,
+      setArray: setFoodArray,
+      setError: setError,
+    });
   };
 
 
@@ -76,7 +70,7 @@ const Search = () => {
     setFoodArray([]);
   };
 
-  if (loading) return <div>Loading...</div>;
+  if (loading  || !data || !data.user) return <div>Loading...</div>;
   if (logError) return <div>Error: {error.message}</div>;
   
   return (
@@ -85,7 +79,7 @@ const Search = () => {
       <SearchBar
         nameOfFood={foodName}
         setNameOfFood={setFoodName}
-        handleSearch={handleSearch}
+        handleSearch={onSearchSubmit}
         clearSearch={clearSearch}
         error={error}
       />
