@@ -8,6 +8,7 @@ const typeDefs = gql`
         password: String
         calorieGoal: Int
         profilePic: String
+        daily_log: [DailyLog]
         saved_meal: [Meal]
         saved_recipe: [Recipe]
     }
@@ -16,13 +17,6 @@ const typeDefs = gql`
         _id: ID!
         name: String!
         calorieCount: Int!
-    }
-
-    type Recipe {
-        _id: ID!
-        recipeNameame: String!
-        user_id: User!
-        ingredients: [OneFood]
     }
 
     type Auth {
@@ -55,18 +49,49 @@ const typeDefs = gql`
         meal_type: String!
       }
 
+    type Nutrition {
+    caloriesPerServing: Float!,
+    carbohydratePerServing: Float!,
+    proteinPerServing: Float!,
+    fatPerServing: Float!
+    }
+
+    type Recipe {
+        _id: ID!
+        recipeName: String!
+        user_id: User!
+        ingredients: [OneFood]!
+        nutrition: Nutrition!
+    }
+
+    input NutritionInput {
+    caloriesPerServing: Float!,
+    carbohydratePerServing: Float!,
+    proteinPerServing: Float!,
+    fatPerServing: Float!
+    }
+
     type Query {
         user: User
+
         getDailyLog(
             user_id: ID!, 
             date: String!
             calorieGoal: Int
         ): DailyLog
+
         getOneFood(
             user_id: ID!
             food_id: ID!
             created: String!
         ): OneFood
+    
+        getRecipe(
+            user_id: ID!
+            recipeName: String!
+            ingredients: [ID]!
+            nutrition: NutritionInput
+        ): Recipe
     }
 
     type Mutation {
@@ -94,9 +119,10 @@ const typeDefs = gql`
         ): User
 
         createRecipe(
-            recipeName: String,
-            userId: ID!,
+            recipeName: String!,
+            user_id: ID!,
             ingredients: [String!]!,
+            nutrition: NutritionInput!
         ): Recipe
     }
 `;

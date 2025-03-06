@@ -6,6 +6,10 @@ import { useQuery } from '@apollo/client';
 import { GET_USER } from '../utils/mutations';
 import useAuth from '../hooks/RefreshToken';
 import Calendar from '../components/Calendar';
+// TODO
+// change to luxon
+// fix date selection
+// implement remove function
 import dayjs from 'dayjs'; 
 
 
@@ -43,7 +47,7 @@ const DailyLogs = () => {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
         const data = await response.json();
-        setLogHistory(data);
+        setLogHistory(data.foods);
       } catch (error) {
         console.error('Error fetching food logs for selected date:', error);
       }
@@ -85,7 +89,7 @@ const DailyLogs = () => {
                           <strong>{food.food_name}</strong>
                           <br />
                           <span className="text-sm">
-                            {food.serving_size} | Calories: {food.calories} | Carb: {food.carbohydrate} | Protein: {food.protein} | Fat: {food.fat}
+                             Calories: {food.calories} | Carb: {food.carbohydrate} | Protein: {food.protein} | Fat: {food.fat} | Number or servings: {food.number_of_servings} | Serving size: {food.serving_size}
                           </span>
                         </Link>
                       </div>

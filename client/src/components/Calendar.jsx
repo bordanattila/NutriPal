@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 // import { Calendar, ChevronDown } from 'lucide-react';
-import { CalendarDaysIcon, ChevronDownIcon } from '@heroicons/react/20/solid';
+import { ChevronDownIcon } from '@heroicons/react/20/solid';
 
 const Calendar = ({ 
   value = new Date(),
@@ -42,7 +42,7 @@ const Calendar = ({
   useEffect(() => {
     const newDate = new Date(selectedYear, selectedMonth, selectedDay);
     onChange(newDate);
-  }, [selectedYear, selectedMonth, selectedDay]);
+  }, [selectedYear, selectedMonth, selectedDay, onChange]);
 
   // Ensure valid day when month/year changes
   useEffect(() => {
@@ -50,7 +50,7 @@ const Calendar = ({
     if (selectedDay > daysInMonth) {
       setSelectedDay(daysInMonth);
     }
-  }, [selectedYear, selectedMonth]);
+  }, [selectedYear, selectedMonth, selectedDay]);
 
   const SelectWrapper = ({ 
     options,

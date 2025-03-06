@@ -40,7 +40,7 @@ const routes = [
     element: <DailyLogs />,
   },
   {
-    path: '/foodById/:foodId',
+    path: '/:source/foodById/:foodId',
     element: <FoodDetails />,
   },
   {

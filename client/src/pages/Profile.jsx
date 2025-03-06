@@ -1,13 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import Auth from '../utils/auth';
 import { useQuery, useMutation } from '@apollo/client';
 import { GET_USER, UPDATE_USER_PROFILE } from '../utils/mutations';
-import ky from 'ky';
+// import ky from 'ky';
 
-const api = ky.create({
-    prefixUrl: process.env.REACT_APP_API_URL,
-});
+// const api = ky.create({
+//     prefixUrl: process.env.REACT_APP_API_URL,
+// });
 
 const Profile = () => {
     const [user, setUser] = useState({});
@@ -17,7 +17,7 @@ const Profile = () => {
     const [calorieGoal, setCalorieGoal] = useState('');
     const [password, setPassword] = useState('');
     const [profilePic, setProfilePic] = useState(null);
-
+    
     const { loadingQuery, data, loadingError } = useQuery(GET_USER, {
         context: {
           headers: {
@@ -25,6 +25,7 @@ const Profile = () => {
           },
         },
         onError: (err) => {
+            setLoading(false);
           console.error(err); 
                // Check if the error is due to an expired token
                if (err.message.includes("Unauthorized")) {
@@ -39,10 +40,11 @@ const Profile = () => {
               }
         }
       });
-
       
       const [updateUserProfile, { loading: updateloading, error:updateError } ] = useMutation(UPDATE_USER_PROFILE);
-
+      console.log(updateloading)
+      console.log(updateError)
+      console.log(user)
       const handleUpdate = async (e) => {
           e.preventDefault();
         try {

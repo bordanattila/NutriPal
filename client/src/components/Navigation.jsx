@@ -9,7 +9,7 @@ const navigationItems = [
   { to: '/recipe', icon: faBook, label: 'Recipes' },
   { to: '/dashboard', icon: faHouse, label: 'Dashboard' },
   { to: '/search', icon: faMagnifyingGlass, label: 'Search' },
-  { to: 'dailyLogs', icon: faRegularClipboard, label: 'Logs' },
+  { to: '/dailyLogs', icon: faRegularClipboard, label: 'Logs' },
 ];
 
 const Navigation = () => {

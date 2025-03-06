@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import ky from 'ky';
 import { useNavigate, Link } from 'react-router-dom';
-import { MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/20/solid';
 import Auth from '../utils/auth';
 import { useQuery } from '@apollo/client';
 import { GET_USER } from '../utils/mutations';
 import useAuth from '../hooks/RefreshToken';
+import SearchBar from '../components/SearchBar';
+import { handleSearch } from '../components/SearchComponent';
 
 const api = ky.create({
   prefixUrl: process.env.REACT_APP_API_URL,
@@ -26,15 +27,17 @@ const Search = () => {
       },
     },
     onError: () => {
-      navigate('/login');
+      navigate('/');
     }
   });
 
+  // Identify source page for FoodDetails.jsx
+  const sourcePage = 'search';
+  
   // Get the last 5 food logs for the user
-
-  const userId = data.user._id;
-
+  const userId = data?.user?._id;
   useEffect(() => {
+    if (!userId) return;
     const fetchLogHistory = async () => {
       try {
         const response = await api.get(`api/recent-foods/${userId}`);
@@ -49,23 +52,15 @@ const Search = () => {
     };
 
     fetchLogHistory();
-  }, []);
+  }, [userId]);
 
-  const handleSearch = async (e) => {
+  const onSearchSubmit = async (e) => {
     e.preventDefault();
-    try {
-      const response = await api.get(`api/foodByName?searchExpression=${foodName}`);
-      const data = await response.json();
-      setFoodArray(data.foods.food);
-      setError(null);
-
-    } catch (error) {
-      setError(error.message);
-      console.error(`Error: ${error.message}`);
-      alert(`Entry failed: ${error.message}`);
-      // Send error report to server
-      fetch('/error-report', { method: 'POST', body: JSON.stringify(error) });
-    }
+    await handleSearch({
+      name: foodName,
+      setArray: setFoodArray,
+      setError: setError,
+    });
   };
 
 
@@ -75,43 +70,19 @@ const Search = () => {
     setFoodArray([]);
   };
 
-  if (loading) return <div>Loading...</div>;
+  if (loading  || !data || !data.user) return <div>Loading...</div>;
   if (logError) return <div>Error: {error.message}</div>;
-
+  console.log("foodArray for error", foodArray)
   return (
     <div className="flex flex-col items-center justify-center min-h-max p-6">
-      <form onSubmit={handleSearch} className="flex flex-col p-6 items-center justify-center mb-4 w-full max-w-lg">
-        <div className="relative w-full">
-          <MagnifyingGlassIcon className="absolute left-3 top-3 h-5 w-5 text-blue-500" />
-          <input
-            type="text"
-            id="foodName"
-            value={foodName}
-            onChange={(e) => setFoodName(e.target.value)}
-            placeholder="Search for a food"
-            className="w-full pl-10 pr-10 py-2 rounded-full bg-gray-100 text-gray-700 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-md"
-          />
-          {/* Clear Button */}
-          {foodName && (
-            <button
-              type="button"
-              onClick={clearSearch}
-              className="absolute right-3 top-3 h-5 w-5 text-gray-400 hover:text-gray-600"
-            >
-              <XMarkIcon />
-            </button>
-          )}
-        </div>
-        {/* Submit search button */}
-        <button
-          className="mt-4 bg-gradient-to-r from-green-400 to-teal-500 rounded-full shadow-lg hover:from-green-400 hover:to-blue-600 transition duration-300 text-white font-bold py-2 px-6 "
-          type="submit"
-        >
-          Search
-        </button>
-        {error && <div className="text-red-500 mt-2">{error}</div>}
-      </form>
 
+      <SearchBar
+        nameOfFood={foodName}
+        setNameOfFood={setFoodName}
+        handleSearch={onSearchSubmit}
+        clearSearch={clearSearch}
+        error={error}
+      />
 
       {/* Search Results */}
       {foodArray.length > 0 ? (
@@ -119,7 +90,7 @@ const Search = () => {
           {foodArray.map((food) => (
             <li key={food.food_id} className="py-2 ">
               <div className='rounded-md p-2 bg-teal-100'>
-                <Link to={`/foodById/${food.food_id}`} className="text-blue-700 hover:underline">
+                <Link to={`/${sourcePage}/foodById/${food.food_id}`} className="text-blue-700 hover:underline">
                   <strong>{food.food_name}</strong>
                   <br />
                   <span className='text-sm'>{food.food_description}</span>
@@ -134,12 +105,14 @@ const Search = () => {
           <h2 className='text-center'>Recent History</h2>
           <ul className="list-none mt-4 w-full max-w-lg">
             {logHistory.map((food) => (
-              <li key={food._id} className="py-2">
+              <li key={food.food_id} className="py-2">
                 <div className="rounded-md p-2 bg-teal-100">
-                  <Link to={`/foodById/${food.food_id}`} className="text-blue-700 hover:underline">
+                  <Link to={`/${sourcePage}/foodById/${food.food_id}`} className="text-blue-700 hover:underline">
                     <strong>{food.food_name}</strong>
                     <br />
-                    <span className='text-sm'>{food.food_description}</span>
+                    <span className='text-sm'>
+                      Calories: {food.calories} | Carb: {food.carbohydrate} | Protein: {food.protein} | Fat: {food.fat} | Number or servings: {food.number_of_servings} | Serving size: {food.serving_size}
+                    </span>
                     <br />
                   </Link>
                 </div>

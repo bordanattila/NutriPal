@@ -1,6 +1,6 @@
 const { Schema, model } = require('mongoose');
 
-const recipeSchema = new Recipe(
+const recipeSchema = new Schema(
     {
         recipeName: {
             type: String,
@@ -15,7 +15,12 @@ const recipeSchema = new Recipe(
             type: Schema.Types.ObjectId,
             ref: 'OneFood'
         }],
-
+        nutrition: {
+            caloriesPerServing: { type: Number },
+            carbohydratePerServing: { type: Number },
+            proteinPerServing: { type: Number },
+            fatPerServing: { type: Number },
+        }
     },
 );
 
