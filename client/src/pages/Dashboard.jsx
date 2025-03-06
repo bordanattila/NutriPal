@@ -23,7 +23,7 @@ const Dashboard = () => {
   const [proteinTotal, setProteinTotal] = useState(0);
   const [fatTotal, setFatTotal] = useState(0);
   const [goal, setGoal] = useState(0);
-  const [date, setDate] = useState(DateTime.now());
+  const [date, setDate] = useState(null);
 
   const todaysDate = date.year+'-'+date.month+'-'+date.day
 
@@ -49,6 +49,8 @@ const Dashboard = () => {
     }
   });
 
+  setDate = DateTime.now();
+
   const userId = data?.user?._id;
   const calgoal = data?.user?.calorieGoal;
   
@@ -70,7 +72,7 @@ const Dashboard = () => {
     };
     setGoal(calgoal)
     fetchTodaysLog();
-  }, [userId]);
+  }, [userId, calgoal]);
 console.log("today's log", todaysLog)
   useEffect(() => {
     const totalCalories = async () => {

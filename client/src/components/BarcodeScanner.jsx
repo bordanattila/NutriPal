@@ -50,8 +50,7 @@ const BarcodeScanner = ({ onDetected, onError }) => {
           console.log('Quagga initialized successfully');
           Quagga.start();
           setScanning(true);
-        }
-      );
+        }, [handleDetected, onError, scanning]);
 
       // Set up the event listener for when a barcode is detected
       Quagga.onDetected(handleDetected);

@@ -30,7 +30,7 @@ const FoodDetails = () => {
   const [meal, setMeal] = useState(mealTypes[0]);
   const navigate = useNavigate();
   // const [ingredients, setIngredients] = useState(null);
-  const [date, setDate] = useState(DateTime.now());
+  const [date, setDate] = useState(null);
 
   const todaysDate = date.year + '-' + date.month + '-' + date.day
 
@@ -44,6 +44,8 @@ const FoodDetails = () => {
       navigate('/login');
     },
   });
+  
+  setDate = DateTime.now();
 
   const [userID, setUserID] = useState(null);
   // Set user ID from log data
@@ -57,6 +59,7 @@ const FoodDetails = () => {
     const fetchFoodDetails = async () => {
       setLoading(true);
       console.log("foodID", foodId)
+      console.log(servingID)
       try {
         const response = await api.get(`api/${source}/foodById?food_id=${foodId}`);
         const responseData = await response.json();

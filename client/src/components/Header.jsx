@@ -27,7 +27,7 @@ const Header = () => {
                   <a href="/profile" className="block px-4 py-2 text-sm text-gray-700">Your Profile</a>
                 </MenuItem>
                 <MenuItem>
-                  <a href="#" className="block px-4 py-2 text-sm text-gray-700">Settings</a>
+                  <a href="/" className="block px-4 py-2 text-sm text-gray-700">Settings</a>
                 </MenuItem>
                 <MenuItem>
                   <a href="/" className="block px-4 py-2 text-sm text-gray-700" onClick={Auth.logout}>Log out</a>

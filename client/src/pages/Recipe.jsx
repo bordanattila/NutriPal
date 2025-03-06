@@ -144,7 +144,7 @@ const Recipe = () => {
       const recipeResponse = await api.post('api/recipe', {
         json: newRecipe,
       });
-      const recipeData = await recipeResponse.json();
+      // const recipeData = await recipeResponse.json();
 
       if (!recipeResponse.ok) {
         throw new Error('Failed to create recipe.');
@@ -183,7 +183,7 @@ const Recipe = () => {
           id="recipeName"
           name="recipeName"
           placeholder="Recipe name"
-          aria-autocomplete=''
+          aria-autocomplete='list'
           value={recipeName}
           onChange={(e) => {
             const newValue = e.target.value;
@@ -201,7 +201,7 @@ const Recipe = () => {
           id="recipeServingSize"
           name="recipeServingSize"
           placeholder="Number of servings"
-          aria-autocomplete=''
+          aria-autocomplete='list'
           value={numberOfServings}
           onChange={(e) => {
             const newValue = e.target.value;
