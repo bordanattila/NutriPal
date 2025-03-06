@@ -80,7 +80,7 @@ const FoodDetails = () => {
       }
     };
     fetchFoodDetails();
-  }, [foodId, source]);
+  }, [foodId, source, servingID]);
 
   // Set serving_id when a serving is selected
   const handleServingChange = (serving) => {

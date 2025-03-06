@@ -6,7 +6,51 @@ const BarcodeScanner = ({ onDetected, onError }) => {
   const [scanning, setScanning] = useState(false);
   // const detectionsCount = useRef({});
 
+  
   useEffect(() => {
+    function handleDetected (result) {
+      console.log('detected:', result);
+      const code = result.codeResult.code;
+      const format = result.codeResult.format;
+      
+      const isValid = isValidEAN13(code);
+      if (isValid) {
+        Quagga.stop();
+        onDetected(code);
+      }
+    
+  
+      console.log(`Detected ${format} code: ${code}`);
+  
+      // Implement a "vote" system for detected codes to ensure accuracy
+      // if (!detectionsCount.current[code]) {
+      //   detectionsCount.current[code] = 1;
+      // } else {
+      //   detectionsCount.current[code]++;
+      // }
+  
+      // If detect the same code multiple times, it's likely correct
+      // For EAN-13, also validate the checksum
+      // if (detectionsCount.current[code] >= 3 && (format !== 'ean_13' || isValidEAN13(code))) {
+      //   console.log('Confirmed code detected:', code);
+  
+      //   // Reset detections count
+      //   detectionsCount.current = {};
+  
+      //   // Temporarily stop scanning to avoid multiple rapid detections
+      //   Quagga.stop();
+      //   setScanning(false);
+  
+      //   if (onDetected) onDetected(code);
+  
+      //   // Optional: Restart scanning after a short delay
+      //   setTimeout(() => {
+      //     Quagga.start();
+      //     setScanning(true);
+      //   }, 1500);
+      // }
+      // if (onDetected) onDetected(code);
+    };
     if (scannerRef.current) {
       // Initialize Quagga2 with configuration
       Quagga.init(
@@ -68,7 +112,7 @@ const BarcodeScanner = ({ onDetected, onError }) => {
         setScanning(false);
       }
     };
-  }, [handleDetected, onError, scanning]);
+  }, [onDetected, onError, scanning]);
 
   function isValidEAN13(code) {
     if (!/^\d{13}$/.test(code)) return false;
@@ -81,49 +125,6 @@ const BarcodeScanner = ({ onDetected, onError }) => {
     return checkDigit === parseInt(code[12], 10);
   }
 
-  const handleDetected = (result) => {
-    console.log('detected:', result);
-    const code = result.codeResult.code;
-    const format = result.codeResult.format;
-    
-    const isValid = isValidEAN13(code);
-    if (isValid) {
-      Quagga.stop();
-      onDetected(code);
-    }
-  
-
-    console.log(`Detected ${format} code: ${code}`);
-
-    // Implement a "vote" system for detected codes to ensure accuracy
-    // if (!detectionsCount.current[code]) {
-    //   detectionsCount.current[code] = 1;
-    // } else {
-    //   detectionsCount.current[code]++;
-    // }
-
-    // If detect the same code multiple times, it's likely correct
-    // For EAN-13, also validate the checksum
-    // if (detectionsCount.current[code] >= 3 && (format !== 'ean_13' || isValidEAN13(code))) {
-    //   console.log('Confirmed code detected:', code);
-
-    //   // Reset detections count
-    //   detectionsCount.current = {};
-
-    //   // Temporarily stop scanning to avoid multiple rapid detections
-    //   Quagga.stop();
-    //   setScanning(false);
-
-    //   if (onDetected) onDetected(code);
-
-    //   // Optional: Restart scanning after a short delay
-    //   setTimeout(() => {
-    //     Quagga.start();
-    //     setScanning(true);
-    //   }, 1500);
-    // }
-    // if (onDetected) onDetected(code);
-  };
 
   // Visual feedback for scanning
   const handleProcessed = (result) => {

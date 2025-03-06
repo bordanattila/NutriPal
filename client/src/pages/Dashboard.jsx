@@ -72,7 +72,7 @@ const Dashboard = () => {
     };
     setGoal(calgoal)
     fetchTodaysLog();
-  }, [userId, calgoal]);
+  }, [userId, calgoal, todaysDate]);
 console.log("today's log", todaysLog)
   useEffect(() => {
     const totalCalories = async () => {
