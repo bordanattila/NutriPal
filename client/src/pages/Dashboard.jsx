@@ -23,8 +23,8 @@ const Dashboard = () => {
   const [proteinTotal, setProteinTotal] = useState(0);
   const [fatTotal, setFatTotal] = useState(0);
   const [goal, setGoal] = useState(0);
-  const [date, setDate] = useState(null);
-
+  const [date, setDate] = useState(DateTime.now());
+  
   const todaysDate = date.year+'-'+date.month+'-'+date.day
 
   const { loading, data, error } = useQuery(GET_USER, {
@@ -34,6 +34,7 @@ const Dashboard = () => {
       },
     },
     onError: (err) => {
+      setDate(DateTime.now())
       console.error(err); 
            // Check if the error is due to an expired token
            if (err.message.includes("Unauthorized")) {
@@ -49,7 +50,6 @@ const Dashboard = () => {
     }
   });
 
-  setDate = DateTime.now();
 
   const userId = data?.user?._id;
   const calgoal = data?.user?.calorieGoal;

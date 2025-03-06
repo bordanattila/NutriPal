@@ -42,7 +42,7 @@ const Calendar = ({
   useEffect(() => {
     const newDate = new Date(selectedYear, selectedMonth, selectedDay);
     onChange(newDate);
-  }, [selectedYear, selectedMonth, selectedDay, onChange]);
+  }, [selectedYear, selectedMonth, selectedDay]);
 
   // Ensure valid day when month/year changes
   useEffect(() => {

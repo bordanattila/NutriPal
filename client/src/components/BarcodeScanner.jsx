@@ -50,7 +50,8 @@ const BarcodeScanner = ({ onDetected, onError }) => {
           console.log('Quagga initialized successfully');
           Quagga.start();
           setScanning(true);
-        }, [handleDetected, onError, scanning]);
+        }
+      );
 
       // Set up the event listener for when a barcode is detected
       Quagga.onDetected(handleDetected);
@@ -67,7 +68,7 @@ const BarcodeScanner = ({ onDetected, onError }) => {
         setScanning(false);
       }
     };
-  }, []);
+  }, [handleDetected, onError, scanning]);
 
   function isValidEAN13(code) {
     if (!/^\d{13}$/.test(code)) return false;

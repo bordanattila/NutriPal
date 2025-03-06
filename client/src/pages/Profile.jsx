@@ -13,11 +13,11 @@ const Profile = () => {
     const [user, setUser] = useState({});
     const navigate = useNavigate();
     const [error, setError] = useState(null);
-    const [loading, setLoading] = useState(null);
+    const [loading, setLoading] = useState(false);
     const [calorieGoal, setCalorieGoal] = useState('');
     const [password, setPassword] = useState('');
     const [profilePic, setProfilePic] = useState(null);
-    setLoading = false;
+    
     const { loadingQuery, data, loadingError } = useQuery(GET_USER, {
         context: {
           headers: {
@@ -25,6 +25,7 @@ const Profile = () => {
           },
         },
         onError: (err) => {
+            setLoading(false);
           console.error(err); 
                // Check if the error is due to an expired token
                if (err.message.includes("Unauthorized")) {
@@ -39,12 +40,11 @@ const Profile = () => {
               }
         }
       });
-
-      user = null;
       
       const [updateUserProfile, { loading: updateloading, error:updateError } ] = useMutation(UPDATE_USER_PROFILE);
       console.log(updateloading)
       console.log(updateError)
+      console.log(user)
       const handleUpdate = async (e) => {
           e.preventDefault();
         try {
