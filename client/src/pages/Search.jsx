@@ -72,7 +72,7 @@ const Search = () => {
 
   if (loading  || !data || !data.user) return <div>Loading...</div>;
   if (logError) return <div>Error: {error.message}</div>;
-  
+  console.log("foodArray for error", foodArray)
   return (
     <div className="flex flex-col items-center justify-center min-h-max p-6">
 

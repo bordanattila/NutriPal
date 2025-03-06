@@ -13,7 +13,6 @@ const SearchBar = ({ nameOfFood, setNameOfFood, handleSearch, clearSearch, error
   // When BarcodeScanner detects a barcode.
   const handleDetectedBarcode = (barcode) => {
     console.log('Barcode detected:', barcode);
-    console.log('Barcode detected:', barcode.value);
     // You might want to set the food name to the scanned barcode value
     setNameOfFood(barcode);
     // Stop scanning once a barcode is detected

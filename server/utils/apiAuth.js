@@ -11,7 +11,7 @@ async function getAccessToken() {
   const tokenUrl = 'https://oauth.fatsecret.com/connect/token';
   const data = qs.stringify({
     grant_type: 'client_credentials',
-    scope: 'basic'
+    scope: 'basic premier barcode'
   });
 
   try {

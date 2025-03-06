@@ -46,6 +46,37 @@ router.get('/foodByName', async (req, res) => {
     }
 });
 
+const { convertUpcEtoUpcA } = require('../utils/barcodeConverter')
+// Endpoint to search foods via FatSecret API by barcode
+router.get('/foodByBarcode', async (req, res) => {
+
+    const { query } = req;
+    console.log("barcode", query.barcode)
+    try {
+        const upcA = await convertUpcEtoUpcA(query.barcode)
+        const formattedBarcode = upcA.padStart(13, '0');
+        console.log("formattedBarcode", formattedBarcode)
+        const token = await getAccessTokenValue();
+        const tokenUrl = 'https://platform.fatsecret.com/rest/food/barcode/find-by-id/v1';
+        const response = await axios.get(tokenUrl, {
+            params: {
+                method: 'food.find_id_for_barcode',
+                barcode: formattedBarcode,
+                format: 'json'
+            },
+            headers: {
+                // 'Content-Type': 'application/x-www-form-urlencoded',
+                'Authorization': 'Bearer ' + token // Use the access token
+            }
+        });
+        console.log("API Response Data:", response.data);
+        res.json(response.data); // Send back the response from FatSecret API
+    } catch (error) {
+        console.error('Error fetching food data:', error.response ? error.response.data : error.message);
+        res.status(500).json({ error: 'Failed to fetch food data' });
+    }
+});
+
 // Endpoint to search food by id
 router.get('/:sourcePage/foodById', async (req, res) => {
     const food_Id = req.query.food_id;
