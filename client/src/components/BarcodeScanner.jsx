@@ -88,7 +88,6 @@ const BarcodeScanner = ({ onDetected, onError }) => {
     
     const isValid = isValidEAN13(code);
     if (isValid) {
-      // Possibly also do a repeated detection check before finalizing
       Quagga.stop();
       onDetected(code);
     }
