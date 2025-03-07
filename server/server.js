@@ -7,6 +7,7 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 require('dotenv').config();
 const MongoStore = require('connect-mongo');
+const helmet = require('helmet');
 
 // Set up database
 const { typeDefs, resolvers } = require('./schemas');
@@ -82,6 +83,20 @@ if (process.env.NODE_ENV === 'production') {
 } else {
   app.use(express.static(path.join(__dirname, 'public')));
 }
+
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", "https://cdn.jsdelivr.net", "https://rsms.me", "'unsafe-inline'"],
+        scriptSrc: ["'self'", "https://cdn.tailwindcss.com", "https://kit.fontawesome.com"],
+        fontSrc: ["'self'", "data:"],
+        // Add other directives as needed
+      },
+    },
+  })
+);
 
 // Start server
 const startApolloServer = async (typeDefs, resolvers) => {

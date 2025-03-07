@@ -19,6 +19,7 @@
     "express-async-errors": "^3.1.1",
     "express-session": "^1.18.0",
     "graphql": "^16.9.0",
+    "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.2",
     "ky": "^1.7.2",
     "mongoose": "^8.6.0",
