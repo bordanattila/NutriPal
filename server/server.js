@@ -72,12 +72,11 @@ app.use(
   })
 );
 
-app.use('/', require('./controllers/'));
 
 // Serve static files from the React app
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, '../client/build')));
-
+  
   // Create a route that will serve up the `../client/build/index.html` page
   app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, '../client/build', 'index.html'));
@@ -85,6 +84,8 @@ if (process.env.NODE_ENV === 'production') {
 } else {
   app.use(express.static(path.join(__dirname, 'public')));
 }
+
+app.use('/api', require('./controllers/'));
 
 // Start server
 const startApolloServer = async (typeDefs, resolvers) => {
