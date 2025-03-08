@@ -41,7 +41,7 @@ const server = new ApolloServer({
 });
 
 app.use(cors({
-  origin: process.env.CLIENT_URL,
+  origin: [process.env.CLIENT_URL, 'https://nutripal-hbcff5htezbqdwe9.canadacentral-01.azurewebsites.net'],
   methods: ['GET', 'POST', 'OPTIONS'],
   credentials: true
 }));
@@ -75,10 +75,12 @@ app.use(
 
 // Serve static files from the React app
 if (process.env.NODE_ENV === 'production') {
+  console.log('Serving static files from:', path.join(__dirname, '../client/build'));
   app.use(express.static(path.join(__dirname, '../client/build')));
   
   // Create a route that will serve up the `../client/build/index.html` page
   app.get('*', (req, res) => {
+    console.log('Catch-all route hit, serving index.html');
     res.sendFile(path.join(__dirname, '../client/build', 'index.html'));
   });
 } else {
