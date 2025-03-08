@@ -16,7 +16,21 @@ const db = require('./config/connection');
 // Set up Express
 const app = express();
 const PORT = process.env.PORT || 4000;
-const isProduction = process.env.NODE_ENV === 'production';
+
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", "https://cdn.jsdelivr.net", "https://rsms.me", "'unsafe-inline'"],
+        scriptSrc: ["'self'", "https://cdn.tailwindcss.com", "https://kit.fontawesome.com"],
+        fontSrc: ["'self'", "data:"],
+        // Add other directives as needed
+      },
+    },
+  })
+);
+
 const server = new ApolloServer({
   typeDefs,
   resolvers,
@@ -31,18 +45,6 @@ app.use(cors({
   methods: ['GET', 'POST', 'OPTIONS'],
   credentials: true
 }));
-
-// Preflight CORS Headers
-// app.use((req, res, next) => {
-//   res.header("Access-Control-Allow-Origin", process.env.CLIENT_URL);
-//   res.header("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
-//   res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-//   res.header("Access-Control-Allow-Credentials", "true");
-//   if (req.method === 'OPTIONS') {
-//     return res.sendStatus(204); // No Content
-//   }
-//   next();
-// });
  
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -83,20 +85,6 @@ if (process.env.NODE_ENV === 'production') {
 } else {
   app.use(express.static(path.join(__dirname, 'public')));
 }
-
-app.use(
-  helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        styleSrc: ["'self'", "https://cdn.jsdelivr.net", "https://rsms.me", "'unsafe-inline'"],
-        scriptSrc: ["'self'", "https://cdn.tailwindcss.com", "https://kit.fontawesome.com"],
-        fontSrc: ["'self'", "data:"],
-        // Add other directives as needed
-      },
-    },
-  })
-);
 
 // Start server
 const startApolloServer = async (typeDefs, resolvers) => {
