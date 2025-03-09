@@ -39,7 +39,12 @@ jobs:
           cd ..
           echo "Client build complete. Checking build directory:"
           ls -la client/build || echo "Build directory not found"
-          
+
+      - name: Debug client build directory
+        run: |
+          echo "Listing client/build contents:"
+          ls -la client/build
+
       - name: Server dependencies and build
         run: |
           echo "Installing server dependencies..."
