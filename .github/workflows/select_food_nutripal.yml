@@ -64,12 +64,15 @@ jobs:
           echo "Client build directory:"
           ls -la client/build || echo "Build directory not found"
       
-      - name: Zip artifact for deployment
+      - name: Prepare deployment package
         run: |
+          echo "Copying client build to deployment folder..."
+          cp -r client/build ./build
+          echo "Contents of build folder:"
+          ls -la build
           echo "Creating deployment package..."
-          zip -r release.zip . -x "node_modules/*" "client/node_modules/*"
-          echo "Zip file created. Checking contents:"
-          unzip -l release.zip | grep -i client/build
+          zip -r release.zip . -x "node_modules/*"
+
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
