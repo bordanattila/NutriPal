@@ -76,10 +76,7 @@ const BarcodeScanner = ({ onDetected, onError }) => {
           },
           decoder: {
             // Limit to UPC barcode readers for performance
-            // readers: ['upc_e_reader']
             readers: [
-              // 'upc_e_reader',
-              // 'upc_reader',
               'ean_reader'
             ]
           },
