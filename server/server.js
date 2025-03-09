@@ -8,6 +8,7 @@ const bodyParser = require('body-parser');
 require('dotenv').config();
 const MongoStore = require('connect-mongo');
 const helmet = require('helmet');
+const fs = require('fs');
 
 // Set up database
 const { typeDefs, resolvers } = require('./schemas');
@@ -73,16 +74,68 @@ app.use(
 );
 
 
-// Serve static files from the React app
-if (process.env.NODE_ENV === 'production') {
-  console.log('Serving static files from:', path.join(__dirname, '../client/build'));
-  app.use(express.static(path.join(__dirname, '../client/build')));
+// // Serve static files from the React app
+// if (process.env.NODE_ENV === 'production') {
+//   console.log('Serving static files from:', path.join(__dirname, '../client/build'));
+//   app.use(express.static(path.join(__dirname, '../client/build')));
   
-  // Create a route that will serve up the `../client/build/index.html` page
-  app.get('*', (req, res) => {
-    console.log('Catch-all route hit, serving index.html');
-    res.sendFile(path.join(__dirname, '../client/build', 'index.html'));
-  });
+//   // Create a route that will serve up the `../client/build/index.html` page
+//   app.get('*', (req, res) => {
+//     console.log('Catch-all route hit, serving index.html');
+//     res.sendFile(path.join(__dirname, '../client/build', 'index.html'));
+//   });
+// } else {
+//   app.use(express.static(path.join(__dirname, 'public')));
+// }
+
+if (process.env.NODE_ENV === 'production') {
+  // Try multiple possible build paths
+  const possiblePaths = [
+    path.join(__dirname, '../client/build'),
+    path.join(__dirname, './client/build'),
+    path.join(__dirname, '../../client/build'),
+    path.join(__dirname, 'client/build')
+  ];
+  
+  let buildPath = null;
+  
+  // Log the current directory and possible paths for debugging
+  console.log('Current directory:', __dirname);
+  console.log('Checking possible build paths...');
+  
+  for (const testPath of possiblePaths) {
+    console.log(`Testing path: ${testPath}`);
+    try {
+      if (fs.existsSync(testPath)) {
+        console.log(`Path exists: ${testPath}`);
+        const files = fs.readdirSync(testPath);
+        console.log(`Files in ${testPath}:`, files);
+        
+        if (files.includes('index.html')) {
+          buildPath = testPath;
+          console.log(`Found valid build path: ${buildPath}`);
+          break;
+        }
+      }
+    } catch (err) {
+      console.log(`Error checking path ${testPath}:`, err.message);
+    }
+  }
+  
+  if (buildPath) {
+    console.log(`Serving static files from: ${buildPath}`);
+    app.use(express.static(buildPath));
+    
+    app.get('*', (req, res) => {
+      console.log('Catch-all route hit, serving index.html');
+      res.sendFile(path.join(buildPath, 'index.html'));
+    });
+  } else {
+    console.log('WARNING: Could not find client build directory');
+    app.get('*', (req, res) => {
+      res.status(500).send('Server configuration error: Client build directory not found. Check logs for details.');
+    });
+  }
 } else {
   app.use(express.static(path.join(__dirname, 'public')));
 }
