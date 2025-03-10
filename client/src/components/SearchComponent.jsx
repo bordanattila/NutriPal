@@ -9,6 +9,7 @@ export const handleSearch = async ({ name, setArray, setError }) => {
     if (/^\d+$/.test(name)) {
       // Call the barcode API endpoint
       try {
+        console.log("input is barcode")
         const response = await api.get(`api/foodByBarcode?barcode=${name}`);
         const data = await response.json();
         console.log("barcode return", data)
@@ -20,7 +21,9 @@ export const handleSearch = async ({ name, setArray, setError }) => {
       }
     } else {
       // Otherwise, treat it as a normal text search.
-  try {
+      try {
+    console.log("input is text")
+    console.log("input is text", name)
     const response = await api.get(`api/foodByName?searchExpression=${name}`);
     const data = await response.json();
     setArray(data?.foods?.food || []);

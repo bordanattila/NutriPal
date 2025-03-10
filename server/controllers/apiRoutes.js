@@ -22,8 +22,9 @@ router.get('/token', async (req, res) => {
 
 // Endpoint to search foods via FatSecret API by name
 router.get('/foodByName', async (req, res) => {
-
+    console.log(req)
     const { query } = req;
+    console.log(query)
     const token = await getAccessTokenValue();
     const tokenUrl = 'https://platform.fatsecret.com/rest/foods/search/v1';
     const data = qs.stringify({
