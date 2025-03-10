@@ -26,27 +26,17 @@ app.use(
         styleSrc: ["'self'", "https://cdn.jsdelivr.net", "https://rsms.me", "'unsafe-inline'"],
         scriptSrc: ["'self'", "https://cdn.tailwindcss.com", "https://kit.fontawesome.com"],
         fontSrc: ["'self'", "data:"],
-        // Add other directives as needed
       },
     },
   })
 );
-
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-  context: authMiddleware,
-  cache: 'bounded',
-  introspection: true, //!isProduction, Disable introspection in production
-  playground: true,
-});
 
 app.use(cors({
   origin: [process.env.CLIENT_URL, 'https://nutripal-hbcff5htezbqdwe9.canadacentral-01.azurewebsites.net'],
   methods: ['GET', 'POST', 'OPTIONS'],
   credentials: true
 }));
- 
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -73,6 +63,33 @@ app.use(
   })
 );
 
+app.use('/', require('./controllers/'));
+
+// Set up Apollo Server
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  context: authMiddleware,
+  cache: 'bounded',
+  introspection: true, //!isProduction, Disable introspection in production
+  playground: true,
+});
+
+// Start server
+const startApolloServer = async (typeDefs, resolvers) => {
+  await server.start();
+  server.applyMiddleware({ app });
+
+  db.once('open', () => {
+    app.listen(PORT, () => {
+      console.log(`API server running on port ${PORT}!`);
+      console.log(`Use GraphQL at http://localhost:${PORT}${server.graphqlPath}`);
+    })
+  })
+};
+
+// Call the async function to start the server
+startApolloServer(typeDefs, resolvers);
 
 // Serve static files from the React app
 if (process.env.NODE_ENV === 'production') {
@@ -88,7 +105,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 // if (process.env.NODE_ENV === 'production') {
-//   // Try multiple possible build paths
+  //   // Try multiple possible build paths
 //   const possiblePaths = [
 //     path.join(__dirname, '../client/build'),
 //     path.join(__dirname, './client/build'),
@@ -139,21 +156,4 @@ if (process.env.NODE_ENV === 'production') {
 //   app.use(express.static(path.join(__dirname, 'public')));
 // }
 
-app.use('/', require('./controllers/'));
-
-// Start server
-const startApolloServer = async (typeDefs, resolvers) => {
-  await server.start();
-  server.applyMiddleware({ app });
-
-  db.once('open', () => {
-    app.listen(PORT, () => {
-      console.log(`API server running on port ${PORT}!`);
-      console.log(`Use GraphQL at http://localhost:${PORT}${server.graphqlPath}`);
-    })
-  })
-};
-
-// Call the async function to start the server
-startApolloServer(typeDefs, resolvers);
 
