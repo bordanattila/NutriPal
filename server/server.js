@@ -40,6 +40,7 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
+app.use('/', require('./controllers/'));
 
 // Configure session middleware
 // Middleware to set secure cookie based on request
@@ -62,8 +63,6 @@ app.use(
     }
   })
 );
-
-app.use('/', require('./controllers/'));
 
 // Set up Apollo Server
 const server = new ApolloServer({
