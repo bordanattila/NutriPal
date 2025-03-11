@@ -51,6 +51,7 @@ const DailyLogs = () => {
         // Check if foods exist; if not, use an empty array.
         // If foods exists, update logHistory; otherwise, display message
         if (responseData.foods) {
+          console.log("daily log response", responseData)
           setLogHistory(responseData.foods);
           setLogMessage('');
         } else if (responseData.message) {

@@ -126,7 +126,7 @@ router.get('/foodByDate/:user_id/date/:dateCreated', async (req, res) => {
     try {
         const userId = req.params.user_id;
         const selectedDate = (req.params.dateCreated);
-
+        console.log("daily log selected date", selectedDate)
         // // Create variable for start of date
         // const startOfDay = DateTime.now()
         //     .setZone('America/New_York')
@@ -224,6 +224,7 @@ router.post('/one-food', async (req, res) => {
 router.post('/daily-log', async (req, res) => {
     try {
         const { user_id, foods } = req.body;
+        console.log("dashboard params", req.body.foods)
 
         // Get current date and compute start and end of day.
         const startOfDay = DateTime.now()
