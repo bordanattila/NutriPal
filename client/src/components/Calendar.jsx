@@ -1,19 +1,25 @@
 import { useState, useEffect } from 'react';
 // import { Calendar, ChevronDown } from 'lucide-react';
 import { ChevronDownIcon } from '@heroicons/react/20/solid';
+import { DateTime } from 'luxon';
 
-const Calendar = ({ 
-  value = new Date(),
-  onChange = () => {},
+const Calendar = ({
+  value = DateTime.now(),
+  onChange = () => { },
   minYear = 1920,
-  maxYear = new Date().getFullYear(),
+  maxYear = DateTime.now().year,
   className = ''
 }) => {
   // States for individual selects
-  const [selectedYear, setSelectedYear] = useState(value.getFullYear());
-  const [selectedMonth, setSelectedMonth] = useState(value.getMonth());
-  const [selectedDay, setSelectedDay] = useState(value.getDate());
-  
+  const [selectedYear, setSelectedYear] = useState(value.year);
+  const [selectedMonth, setSelectedMonth] = useState(value.month);
+  const [selectedDay, setSelectedDay] = useState(value.day);
+  useEffect(() => {
+    setSelectedYear(value.year);
+    setSelectedMonth(value.month);
+    setSelectedDay(value.day);
+  }, [value]);
+
   // States for dropdowns
   const [openSelect, setOpenSelect] = useState('');
 
@@ -23,6 +29,7 @@ const Calendar = ({
     (_, i) => maxYear - i
   );
 
+  // Use luxon to determine the number of days in the selected month/year
   const months = [
     'January', 'February', 'March', 'April',
     'May', 'June', 'July', 'August',
@@ -30,7 +37,7 @@ const Calendar = ({
   ];
 
   const getDaysInMonth = (year, month) => {
-    return new Date(year, month + 1, 0).getDate();
+    return DateTime.fromObject({ year, month }).daysInMonth;
   };
 
   const days = Array.from(
@@ -40,7 +47,7 @@ const Calendar = ({
 
   // Update parent when any selection changes
   useEffect(() => {
-    const newDate = new Date(selectedYear, selectedMonth, selectedDay);
+    const newDate = DateTime.fromObject({ year: selectedYear, month: selectedMonth, day: selectedDay });
     onChange(newDate);
   }, [selectedYear, selectedMonth, selectedDay, onChange]);
 
@@ -52,7 +59,8 @@ const Calendar = ({
     }
   }, [selectedYear, selectedMonth, selectedDay]);
 
-  const SelectWrapper = ({ 
+  // Generic select dropdown component
+  const SelectWrapper = ({
     options,
     value,
     onChange,
@@ -109,36 +117,39 @@ const Calendar = ({
   );
 
   return (
-    <div 
+    <div
       className={`relative ${className}`}
       onClick={e => e.stopPropagation()}
-    >        
-        {/* Date selects */}
-        <div className="flex gap-2">
-          <SelectWrapper
-            type="month"
-            options={months.map((_, i) => i)}
-            value={selectedMonth}
-            onChange={setSelectedMonth}
-            format={(monthIndex) => months[monthIndex]}
-          />
-          
-          <SelectWrapper
-            type="day"
-            options={days}
-            value={selectedDay}
-            onChange={setSelectedDay}
-            format={(day) => day.toString().padStart(2, '0')}
-          />
-          
-          <SelectWrapper
-            type="year"
-            options={years}
-            value={selectedYear}
-            onChange={setSelectedYear}
-            format={(year) => year.toString()}
-          />
-        </div>
+    >
+      {/* Date selects */}
+      <div className="flex gap-2">
+        <SelectWrapper
+          type="month"
+          options={Array.from({ length: 12 }, (_, i) => i + 1)}
+          value={selectedMonth}
+          onChange={setSelectedMonth}
+          format={(monthNumber) => {
+            // console.log("Formatting month number:", monthNumber);
+            return months[monthNumber - 1];
+          }}
+        />
+
+        <SelectWrapper
+          type="day"
+          options={days}
+          value={selectedDay}
+          onChange={setSelectedDay}
+          format={(day) => day.toString().padStart(2, '0')}
+        />
+
+        <SelectWrapper
+          type="year"
+          options={years}
+          value={selectedYear}
+          onChange={setSelectedYear}
+          format={(year) => year.toString()}
+        />
+      </div>
     </div>
   );
 };

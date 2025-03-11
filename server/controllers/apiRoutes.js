@@ -123,25 +123,36 @@ router.get('/recent-foods/:user_id', async (req, res) => {
 
 // Endpoint to query selected day's food logs for a user
 router.get('/foodByDate/:user_id/date/:dateCreated', async (req, res) => {
-    console.log('todays req.param' + req.params.user_id)
-    console.log('todays req.param' + req.params.dateCreated)
     try {
         const userId = req.params.user_id;
-        const selectedDate = new Date(req.params.dateCreated);
+        const selectedDate = (req.params.dateCreated);
 
-        // Create variable for start of date
-        const startOfDay = DateTime.now()
-            .setZone('America/New_York')
-            .startOf('day')
-            .toUTC()
-            .toJSDate();
+        // // Create variable for start of date
+        // const startOfDay = DateTime.now()
+        //     .setZone('America/New_York')
+        //     .startOf('day')
+        //     .toUTC()
+        //     .toJSDate();
 
-        // Create variable for end of date
-        const endOfDay = DateTime.now()
-            .setZone('America/New_York')
-            .endOf('day')
-            .toUTC()
-            .toJSDate();
+        // // Create variable for end of date
+        // const endOfDay = DateTime.now()
+        //     .setZone('America/New_York')
+        //     .endOf('day')
+        //     .toUTC()
+        //     .toJSDate();
+
+        // Parse the date using Luxon (assumes the format 'yyyy-MM-dd')
+        const selected = DateTime.fromFormat(selectedDate, 'yyyy-MM-dd', { zone: 'America/New_York' });
+
+        // Compute the start and end of the selected day
+        const startOfDay = selected
+        .startOf('day')
+        .toUTC()
+        .toJSDate();
+        const endOfDay = selected
+        .endOf('day')
+        .toUTC()
+        .toJSDate();
 
         const recentFoods = await DailyLog.findOne({
             user_id: userId,
@@ -181,7 +192,6 @@ router.post('/one-food', async (req, res) => {
         // Destructure the required fields from the request body
         const { user_id, food_id, food_name, serving_id, serving_size, number_of_servings, calories, carbohydrate, protein, fat, saturated_fat, sodium, fiber, meal_type, brand } = req.body;
 
-        console.log("brand", brand)
         // Create a new OneFood entry
         const newFood = new OneFood({
             user_id,
@@ -202,7 +212,6 @@ router.post('/one-food', async (req, res) => {
             meal_type: meal_type.toLowerCase(),
             brand
         });
-        console.log(newFood)
         await newFood.save();
         res.status(201).json(newFood);
     } catch (error) {
@@ -289,7 +298,6 @@ router.post('/recipe', async (req, res) => {
 
 // Endpoint to handle token refreshing
 router.post('/refresh', async (req, res) => {
-    console.log('reftesh token' + req.body)
     const { token } = req.body;
 
     if (!token)

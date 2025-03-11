@@ -87,7 +87,6 @@ const startApolloServer = async (typeDefs, resolvers) => {
   db.once('open', () => {
     app.listen(PORT, () => {
       console.log(`API server running on port ${PORT}!`);
-      console.log(`Use GraphQL at http://localhost:${PORT}${server.graphqlPath}`);
     })
   })
 };
@@ -107,57 +106,3 @@ if (process.env.NODE_ENV === 'production') {
 } else {
   app.use(express.static(path.join(__dirname, 'public')));
 }
-
-// if (process.env.NODE_ENV === 'production') {
-  //   // Try multiple possible build paths
-//   const possiblePaths = [
-//     path.join(__dirname, '../client/build'),
-//     path.join(__dirname, './client/build'),
-//     path.join(__dirname, '../../client/build'),
-//     path.join(__dirname, 'client/build')
-//   ];
-  
-//   let buildPath = null;
-  
-//   // Log the current directory and possible paths for debugging
-//   console.log('Current directory:', __dirname);
-//   console.log('Checking possible build paths...');
-  
-//   for (const testPath of possiblePaths) {
-//     console.log(`Testing path: ${testPath}`);
-//     try {
-//       if (fs.existsSync(testPath)) {
-//         console.log(`Path exists: ${testPath}`);
-//         const files = fs.readdirSync(testPath);
-//         console.log(`Files in ${testPath}:`, files);
-        
-//         if (files.includes('index.html')) {
-//           buildPath = testPath;
-//           console.log(`Found valid build path: ${buildPath}`);
-//           break;
-//         }
-//       }
-//     } catch (err) {
-//       console.log(`Error checking path ${testPath}:`, err.message);
-//     }
-//   }
-  
-//   if (buildPath) {
-//     console.log(`Serving static files from: ${buildPath}`);
-//     app.use(express.static(buildPath));
-    
-//     app.get('*', (req, res) => {
-//       console.log('Catch-all route hit, serving index.html');
-//       res.sendFile(path.join(buildPath, 'index.html'));
-//     });
-//   } else {
-//     console.log('WARNING: Could not find client build directory');
-//     app.get('*', (req, res) => {
-//       res.status(500).send('Server configuration error: Client build directory not found. Check logs for details.');
-//     });
-//   }
-// } else {
-//   app.use(express.static(path.join(__dirname, 'public')));
-// }
-
-

@@ -58,13 +58,10 @@ const FoodDetails = () => {
   useEffect(() => {
     const fetchFoodDetails = async () => {
       setLoading(true);
-      console.log("foodID", foodId)
-      console.log(servingID)
       try {
         const response = await api.get(`api/${source}/foodById?food_id=${foodId}`);
         const responseData = await response.json();
         setFoodDetails(responseData);
-        console.log("responseData", responseData)
         // The purpose of this line is to ensure that there is at least one serving available before proceeding to set the selected serving in the state. 
         // It prevents potential errors that could occur if the code tries to access properties of undefined or null.
         if (responseData.food?.servings?.serving?.length > 0) {

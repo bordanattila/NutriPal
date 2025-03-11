@@ -37,9 +37,6 @@ const Login = () => {
 
     try {
       // Make a POST request to the login endpoint
-      console.log(username, password)
-      console.log('API URL:', process.env.REACT_APP_API_URL);
-
       const response = await api.post('user/login', {
         json: { username, password },
       });

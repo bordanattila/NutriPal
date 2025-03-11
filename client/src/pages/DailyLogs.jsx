@@ -7,10 +7,9 @@ import { GET_USER } from '../utils/mutations';
 import useAuth from '../hooks/RefreshToken';
 import Calendar from '../components/Calendar';
 // TODO
-// change to luxon
 // fix date selection
 // implement remove function
-import dayjs from 'dayjs'; 
+import { DateTime } from 'luxon';
 
 
 const api = ky.create({
@@ -21,7 +20,8 @@ const DailyLogs = () => {
   useAuth();
   const navigate = useNavigate();
   const [logHistory, setLogHistory] = useState([]);
-  const [date, setDate] = useState(new Date());
+  const [logMessage, setLogMessage] = useState('');
+  const [date, setDate] = useState(DateTime.now());
 
   const { loading, data, logError } = useQuery(GET_USER, {
     context: {
@@ -38,23 +38,38 @@ const DailyLogs = () => {
 
   const userId = data?.user?._id;
 
+  // Create variable for start of date
+  const startOfDay = DateTime.now()
+    .setZone('America/New_York')
+    .startOf('day')
+
   useEffect(() => {
     const fetchLogHistory = async () => {
       try {
-        const formattedDate = dayjs(date).format('YYYY-MM-DD'); // Format date for URL
+        // Ensure 'date' is a Luxon DateTime.
+        const luxonDate = DateTime.isDateTime(date) ? date : DateTime.fromJSDate(date);
+        const formattedDate = luxonDate.toFormat('yyyy-MM-dd'); // Format date for URL
         const response = await api.get(`api/foodByDate/${userId}/date/${formattedDate}`);
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
-        const data = await response.json();
-        setLogHistory(data.foods);
+        const responseData = await response.json();
+        // Check if foods exist; if not, use an empty array.
+        // If foods exists, update logHistory; otherwise, display message
+        if (responseData.foods) {
+          setLogHistory(responseData.foods);
+          setLogMessage('');
+        } else if (responseData.message) {
+          setLogHistory([]);
+          setLogMessage(responseData.message);
+        }
       } catch (error) {
         console.error('Error fetching food logs for selected date:', error);
       }
     };
-  
+
     if (userId) fetchLogHistory();
-  }, [date, userId]); 
+  }, [date, userId]);
 
   // Group logHistory by meal_type
   const mealTypeOrder = ["breakfast", "lunch", "dinner", "snack"]
@@ -76,6 +91,8 @@ const DailyLogs = () => {
         />
       </div>
       <div className="flex flex-col items-center justify-center w-full p-2">
+      {logHistory.length > 0 ? (
+        <>
         {groupedLogs.map(group => (
           <div key={group.mealType} className="flex flex-col items-center justify-center w-full p-2">
             {group.foods.length > 0 && (
@@ -89,7 +106,7 @@ const DailyLogs = () => {
                           <strong>{food.food_name}</strong> <span className='brandVisibility'>({food.brand})</span>
                           <br />
                           <span className="text-sm">
-                             Calories: {food.calories} | Carb: {food.carbohydrate} | Protein: {food.protein} | Fat: {food.fat} | Number or servings: {food.number_of_servings} | Serving size: {food.serving_size}
+                            Calories: {food.calories} | Carb: {food.carbohydrate} | Protein: {food.protein} | Fat: {food.fat} | Number or servings: {food.number_of_servings} | Serving size: {food.serving_size}
                           </span>
                         </Link>
                       </div>
@@ -100,6 +117,10 @@ const DailyLogs = () => {
             )}
           </div>
         ))}
+        </>
+            ) : (
+              <span>{logMessage}</span>
+            )}
       </div>
     </div>
   );
