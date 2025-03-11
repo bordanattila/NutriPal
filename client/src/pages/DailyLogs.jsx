@@ -34,15 +34,9 @@ const DailyLogs = () => {
     }
   });
 
-  // Get the food items logged today
-
   const userId = data?.user?._id;
 
-  // Create variable for start of date
-  const startOfDay = DateTime.now()
-    .setZone('America/New_York')
-    .startOf('day')
-
+  // Get the food items logged today
   useEffect(() => {
     const fetchLogHistory = async () => {
       try {
