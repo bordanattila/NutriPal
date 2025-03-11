@@ -22,10 +22,9 @@ export const handleSearch = async ({ name, setArray, setError }) => {
   } else {
     // Otherwise, treat it as a normal text search.
     try {
-      console.log("input is text")
-      console.log("input is text", name)
       const response = await api.get(`api/foodByName?searchExpression=${name}`);
       const data = await response.json();
+      console.log(data)
       setArray(data?.foods?.food || []);
       setError(null);
     } catch (error) {

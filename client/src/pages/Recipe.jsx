@@ -22,7 +22,7 @@ const Recipe = () => {
   const [ingredientsList, setIngredientsList] = useState([]);
   const [ingredientsID, setIngredientsID] = useState([]);
   const [foodName, setFoodName] = useState('');
-  const [foodArray, setFoodArray] = useState([]);
+  const [arrayToDisplay, setArrayToDisplay] = useState([]);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
@@ -54,7 +54,7 @@ const Recipe = () => {
     e.preventDefault();
     await handleSearch({
       name: foodName,
-      setArray: setFoodArray,
+      setArray: setArrayToDisplay,
       setError: setError,
     });
   };
@@ -63,7 +63,7 @@ const Recipe = () => {
 
   const clearSearch = () => {
     setFoodName('');
-    setFoodArray([]);
+    setArrayToDisplay([]);
   };
 
   // Add recipe name and num of servings to local storage
@@ -221,11 +221,11 @@ const Recipe = () => {
       />
       {/* Search Results */}
       <ul className="list-none mt-4 w-full max-w-lg">
-        {foodArray.map((food) => (
+        {arrayToDisplay.map((food) => (
           <li key={food.food_id} className="py-2 ">
             <div className='rounded-md p-2 bg-teal-100'>
               <Link to={`/${sourcePage}/foodById/${food.food_id}`} className="text-blue-700 hover:underline">
-                <strong>{food.food_name}</strong>
+                <strong>{food.food_name}</strong> <span className='brandVisibility'>({food.brand_name})</span>
                 <br />
                 <span className='text-sm'>{food.food_description}</span>
                 <br />

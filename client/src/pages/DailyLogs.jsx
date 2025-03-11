@@ -86,7 +86,7 @@ const DailyLogs = () => {
                     <li key={food.food_id} className="py-2 ">
                       <div className="rounded-md p-2 bg-teal-100">
                         <Link to={`/foodById/${food.food_id}`} className="text-blue-700 hover:underline">
-                          <strong>{food.food_name}</strong>
+                          <strong>{food.food_name}</strong> <span className='brandVisibility'>({food.brand})</span>
                           <br />
                           <span className="text-sm">
                              Calories: {food.calories} | Carb: {food.carbohydrate} | Protein: {food.protein} | Fat: {food.fat} | Number or servings: {food.number_of_servings} | Serving size: {food.serving_size}

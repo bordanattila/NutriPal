@@ -39,14 +39,15 @@ const typeDefs = gql`
         serving_id: String!
         serving_size: String!
         number_of_servings: Int!
-        calories: Int!
-        carbohydrate: Int!
-        protein: Int!
-        fat: Int!
-        saturated_fat: Int!
-        sodium: Int!
-        fiber: Int!
+        calories: Int
+        carbohydrate: Int
+        protein: Int
+        fat: Int
+        saturated_fat: Int
+        sodium: Int
+        fiber: Int
         meal_type: String!
+        brand: String
       }
 
     type Nutrition {

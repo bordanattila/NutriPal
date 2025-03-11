@@ -127,6 +127,7 @@ const FoodDetails = () => {
         saturated_fat: selectedServing.saturated_fat * servingCount,
         sodium: selectedServing.sodium * servingCount,
         fiber: selectedServing.fiber * servingCount,
+        brand: foodDetails.food.brand_name,
         meal_type: meal.toLocaleLowerCase(),
       };
 
@@ -176,6 +177,7 @@ const FoodDetails = () => {
         sodium: selectedServing.sodium * servingCount,
         fiber: selectedServing.fiber * servingCount,
         meal_type: meal.toLocaleLowerCase(),
+        brand: foodDetails.food.brand_name,
       };
 
       try {

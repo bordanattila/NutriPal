@@ -34,37 +34,41 @@ const oneFoodSchema = new Schema({
   },
   calories: {
     type: Number,
-    required: true,
+    required: false,
   },
   carbohydrate: {
     type: Number,
-    required: true,
+    required: false,
   },
   protein: {
     type: Number,
-    required: true,
+    required: false,
   },
   fat: {
     type: Number,
-    required: true,
+    required: false,
   },
   saturated_fat: {
     type: Number,
-    required: true,
+    required: false,
   },
   sodium: {
     type: Number,
-    required: true,
+    required: false,
   },
   fiber: {
     type: Number,
-    required: true,
+    required: false,
   },
   meal_type: {
     type: String,
     enum: ['breakfast', 'lunch', 'dinner', 'snack'],
     required: true,
   },
+  brand: {
+    type: String,
+    required: false,
+  }
 }
 );
 

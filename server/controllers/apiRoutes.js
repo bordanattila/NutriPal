@@ -22,9 +22,7 @@ router.get('/token', async (req, res) => {
 
 // Endpoint to search foods via FatSecret API by name
 router.get('/foodByName', async (req, res) => {
-    console.log(req)
     const { query } = req;
-    console.log(query)
     const token = await getAccessTokenValue();
     const tokenUrl = 'https://platform.fatsecret.com/rest/foods/search/v1';
     const data = qs.stringify({
@@ -149,7 +147,6 @@ router.get('/foodByDate/:user_id/date/:dateCreated', async (req, res) => {
             user_id: userId,
             dateCreated: { $gte: startOfDay, $lte: endOfDay }
         }).populate('foods')
-        console.log
         if (!recentFoods) {
             return res.json({ message: 'No food has been logged for this day.' });
         }
@@ -182,8 +179,9 @@ router.get('/saved-recipes/:user_id', async (req, res) => {
 router.post('/one-food', async (req, res) => {
     try {
         // Destructure the required fields from the request body
-        const { user_id, food_id, food_name, serving_id, serving_size, number_of_servings, calories, carbohydrate, protein, fat, saturated_fat, sodium, fiber, meal_type } = req.body;
+        const { user_id, food_id, food_name, serving_id, serving_size, number_of_servings, calories, carbohydrate, protein, fat, saturated_fat, sodium, fiber, meal_type, brand } = req.body;
 
+        console.log("brand", brand)
         // Create a new OneFood entry
         const newFood = new OneFood({
             user_id,
@@ -201,8 +199,10 @@ router.post('/one-food', async (req, res) => {
             sodium,
             fiber,
             // Convert to lowercase
-            meal_type: meal_type.toLowerCase()
+            meal_type: meal_type.toLowerCase(),
+            brand
         });
+        console.log(newFood)
         await newFood.save();
         res.status(201).json(newFood);
     } catch (error) {

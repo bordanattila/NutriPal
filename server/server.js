@@ -26,6 +26,7 @@ app.use(
         styleSrc: ["'self'", "https://cdn.jsdelivr.net", "https://rsms.me", "'unsafe-inline'"],
         scriptSrc: ["'self'", "https://cdn.tailwindcss.com", "https://kit.fontawesome.com"],
         fontSrc: ["'self'", "data:"],
+        imgSrc: ["'self'", "data:", "https://platform.fatsecret.com"],
       },
     },
   })
@@ -40,7 +41,6 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-app.use('/', require('./controllers/'));
 
 // Configure session middleware
 // Middleware to set secure cookie based on request
@@ -63,6 +63,11 @@ app.use(
     }
   })
 );
+
+// Mount your API and user routes 
+app.use('/api', require('./controllers/apiRoutes'));
+app.use('/user', require('./controllers/userRoutes'));
+
 
 // Set up Apollo Server
 const server = new ApolloServer({
