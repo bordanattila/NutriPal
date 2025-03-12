@@ -143,7 +143,7 @@ router.get('/foodByDate/:user_id/date/:dateCreated', async (req, res) => {
 
         // Parse the date using Luxon (assumes the format 'yyyy-MM-dd')
         const selected = DateTime.fromFormat(selectedDate, 'yyyy-MM-dd', { zone: 'America/New_York' });
-
+console.log("selected", selected)
         // Compute the start and end of the selected day
         const startOfDay = selected
         .startOf('day')
@@ -153,11 +153,15 @@ router.get('/foodByDate/:user_id/date/:dateCreated', async (req, res) => {
         .endOf('day')
         .toUTC()
         .toJSDate();
+        console.log("Computed startOfDay:", startOfDay);
+console.log("Computed endOfDay:", endOfDay);
+
 
         const recentFoods = await DailyLog.findOne({
             user_id: userId,
             dateCreated: { $gte: startOfDay, $lte: endOfDay }
         }).populate('foods')
+        console.log(recentFoods)
         if (!recentFoods) {
             return res.json({ message: 'No food has been logged for this day.' });
         }
