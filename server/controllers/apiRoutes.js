@@ -143,7 +143,8 @@ router.get('/foodByDate/:user_id/date/:dateCreated', async (req, res) => {
 
         // Parse the date using Luxon (assumes the format 'yyyy-MM-dd')
         const selected = DateTime.fromFormat(selectedDate, 'yyyy-MM-dd', { zone: 'America/New_York' });
-        console.log("selected", selected)
+        console.log("selected date formatted", selected)
+        console.log("userID", userId)
         // Compute the start and end of the selected day
         const startOfDay = selected
             .startOf('day')
@@ -258,6 +259,9 @@ router.post('/daily-log', async (req, res) => {
                 dateCreated: startOfDay,
                 foods
             });
+            console.log("new daily log id", dailyLog._id)
+            console.log("new daily log date created", dailyLog.dateCreated)
+            console.log("new daily log", dailyLog)
             await dailyLog.save();
             res.status(201).json(dailyLog);
         }
