@@ -154,8 +154,8 @@ router.get('/foodByDate/:user_id/date/:dateCreated', async (req, res) => {
         console.log("Now in New York:", nowNY.toString());
         const startOfDayDebug = nowNY.startOf('day').toUTC().toJSDate();
         const endOfDayDebug = nowNY.endOf('day').toUTC().toJSDate();
-        console.log("Computed startOfDay:", startOfDayDebug);
-        console.log("Computed endOfDay:", endOfDayDebug);
+        console.log("Computed startOfDayDebug:", startOfDayDebug);
+        console.log("Computed endOfDayDebug:", endOfDayDebug);
 
         // Compute the start and end of the selected day
         const startOfDay = selected
@@ -169,10 +169,11 @@ router.get('/foodByDate/:user_id/date/:dateCreated', async (req, res) => {
         console.log("Computed startOfDay:", startOfDay);
         console.log("Computed endOfDay:", endOfDay);
 
+        const adjustedStartOfDay = new Date(startOfDay.getTime() - 4 * 60 * 60 * 1000);
 
         const recentFoods = await DailyLog.findOne({
             user_id: userId,
-            dateCreated: { $gte: startOfDay, $lte: endOfDay }
+            dateCreated: { $gte: adjustedStartOfDay, $lte: endOfDay }
         }).populate('foods')
         console.log(recentFoods)
         if (!recentFoods) {
@@ -256,10 +257,12 @@ router.post('/daily-log', async (req, res) => {
             .endOf('day')
             .toUTC()
             .toJSDate();
+        
+            const adjustedStartOfDay = new Date(startOfDay.getTime() - 4 * 60 * 60 * 1000);
         // Check if a DailyLog exists for this user for today.
         let dailyLog = await DailyLog.findOne({
             user_id,
-            dateCreated: { $gte: startOfDay, $lte: endOfDay }
+            dateCreated: { $gte: adjustedStartOfDay, $lte: endOfDay }
         });
         if (dailyLog) {
             console.log("existing daily log id", dailyLog._id)
@@ -272,7 +275,7 @@ router.post('/daily-log', async (req, res) => {
             // Create a new DailyLog if none exists for today.
             dailyLog = new DailyLog({
                 user_id,
-                dateCreated: startOfDay,
+                dateCreated: adjustedStartOfDay,
                 foods
             });
             console.log("new daily log id", dailyLog._id)
