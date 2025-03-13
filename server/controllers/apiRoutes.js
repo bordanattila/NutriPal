@@ -23,6 +23,7 @@ router.get('/token', async (req, res) => {
 // Endpoint to search foods via FatSecret API by name
 router.get('/foodByName', async (req, res) => {
     const { query } = req;
+    console.log("food by name search expression", query.searchExpression)
     const token = await getAccessTokenValue();
     const tokenUrl = 'https://platform.fatsecret.com/rest/foods/search/v1';
     const data = qs.stringify({
@@ -39,6 +40,7 @@ router.get('/foodByName', async (req, res) => {
             }
         });
         res.json(response.data); // Send back the response from FatSecret API
+        console.log("food by name response", response.data)
     } catch (error) {
         console.error('Error fetching food data:', error.response ? error.response.data : error.message);
         res.status(500).json({ error: 'Failed to fetch food data' });
@@ -143,8 +145,18 @@ router.get('/foodByDate/:user_id/date/:dateCreated', async (req, res) => {
 
         // Parse the date using Luxon (assumes the format 'yyyy-MM-dd')
         const selected = DateTime.fromFormat(selectedDate, 'yyyy-MM-dd', { zone: 'America/New_York' });
+
         console.log("selected date formatted", selected)
         console.log("userID", userId)
+        const nowRaw = DateTime.now();
+        console.log("Raw now:", nowRaw.toString());
+        const nowNY = nowRaw.setZone('America/New_York');
+        console.log("Now in New York:", nowNY.toString());
+        const startOfDayDebug = nowNY.startOf('day').toUTC().toJSDate();
+        const endOfDayDebug = nowNY.endOf('day').toUTC().toJSDate();
+        console.log("Computed startOfDay:", startOfDayDebug);
+        console.log("Computed endOfDay:", endOfDayDebug);
+
         // Compute the start and end of the selected day
         const startOfDay = selected
             .startOf('day')
@@ -229,7 +241,9 @@ router.post('/one-food', async (req, res) => {
 router.post('/daily-log', async (req, res) => {
     try {
         const { user_id, foods } = req.body;
-        console.log("dashboard params", req.body.foods)
+        console.log("dashboard params-food", req.body.foods)
+        console.log("dashboard params-user_id", req.body.user_id)
+        console.log("dashboard params", req.body)
 
         // Get current date and compute start and end of day.
         const startOfDay = DateTime.now()
@@ -248,6 +262,8 @@ router.post('/daily-log', async (req, res) => {
             dateCreated: { $gte: startOfDay, $lte: endOfDay }
         });
         if (dailyLog) {
+            console.log("existing daily log id", dailyLog._id)
+            console.log("existing daily log created date", dailyLog.dateCreated)
             // Update the existing DailyLog by appending new foods.
             dailyLog.foods = dailyLog.foods.concat(foods);
             await dailyLog.save();

@@ -151,12 +151,12 @@ const BarcodeScanner = ({ onDetected, onError }) => {
 
   return (
     <>
-      <div
+      <div id="scanner-container"
         ref={scannerRef}
         style={{
           position: 'relative',
           width: '100%',
-          height: '25%',
+          height: '50vh',
           overflow: 'hidden'
         }}
       >

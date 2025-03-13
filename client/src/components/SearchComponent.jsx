@@ -4,16 +4,17 @@ const api = ky.create({
   prefixUrl: process.env.REACT_APP_API_URL,
 });
 
-export const handleSearch = async ({ name, setArray, setError }) => {
+export const handleSearch = async ({ name, setArray, setError, setBarcode }) => {
   // If the input is all digits, treat it as a barcode.
   if (/^\d+$/.test(name)) {
     // Call the barcode API endpoint
     try {
       console.log("input is barcode")
-      const response = await api.get(`api/foodByBarcode?barcode=${name}`);
-      const data = await response.json();
-      console.log("barcode return", data)
-      setArray(data.foods.food);
+      const barcodeResponse = await api.get(`api/foodByBarcode?barcode=${name}`);
+      const barcodeData = await barcodeResponse.json();
+      console.log("barcode return", barcodeData.food_id.value)
+      setArray([]);
+      setBarcode(barcodeData.food_id.value);
       setError(null);
     } catch (error) {
       setError(error.message);

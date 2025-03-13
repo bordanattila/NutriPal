@@ -19,6 +19,7 @@ const Search = () => {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
   const [logHistory, setLogHistory] = useState([]);
+  const [barcodeID, setBarcodeID] = useState('');
 
   const { loading, data, logError } = useQuery(GET_USER, {
     context: {
@@ -33,7 +34,7 @@ const Search = () => {
 
   // Identify source page for FoodDetails.jsx
   const sourcePage = 'search';
-  
+
   // Get the last 5 food logs for the user
   const userId = data?.user?._id;
   useEffect(() => {
@@ -56,7 +57,7 @@ const Search = () => {
 
   const onSearchSubmit = async (e) => {
     e.preventDefault();
-    if (foodName === ''){
+    if (foodName === '') {
       setError('Please enter a food name');
       return;
     }
@@ -64,19 +65,27 @@ const Search = () => {
       name: foodName,
       setArray: setArrayToDisplay,
       setError: setError,
+      setBarcode: setBarcodeID,
     });
+    console.log("barcodeID", barcodeID)
   };
 
-
+  useEffect(() => {
+    if (barcodeID !== '') {
+      console.log("barcodeID updated, navigating to food details");
+      navigate(`/${sourcePage}/foodById/${barcodeID}`);
+    }
+  }, [barcodeID, navigate, sourcePage]);
+  
 
   const clearSearch = () => {
     setFoodName('');
     setArrayToDisplay([]);
   };
 
-  if (loading  || !data || !data.user) return <div>Loading...</div>;
+  if (loading || !data || !data.user) return <div>Loading...</div>;
   if (logError) return <div>Error: {error.message}</div>;
-  console.log("arrayToDisplay for error", arrayToDisplay)
+  console.log("arrayToDisplay", arrayToDisplay)
   return (
     <div className="flex flex-col items-center justify-center min-h-max p-6">
 
