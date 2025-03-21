@@ -10,7 +10,7 @@ const BarcodeScanner = ({ onDetected, onError }) => {
   useEffect(() => {
     function handleDetected (result) {
       const code = result.codeResult.code;
-      const format = result.codeResult.format;
+      // const format = result.codeResult.format;
       
       const isValid = isValidEAN13(code);
       if (isValid) {
