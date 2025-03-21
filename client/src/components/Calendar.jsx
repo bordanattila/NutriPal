@@ -129,7 +129,6 @@ const Calendar = ({
           value={selectedMonth}
           onChange={setSelectedMonth}
           format={(monthNumber) => {
-            // console.log("Formatting month number:", monthNumber);
             return months[monthNumber - 1];
           }}
         />

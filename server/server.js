@@ -34,7 +34,7 @@ app.use(
 
 app.use(cors({
   origin: [process.env.CLIENT_URL, 'https://nutripal-hbcff5htezbqdwe9.canadacentral-01.azurewebsites.net'],
-  methods: ['GET', 'POST', 'OPTIONS'],
+  methods: ['GET', 'POST', 'DELETE', 'PUT'],
   credentials: true
 }));
 

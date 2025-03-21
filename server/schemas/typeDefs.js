@@ -125,6 +125,11 @@ const typeDefs = gql`
             ingredients: [String!]!,
             nutrition: NutritionInput!
         ): Recipe
+
+        deleteOneFood(
+            _id: ID!,
+            food_id: ID!,
+            ): User
     }
 `;
 

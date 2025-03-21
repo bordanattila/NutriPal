@@ -64,9 +64,7 @@ const Dashboard = () => {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
         const data = await response.json();
-        console.log("response for dashboard", data)
         setTodaysLog(data.foods);
-        console.log("dashboard", data)
       } catch (error) {
         console.error('Error fetching todays foods:', error);
       }
@@ -74,7 +72,6 @@ const Dashboard = () => {
     setGoal(calgoal)
     fetchTodaysLog();
   }, [userId, calgoal, todaysDate]);
-console.log("today's log", todaysLog)
   useEffect(() => {
     const totalCalories = async () => {
       const totalCal = todaysLog?.reduce((sum, { calories = 0 }) => sum + calories, 0) ?? 0;

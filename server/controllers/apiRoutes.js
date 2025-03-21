@@ -23,7 +23,6 @@ router.get('/token', async (req, res) => {
 // Endpoint to search foods via FatSecret API by name
 router.get('/foodByName', async (req, res) => {
     const { query } = req;
-    console.log("food by name search expression", query.searchExpression)
     const token = await getAccessTokenValue();
     const tokenUrl = 'https://platform.fatsecret.com/rest/foods/search/v1';
     const data = qs.stringify({
@@ -40,7 +39,6 @@ router.get('/foodByName', async (req, res) => {
             }
         });
         res.json(response.data); // Send back the response from FatSecret API
-        console.log("food by name response", response.data)
     } catch (error) {
         console.error('Error fetching food data:', error.response ? error.response.data : error.message);
         res.status(500).json({ error: 'Failed to fetch food data' });
@@ -52,11 +50,9 @@ const { convertUpcEtoUpcA } = require('../utils/barcodeConverter')
 router.get('/foodByBarcode', async (req, res) => {
 
     const { query } = req;
-    console.log("barcode", query.barcode)
     try {
         const upcA = await convertUpcEtoUpcA(query.barcode)
         const formattedBarcode = upcA.padStart(13, '0');
-        console.log("formattedBarcode", formattedBarcode)
         const token = await getAccessTokenValue();
         const tokenUrl = 'https://platform.fatsecret.com/rest/food/barcode/find-by-id/v1';
         const response = await axios.get(tokenUrl, {
@@ -70,7 +66,6 @@ router.get('/foodByBarcode', async (req, res) => {
                 'Authorization': 'Bearer ' + token // Use the access token
             }
         });
-        console.log("API Response Data:", response.data);
         res.json(response.data); // Send back the response from FatSecret API
     } catch (error) {
         console.error('Error fetching food data:', error.response ? error.response.data : error.message);
@@ -128,34 +123,9 @@ router.get('/foodByDate/:user_id/date/:dateCreated', async (req, res) => {
     try {
         const userId = req.params.user_id;
         const selectedDate = (req.params.dateCreated);
-        console.log("daily log selected date", selectedDate)
-        // // Create variable for start of date
-        // const startOfDay = DateTime.now()
-        //     .setZone('America/New_York')
-        //     .startOf('day')
-        //     .toUTC()
-        //     .toJSDate();
-
-        // // Create variable for end of date
-        // const endOfDay = DateTime.now()
-        //     .setZone('America/New_York')
-        //     .endOf('day')
-        //     .toUTC()
-        //     .toJSDate();
 
         // Parse the date using Luxon (assumes the format 'yyyy-MM-dd')
         const selected = DateTime.fromFormat(selectedDate, 'yyyy-MM-dd', { zone: 'America/New_York' });
-
-        console.log("selected date formatted", selected)
-        console.log("userID", userId)
-        const nowRaw = DateTime.now();
-        console.log("Raw now:", nowRaw.toString());
-        const nowNY = nowRaw.setZone('America/New_York');
-        console.log("Now in New York:", nowNY.toString());
-        const startOfDayDebug = nowNY.startOf('day').toUTC().toJSDate();
-        const endOfDayDebug = nowNY.endOf('day').toUTC().toJSDate();
-        console.log("Computed startOfDayDebug:", startOfDayDebug);
-        console.log("Computed endOfDayDebug:", endOfDayDebug);
 
         // Compute the start and end of the selected day
         const startOfDay = selected
@@ -166,8 +136,6 @@ router.get('/foodByDate/:user_id/date/:dateCreated', async (req, res) => {
             .endOf('day')
             .toUTC()
             .toJSDate();
-        console.log("Computed startOfDay:", startOfDay);
-        console.log("Computed endOfDay:", endOfDay);
 
         const adjustedStartOfDay = new Date(startOfDay.getTime() - 4 * 60 * 60 * 1000);
 
@@ -175,7 +143,6 @@ router.get('/foodByDate/:user_id/date/:dateCreated', async (req, res) => {
             user_id: userId,
             dateCreated: { $gte: adjustedStartOfDay, $lte: endOfDay }
         }).populate('foods')
-        console.log(recentFoods)
         if (!recentFoods) {
             return res.json({ message: 'No food has been logged for this day.' });
         }
@@ -242,9 +209,6 @@ router.post('/one-food', async (req, res) => {
 router.post('/daily-log', async (req, res) => {
     try {
         const { user_id, foods } = req.body;
-        console.log("dashboard params-food", req.body.foods)
-        console.log("dashboard params-user_id", req.body.user_id)
-        console.log("dashboard params", req.body)
 
         // Get current date and compute start and end of day.
         const startOfDay = DateTime.now()
@@ -257,16 +221,14 @@ router.post('/daily-log', async (req, res) => {
             .endOf('day')
             .toUTC()
             .toJSDate();
-        
-            const adjustedStartOfDay = new Date(startOfDay.getTime() - 4 * 60 * 60 * 1000);
+
+        const adjustedStartOfDay = new Date(startOfDay.getTime() - 4 * 60 * 60 * 1000);
         // Check if a DailyLog exists for this user for today.
         let dailyLog = await DailyLog.findOne({
             user_id,
             dateCreated: { $gte: adjustedStartOfDay, $lte: endOfDay }
         });
         if (dailyLog) {
-            console.log("existing daily log id", dailyLog._id)
-            console.log("existing daily log created date", dailyLog.dateCreated)
             // Update the existing DailyLog by appending new foods.
             dailyLog.foods = dailyLog.foods.concat(foods);
             await dailyLog.save();
@@ -278,9 +240,6 @@ router.post('/daily-log', async (req, res) => {
                 dateCreated: adjustedStartOfDay,
                 foods
             });
-            console.log("new daily log id", dailyLog._id)
-            console.log("new daily log date created", dailyLog.dateCreated)
-            console.log("new daily log", dailyLog)
             await dailyLog.save();
             res.status(201).json(dailyLog);
         }
@@ -323,6 +282,41 @@ router.post('/recipe', async (req, res) => {
         res.status(500).json({ message: 'Error creating recipe', error: error.message });
     }
 });
+
+// Endpoint to remove one food item
+router.delete('/deleteFood/:user_id/:food_id/:date', async (req, res) => {
+    try {
+        const { user_id, date, food_id } = req.params;
+
+        const selectedDate = DateTime.fromFormat(req.params.date, 'yyyy-MM-dd', { zone: 'America/New_York' });
+        // Compute the start and end of the selected day
+        const startOfDay = selectedDate
+            .startOf('day')
+            .toUTC()
+            .toJSDate();
+        const endOfDay = selectedDate
+            .endOf('day')
+            .toUTC()
+            .toJSDate();
+
+        const adjustedStartOfDay = new Date(startOfDay.getTime() - 4 * 60 * 60 * 1000);
+
+        const food = await OneFood.findById(food_id);
+        if (!food) {
+            return res.status(404).json({ message: 'Food item not found' });
+        }
+        await DailyLog.findOneAndUpdate({
+
+            user_id: user_id,
+            dateCreated: { $gte: adjustedStartOfDay, $lte: endOfDay }
+        },
+            { $pull: { foods: food_id } }
+        );
+        res.status(200).json({ message: 'Food item removed successfully' });
+    } catch (error) {
+        console.error('Error removing food item:', error);
+    }
+})
 
 // Endpoint to handle token refreshing
 router.post('/refresh', async (req, res) => {
