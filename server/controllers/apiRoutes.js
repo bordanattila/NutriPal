@@ -159,7 +159,7 @@ router.get('/foodByDate/:user_id/date/:dateCreated', async (req, res) => {
 router.get('/saved-recipes/:user_id', async (req, res) => {
     try {
         const userId = req.params.user_id;
-        const recentRecipes = await OneFood.find({ user_id: userId })
+        const recentRecipes = await Recipe.find({ user_id: userId })
         // // Sort by 'created' field in descending order
         // .sort({ created: -1 })
         // // Limit to 5 items
@@ -173,6 +173,7 @@ router.get('/saved-recipes/:user_id', async (req, res) => {
 
 // Endpoint for logging one food item
 router.post('/one-food', async (req, res) => {
+    console.log("one-food hit");
     try {
         // Destructure the required fields from the request body
         const { user_id, food_id, food_name, serving_id, serving_size, number_of_servings, fraction_of_serving, calories, carbohydrate, protein, fat, saturated_fat, sodium, fiber, meal_type, brand } = req.body;
@@ -199,6 +200,7 @@ router.post('/one-food', async (req, res) => {
             brand
         });
         await newFood.save();
+        console.log("new food saved");
         res.status(201).json(newFood);
     } catch (error) {
         console.error('Error creating food entry:', error);

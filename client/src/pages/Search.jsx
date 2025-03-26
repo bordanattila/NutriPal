@@ -76,7 +76,7 @@ const Search = () => {
       navigate(`/${sourcePage}/foodById/${barcodeID}`);
     }
   }, [barcodeID, navigate, sourcePage]);
-  
+
 
   const clearSearch = () => {
     setFoodName('');
@@ -115,7 +115,9 @@ const Search = () => {
         </ul>
       ) : (
         <div>
-          <h2 className='text-center'>Recent History</h2>
+          <h2 className="text-2xl font-bold text-teal-700 tracking-wide uppercase mb-4 border-b-2 border-teal-400 pb-2 shadow-sm text-center">
+            Recent History
+          </h2>
           <ul className="list-none mt-4 w-full max-w-lg">
             {logHistory.map((food) => (
               <li key={food.food_id} className="py-2">

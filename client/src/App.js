@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { Route, Routes, useLocation, useMatch } from 'react-router-dom';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
@@ -13,6 +13,9 @@ import Header from './components/Header';
 import DailyLogs from './pages/DailyLogs';
 import Profile from './pages/Profile';
 import Recipe from './pages/Recipe';
+import LogOptions from './components/LogOptions';
+import Meals from './pages/Meals';
+import SavedRecipes from './components/SavedRecipes';
 
 const routes = [
   {
@@ -55,29 +58,39 @@ const routes = [
     path: '/recipe',
     element: <Recipe />,
   },
+  {
+    path: '/saved-recipes',
+    element: <SavedRecipes />,
+  },
+  {
+    path: '/meals',
+    element: <Meals />,
+  },
+  {
+    path: '/logOptions',
+    element: <LogOptions />,
+  },
 ];
 
 const App = () => {
+  const location = useLocation();
+  const isHome = location.pathname === '/';
+  const isFoodDetails = useMatch('/:source/foodById/:foodId');
 
   return (
-    <Router>
-      <div>
+    
+      <>
         {/* Check if the current route is the home page */}
-        {window.location.pathname !== '/' && <Header />}
-      </div>
+        {!isHome && !isFoodDetails && <Header />}
       <Routes>
         {routes.map((route) => (
           <Route key={route.path} {...route} />
         ))}
       </Routes>
-      <div>
         {/* Check if the current route is the home page */}
-        {window.location.pathname !== '/' && <Navbar />}
-      </div>
-      <div>
+        {!isHome && <Navbar />}
         <Footer />
-      </div>
-    </Router>
+      </>    
   );
 };
 

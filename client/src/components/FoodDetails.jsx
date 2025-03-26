@@ -209,9 +209,11 @@ const FoodDetails = () => {
         if (foodResponse.ok) {
           const ingredientID = foodData._id;
           const addedIngredient = foodData.food_name
+          const ingredientServingCount = foodData.number_of_servings+(foodData.fraction_of_serving==='0' ? '' : ' and '+foodData.fraction_of_serving);
+          const IngredientServingSize = foodData.serving_size;
           toast.success('Food added successfully!');
           // Send _id back to Recipe.jsx in state
-          setTimeout(() => { navigate(`/${source}`, { state: { ingredientID, addedIngredient } }) }, 1000);
+          setTimeout(() => { navigate(`/${source}`, { state: { ingredientID, addedIngredient, ingredientServingCount, IngredientServingSize } }) }, 1000);
         }
       } catch (error) {
         console.error('Error adding food:', error);

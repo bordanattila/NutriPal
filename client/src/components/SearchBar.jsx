@@ -19,7 +19,7 @@ const SearchBar = ({ nameOfFood, setNameOfFood, handleSearch, clearSearch, error
 
   return (
     <>
-    <form onSubmit={handleSearch} className="flex flex-col p-6 items-center justify-center mb-4 w-full max-w-lg">
+    <form onSubmit={handleSearch} className="flex flex-col p-6 items-center justify-center w-full max-w-lg">
       <div className="relative w-full">
         <MagnifyingGlassIcon className="absolute left-3 top-3 h-5 w-5 text-blue-500" />
         {!nameOfFood && (
@@ -34,23 +34,23 @@ const SearchBar = ({ nameOfFood, setNameOfFood, handleSearch, clearSearch, error
             {/* <rect x="2" y="2" width="60" height="60" rx="8" ry="8" fill="none" stroke="#000" stroke-width="2" /> */}
 
             {/* <!-- Barcode vertical lines --> */}
-            <g stroke="#000" stroke-width="3">
+            <g stroke="#000" strokeWidth="3">
               <line x1="14" y1="16" x2="14" y2="48" />
             </g>
-            <g stroke="#000" stroke-width="2">
+            <g stroke="#000" strokeWidth="2">
               <line x1="20" y1="16" x2="20" y2="48" />
               <line x1="26" y1="16" x2="26" y2="48" />
               <line x1="32" y1="16" x2="32" y2="48" />
             </g>
-            <g stroke="#000" stroke-width="3">
+            <g stroke="#000" strokeWidth="3">
               <line x1="38" y1="16" x2="38" y2="48" />
               <line x1="44" y1="16" x2="44" y2="48" />
-            </g><g stroke="#000" stroke-width="2">
+            </g><g stroke="#000" strokeWidth="2">
               <line x1="50" y1="16" x2="50" y2="48" />
             </g>
 
             {/* <!-- Scanning line --> */}
-            <line x1="2" y1="32" x2="62" y2="32" stroke="#f00" stroke-width="2" stroke-dasharray="4,2" />
+            <line x1="2" y1="32" x2="62" y2="32" stroke="#f00" strokeWidth="2" strokeDasharray="4,2" />
           </svg>
         </button>
         )}
@@ -76,7 +76,7 @@ const SearchBar = ({ nameOfFood, setNameOfFood, handleSearch, clearSearch, error
       </div>
       {/* Submit search button */}
       <button
-        className="mt-4 bg-gradient-to-r from-green-400 to-teal-500 rounded-full shadow-lg hover:from-green-400 hover:to-blue-600 transition duration-300 text-white font-bold py-2 px-6 "
+        className="mt-4 bg-gradient-to-r from-green-400 to-teal-500 rounded-full shadow-lg hover:from-green-400 hover:to-blue-600 transition duration-300 text-white font-bold py-2 px-6"
         type="submit"
       >
         Search

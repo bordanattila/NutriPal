@@ -34,6 +34,7 @@ const oneFoodSchema = new Schema({
   },
   fraction_of_serving: {
     type: String,
+    required: false,
   },
   calories: {
     type: Number,

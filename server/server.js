@@ -40,7 +40,6 @@ app.use(cors({
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(bodyParser.json());
 
 // Configure session middleware
 // Middleware to set secure cookie based on request
