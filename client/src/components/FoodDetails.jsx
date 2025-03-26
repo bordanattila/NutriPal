@@ -334,7 +334,7 @@ const FoodDetails = () => {
               className="w-1/2"
               value={servingCount}
               onChange={handleServingCount}
-              options={[...Array(100).keys()].map(i => i + 1)}
+              options={[...Array(101).keys()]}
               optionLabel={(count) => count}
               optionKey={(count) => count}
             />
