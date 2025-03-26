@@ -27,6 +27,8 @@ const FoodDetails = () => {
   const [servingArray, setServingArray] = useState(null);
   const [servingID, setServingID] = useState(null);
   const [servingCount, setServingCount] = useState(1);
+  const [fractionCount, setFractionCount] = useState('0');
+  const [fractionValue, setFractionValue] = useState(0);
   const [meal, setMeal] = useState(mealTypes[0]);
   const navigate = useNavigate();
   // const [ingredients, setIngredients] = useState(null);
@@ -45,7 +47,7 @@ const FoodDetails = () => {
       navigate('/login');
     },
   });
-  
+
 
   const [userID, setUserID] = useState(null);
   // Set user ID from log data
@@ -98,6 +100,21 @@ const FoodDetails = () => {
     setServingCount(count);
   };
 
+  // Fractions for serving size
+  const Fractions = ['0', '1/8', '1/4', '1/3', '3/8', '1/2', '5/8', '2/3', '3/4', '7/8']
+
+  // Handling change in fractions
+  function fractionToFloat(fractionStr) {
+    const [numerator , denominator ] = fractionStr.split('/');
+    return parseFloat(numerator ) / parseFloat(denominator );
+  }
+  
+  const handleFractionCount = (fractionStr) => {
+    const fraction = fractionToFloat(fractionStr);
+    setFractionCount(fractionStr);
+    setFractionValue(fraction);
+  };
+
   // Handling change in serving size
   const handleMealChange = (selectedMeal) => {
     setMeal(selectedMeal);
@@ -117,13 +134,14 @@ const FoodDetails = () => {
         serving_id: selectedServing.serving_id,
         serving_size: selectedServing.serving_description,
         number_of_servings: servingCount,
-        calories: selectedServing.calories * servingCount,
-        carbohydrate: selectedServing.carbohydrate * servingCount,
-        protein: selectedServing.protein * servingCount,
-        fat: selectedServing.fat * servingCount,
-        saturated_fat: selectedServing.saturated_fat * servingCount,
-        sodium: selectedServing.sodium * servingCount,
-        fiber: selectedServing.fiber * servingCount,
+        fraction_of_serving: fractionCount,
+        calories: selectedServing.calories * (servingCount + fractionValue),
+        carbohydrate: selectedServing.carbohydrate * (servingCount + fractionValue),
+        protein: selectedServing.protein * (servingCount + fractionValue),
+        fat: selectedServing.fat * (servingCount + fractionValue),
+        saturated_fat: selectedServing.saturated_fat * (servingCount + fractionValue),
+        sodium: selectedServing.sodium * (servingCount + fractionValue),
+        fiber: selectedServing.fiber * (servingCount + fractionValue),
         brand: foodDetails.food.brand_name,
         meal_type: meal.toLocaleLowerCase(),
       };
@@ -166,15 +184,16 @@ const FoodDetails = () => {
         serving_id: selectedServing.serving_id,
         serving_size: selectedServing.serving_description,
         number_of_servings: servingCount,
-        calories: selectedServing.calories * servingCount,
-        carbohydrate: selectedServing.carbohydrate * servingCount,
-        protein: selectedServing.protein * servingCount,
-        fat: selectedServing.fat * servingCount,
-        saturated_fat: selectedServing.saturated_fat * servingCount,
-        sodium: selectedServing.sodium * servingCount,
-        fiber: selectedServing.fiber * servingCount,
-        meal_type: meal.toLocaleLowerCase(),
+        fraction_of_serving: fractionCount,
+        calories: selectedServing.calories * (servingCount + fractionValue),
+        carbohydrate: selectedServing.carbohydrate * (servingCount + fractionValue),
+        protein: selectedServing.protein * (servingCount + fractionValue),
+        fat: selectedServing.fat * (servingCount + fractionValue),
+        saturated_fat: selectedServing.saturated_fat * (servingCount + fractionValue),
+        sodium: selectedServing.sodium * (servingCount + fractionValue),
+        fiber: selectedServing.fiber * (servingCount + fractionValue),
         brand: foodDetails.food.brand_name,
+        meal_type: meal.toLocaleLowerCase(),
       };
 
       try {
@@ -229,20 +248,20 @@ const FoodDetails = () => {
         {selectedServing && servingCount && (
           <div className="py-4 w-40">
             <div>
-              <strong>Calories:</strong> {((selectedServing.calories * servingCount).toFixed(2))}g
+              <strong>Calories:</strong> {((selectedServing.calories * (servingCount + fractionValue)).toFixed(2))}g
             </div>
             <div>
-              <strong>Carbohydrate:</strong> {((selectedServing.carbohydrate * servingCount).toFixed(2))}g
+              <strong>Carbohydrate:</strong> {((selectedServing.carbohydrate * (servingCount + fractionValue)).toFixed(2))}g
             </div>
             <div>
-              <strong>Protein:</strong> {((selectedServing.protein * servingCount).toFixed(2))}g
+              <strong>Protein:</strong> {((selectedServing.protein * (servingCount + fractionValue)).toFixed(2))}g
             </div>
             <div>
-              <strong>Fat:</strong> {((selectedServing.fat * servingCount).toFixed(2))}g
+              <strong>Fat:</strong> {((selectedServing.fat * (servingCount + fractionValue)).toFixed(2))}g
             </div>
-            Saturated fat: {((selectedServing.saturated_fat * servingCount).toFixed(2))}g<br />
-            Sodium: {((selectedServing.sodium * servingCount).toFixed(2))}g<br />
-            Fiber: {((selectedServing.fiber * servingCount).toFixed(2))}g<br />
+            Saturated fat: {((selectedServing.saturated_fat * (servingCount + fractionValue)).toFixed(2))}g<br />
+            Sodium: {((selectedServing.sodium * (servingCount + fractionValue)).toFixed(2))}g<br />
+            Fiber: {((selectedServing.fiber * (servingCount + fractionValue)).toFixed(2))}g<br />
           </div>
         )}
         <div className="py-4 w-56 h-56">
@@ -261,15 +280,29 @@ const FoodDetails = () => {
             optionKey={(serving) => serving.serving_id}
           />
 
-          {/* Dropdown for serving count*/}
-          <DropdownMenu
-            label="Number of servings"
-            value={servingCount}
-            onChange={handleServingCount}
-            options={[...Array(100).keys()].map(i => i + 1)}
-            optionLabel={(count) => count}
-            optionKey={(count) => count}
-          />
+          <div className="flex space-x-4">
+            {/* Dropdown for serving count*/}
+            <DropdownMenu
+              label="Number of servings"
+              className="w-1/2"
+              value={servingCount}
+              onChange={handleServingCount}
+              options={[...Array(101).keys()]}
+              optionLabel={(count) => count}
+              optionKey={(count) => count}
+            />
+
+            {/* Dropdown for fraction count*/}
+            <DropdownMenu
+              label="Fraction of serving"
+              className="w-1/2"
+              value={fractionCount}
+              onChange={handleFractionCount}
+              options={Fractions}
+              optionLabel={(fraction) => fraction}
+              optionKey={(fraction) => fraction}
+            />
+          </div>
 
           {/* Dropdown for meal type*/}
           <DropdownMenu
@@ -294,15 +327,29 @@ const FoodDetails = () => {
             optionKey={(serving) => serving.serving_id}
           />
 
-          {/* Dropdown for serving count*/}
-          <DropdownMenu
-            label="Number of servings"
-            value={servingCount}
-            onChange={handleServingCount}
-            options={[...Array(100).keys()].map(i => i + 1)}
-            optionLabel={(count) => count}
-            optionKey={(count) => count}
-          />
+          <div className="flex space-x-4">
+            {/* Dropdown for serving count*/}
+            <DropdownMenu
+              label="Number of servings"
+              className="w-1/2"
+              value={servingCount}
+              onChange={handleServingCount}
+              options={[...Array(100).keys()].map(i => i + 1)}
+              optionLabel={(count) => count}
+              optionKey={(count) => count}
+            />
+
+            {/* Dropdown for fraction count*/}
+            <DropdownMenu
+              label="Fraction of serving"
+              className="w-1/2"
+              value={fractionCount}
+              onChange={handleFractionCount}
+              options={Fractions}
+              optionLabel={(fraction) => fraction}
+              optionKey={(fraction) => fraction}
+            />
+          </div>
         </>
       )}
 

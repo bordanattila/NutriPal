@@ -175,7 +175,7 @@ router.get('/saved-recipes/:user_id', async (req, res) => {
 router.post('/one-food', async (req, res) => {
     try {
         // Destructure the required fields from the request body
-        const { user_id, food_id, food_name, serving_id, serving_size, number_of_servings, calories, carbohydrate, protein, fat, saturated_fat, sodium, fiber, meal_type, brand } = req.body;
+        const { user_id, food_id, food_name, serving_id, serving_size, number_of_servings, fraction_of_serving, calories, carbohydrate, protein, fat, saturated_fat, sodium, fiber, meal_type, brand } = req.body;
 
         // Create a new OneFood entry
         const newFood = new OneFood({
@@ -186,6 +186,7 @@ router.post('/one-food', async (req, res) => {
             serving_id,
             serving_size,
             number_of_servings,
+            fraction_of_serving,
             calories,
             carbohydrate,
             protein,

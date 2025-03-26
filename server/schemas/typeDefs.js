@@ -39,6 +39,7 @@ const typeDefs = gql`
         serving_id: String!
         serving_size: String!
         number_of_servings: Int!
+        fraction_of_serving: String
         calories: Int
         carbohydrate: Int
         protein: Int

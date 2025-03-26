@@ -104,7 +104,7 @@ const Search = () => {
             <li key={food.food_id} className="py-2 ">
               <div className='rounded-md p-2 bg-teal-100'>
                 <Link to={`/${sourcePage}/foodById/${food.food_id}`} className="text-blue-700 hover:underline">
-                  <strong>{food.food_name}</strong> <span className='brandVisibility'>({food.brand_name})</span>
+                  <strong>{food.food_name}</strong> <span className={`${food.brand ? 'visible' : 'invisible'}`}>({food.brand_name})</span>
                   <br />
                   <span className='text-sm'>{food.food_description}</span>
                   <br />
@@ -121,10 +121,10 @@ const Search = () => {
               <li key={food.food_id} className="py-2">
                 <div className="rounded-md p-2 bg-teal-100">
                   <Link to={`/${sourcePage}/foodById/${food.food_id}`} className="text-blue-700 hover:underline">
-                    <strong>{food.food_name}</strong> <span className='brandVisibility'>({food.brand})</span>
+                    <strong>{food.food_name}</strong> <span className={`${food.brand ? 'visible' : 'invisible'}`}>({food.brand})</span>
                     <br />
                     <span className='text-sm'>
-                      Calories: {food.calories} | Carb: {food.carbohydrate} | Protein: {food.protein} | Fat: {food.fat} | Number or servings: {food.number_of_servings} | Serving size: {food.serving_size}
+                      Calories: {(food.calories.toFixed(2))} | Carb: {(food.carbohydrate.toFixed(2))} | Protein: {(food.protein.toFixed(2))} | Fat: {(food.fat).toFixed(2)} | Number or servings: {food.number_of_servings} | Serving size: {food.serving_size}
                     </span>
                     <br />
                   </Link>

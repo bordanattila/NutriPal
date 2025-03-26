@@ -2,9 +2,9 @@ import React from 'react';
 import { Label, Listbox, ListboxButton, ListboxOption, ListboxOptions } from '@headlessui/react'
 import { ChevronUpDownIcon } from '@heroicons/react/20/solid'
 
-const DropdownMenu = ({ label, value, onChange, options, optionLabel, optionKey }) => {
+const DropdownMenu = ({ label, value, onChange, options, optionLabel, optionKey, className = ''  }) => {
     return (
-        <div className="relative  mt-2">
+        <div className={`relative mt-2 ${className}`}>
             <Listbox value={value} onChange={onChange}>
                 <Label className="block text-sm font-medium leading-6 text-gray-900">{label}</Label>
                 <div>
