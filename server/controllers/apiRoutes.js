@@ -22,7 +22,6 @@ router.get('/token', async (req, res) => {
 
 // Endpoint to search foods via FatSecret API by name
 router.get('/foodByName', async (req, res) => {
-
     const { query } = req;
     const token = await getAccessTokenValue();
     const tokenUrl = 'https://platform.fatsecret.com/rest/foods/search/v1';
@@ -51,11 +50,9 @@ const { convertUpcEtoUpcA } = require('../utils/barcodeConverter')
 router.get('/foodByBarcode', async (req, res) => {
 
     const { query } = req;
-    console.log("barcode", query.barcode)
     try {
         const upcA = await convertUpcEtoUpcA(query.barcode)
         const formattedBarcode = upcA.padStart(13, '0');
-        console.log("formattedBarcode", formattedBarcode)
         const token = await getAccessTokenValue();
         const tokenUrl = 'https://platform.fatsecret.com/rest/food/barcode/find-by-id/v1';
         const response = await axios.get(tokenUrl, {
@@ -69,7 +66,6 @@ router.get('/foodByBarcode', async (req, res) => {
                 'Authorization': 'Bearer ' + token // Use the access token
             }
         });
-        console.log("API Response Data:", response.data);
         res.json(response.data); // Send back the response from FatSecret API
     } catch (error) {
         console.error('Error fetching food data:', error.response ? error.response.data : error.message);
@@ -124,31 +120,29 @@ router.get('/recent-foods/:user_id', async (req, res) => {
 
 // Endpoint to query selected day's food logs for a user
 router.get('/foodByDate/:user_id/date/:dateCreated', async (req, res) => {
-    console.log('todays req.param' + req.params.user_id)
-    console.log('todays req.param' + req.params.dateCreated)
     try {
         const userId = req.params.user_id;
-        const selectedDate = new Date(req.params.dateCreated);
+        const selectedDate = (req.params.dateCreated);
 
-        // Create variable for start of date
-        const startOfDay = DateTime.now()
-            .setZone('America/New_York')
+        // Parse the date using Luxon (assumes the format 'yyyy-MM-dd')
+        const selected = DateTime.fromFormat(selectedDate, 'yyyy-MM-dd', { zone: 'America/New_York' });
+
+        // Compute the start and end of the selected day
+        const startOfDay = selected
             .startOf('day')
             .toUTC()
             .toJSDate();
-
-        // Create variable for end of date
-        const endOfDay = DateTime.now()
-            .setZone('America/New_York')
+        const endOfDay = selected
             .endOf('day')
             .toUTC()
             .toJSDate();
 
+        const adjustedStartOfDay = new Date(startOfDay.getTime() - 4 * 60 * 60 * 1000);
+
         const recentFoods = await DailyLog.findOne({
             user_id: userId,
-            dateCreated: { $gte: startOfDay, $lte: endOfDay }
+            dateCreated: { $gte: adjustedStartOfDay, $lte: endOfDay }
         }).populate('foods')
-        console.log
         if (!recentFoods) {
             return res.json({ message: 'No food has been logged for this day.' });
         }
@@ -181,7 +175,7 @@ router.get('/saved-recipes/:user_id', async (req, res) => {
 router.post('/one-food', async (req, res) => {
     try {
         // Destructure the required fields from the request body
-        const { user_id, food_id, food_name, serving_id, serving_size, number_of_servings, calories, carbohydrate, protein, fat, saturated_fat, sodium, fiber, meal_type } = req.body;
+        const { user_id, food_id, food_name, serving_id, serving_size, number_of_servings, fraction_of_serving, calories, carbohydrate, protein, fat, saturated_fat, sodium, fiber, meal_type, brand } = req.body;
 
         // Create a new OneFood entry
         const newFood = new OneFood({
@@ -192,6 +186,7 @@ router.post('/one-food', async (req, res) => {
             serving_id,
             serving_size,
             number_of_servings,
+            fraction_of_serving,
             calories,
             carbohydrate,
             protein,
@@ -200,7 +195,8 @@ router.post('/one-food', async (req, res) => {
             sodium,
             fiber,
             // Convert to lowercase
-            meal_type: meal_type.toLowerCase()
+            meal_type: meal_type.toLowerCase(),
+            brand
         });
         await newFood.save();
         res.status(201).json(newFood);
@@ -226,10 +222,12 @@ router.post('/daily-log', async (req, res) => {
             .endOf('day')
             .toUTC()
             .toJSDate();
+
+        const adjustedStartOfDay = new Date(startOfDay.getTime() - 4 * 60 * 60 * 1000);
         // Check if a DailyLog exists for this user for today.
         let dailyLog = await DailyLog.findOne({
             user_id,
-            dateCreated: { $gte: startOfDay, $lte: endOfDay }
+            dateCreated: { $gte: adjustedStartOfDay, $lte: endOfDay }
         });
         if (dailyLog) {
             // Update the existing DailyLog by appending new foods.
@@ -240,7 +238,7 @@ router.post('/daily-log', async (req, res) => {
             // Create a new DailyLog if none exists for today.
             dailyLog = new DailyLog({
                 user_id,
-                dateCreated: startOfDay,
+                dateCreated: adjustedStartOfDay,
                 foods
             });
             await dailyLog.save();
@@ -286,9 +284,43 @@ router.post('/recipe', async (req, res) => {
     }
 });
 
+// Endpoint to remove one food item
+router.delete('/deleteFood/:user_id/:food_id/:date', async (req, res) => {
+    try {
+        const { user_id, date, food_id } = req.params;
+
+        const selectedDate = DateTime.fromFormat(req.params.date, 'yyyy-MM-dd', { zone: 'America/New_York' });
+        // Compute the start and end of the selected day
+        const startOfDay = selectedDate
+            .startOf('day')
+            .toUTC()
+            .toJSDate();
+        const endOfDay = selectedDate
+            .endOf('day')
+            .toUTC()
+            .toJSDate();
+
+        const adjustedStartOfDay = new Date(startOfDay.getTime() - 4 * 60 * 60 * 1000);
+
+        const food = await OneFood.findById(food_id);
+        if (!food) {
+            return res.status(404).json({ message: 'Food item not found' });
+        }
+        await DailyLog.findOneAndUpdate({
+
+            user_id: user_id,
+            dateCreated: { $gte: adjustedStartOfDay, $lte: endOfDay }
+        },
+            { $pull: { foods: food_id } }
+        );
+        res.status(200).json({ message: 'Food item removed successfully' });
+    } catch (error) {
+        console.error('Error removing food item:', error);
+    }
+})
+
 // Endpoint to handle token refreshing
 router.post('/refresh', async (req, res) => {
-    console.log('reftesh token' + req.body)
     const { token } = req.body;
 
     if (!token)

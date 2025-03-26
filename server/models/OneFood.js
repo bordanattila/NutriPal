@@ -4,7 +4,7 @@ const Schema = mongoose.Schema;
 const oneFoodSchema = new Schema({
   user_id: {
     type: Schema.Types.ObjectId,
-    ref: 'User', 
+    ref: 'User',
     required: true,
   },
   created: {
@@ -19,7 +19,7 @@ const oneFoodSchema = new Schema({
   food_name: {
     type: String,
     required: true,
-    },
+  },
   serving_id: {
     type: String,
     required: true,
@@ -32,39 +32,46 @@ const oneFoodSchema = new Schema({
     type: Number,
     required: true,
   },
+  fraction_of_serving: {
+    type: String,
+  },
   calories: {
     type: Number,
-    required: true,
+    required: false,
   },
   carbohydrate: {
     type: Number,
-    required: true,
+    required: false,
   },
   protein: {
     type: Number,
-    required: true,
+    required: false,
   },
   fat: {
     type: Number,
-    required: true,
+    required: false,
   },
   saturated_fat: {
     type: Number,
-    required: true,
+    required: false,
   },
   sodium: {
     type: Number,
-    required: true,
+    required: false,
   },
   fiber: {
     type: Number,
-    required: true,
+    required: false,
   },
   meal_type: {
     type: String,
     enum: ['breakfast', 'lunch', 'dinner', 'snack'],
     required: true,
   },
+  brand: {
+    type: String,
+    required: false,
+  }
 }
 );
 

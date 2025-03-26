@@ -87,6 +87,7 @@ const Signup = () => {
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           required
+          autoComplete="username"
           className="border p-2 rounded"
         />
         <label htmlFor="email">Email:</label>
@@ -96,6 +97,7 @@ const Signup = () => {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
+          autoComplete="email"
           className="border p-2 rounded"
         />
         <label htmlFor="password">Password:</label>
@@ -105,6 +107,7 @@ const Signup = () => {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
+          autoComplete="current-password"
           className="border p-2 rounded"
         />
         <button

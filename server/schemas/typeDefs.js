@@ -39,14 +39,16 @@ const typeDefs = gql`
         serving_id: String!
         serving_size: String!
         number_of_servings: Int!
-        calories: Int!
-        carbohydrate: Int!
-        protein: Int!
-        fat: Int!
-        saturated_fat: Int!
-        sodium: Int!
-        fiber: Int!
+        fraction_of_serving: String
+        calories: Int
+        carbohydrate: Int
+        protein: Int
+        fat: Int
+        saturated_fat: Int
+        sodium: Int
+        fiber: Int
         meal_type: String!
+        brand: String
       }
 
     type Nutrition {
@@ -124,6 +126,11 @@ const typeDefs = gql`
             ingredients: [String!]!,
             nutrition: NutritionInput!
         ): Recipe
+
+        deleteOneFood(
+            _id: ID!,
+            food_id: ID!,
+            ): User
     }
 `;
 

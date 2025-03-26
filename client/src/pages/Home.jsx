@@ -19,6 +19,7 @@ const Home = () => {
   const handleSignupClick = () => {
     navigate('/signup');
   };
+  
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[500px] max-h-dvh bg-gradient-to-br from-teal-200 via-cyan-300 to-blue-300 p-6">

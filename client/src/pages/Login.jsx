@@ -37,9 +37,6 @@ const Login = () => {
 
     try {
       // Make a POST request to the login endpoint
-      console.log(username, password)
-      console.log('API URL:', process.env.REACT_APP_API_URL);
-
       const response = await api.post('user/login', {
         json: { username, password },
       });
@@ -76,6 +73,7 @@ const Login = () => {
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             required
+            autoComplete="username"
             className="border p-2 rounded"
           />
         </div>
@@ -89,6 +87,7 @@ const Login = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            autoComplete="current-password"
             className="border p-2 rounded"
           />
         </div>

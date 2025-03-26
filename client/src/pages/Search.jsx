@@ -15,10 +15,11 @@ const api = ky.create({
 const Search = () => {
   useAuth();
   const [foodName, setFoodName] = useState('');
-  const [foodArray, setFoodArray] = useState([]);
+  const [arrayToDisplay, setArrayToDisplay] = useState([]);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
   const [logHistory, setLogHistory] = useState([]);
+  const [barcodeID, setBarcodeID] = useState('');
 
   const { loading, data, logError } = useQuery(GET_USER, {
     context: {
@@ -33,7 +34,7 @@ const Search = () => {
 
   // Identify source page for FoodDetails.jsx
   const sourcePage = 'search';
-  
+
   // Get the last 5 food logs for the user
   const userId = data?.user?._id;
   useEffect(() => {
@@ -56,23 +57,35 @@ const Search = () => {
 
   const onSearchSubmit = async (e) => {
     e.preventDefault();
+    if (foodName === '') {
+      setError('Please enter a food name');
+      return;
+    }
     await handleSearch({
       name: foodName,
-      setArray: setFoodArray,
+      setArray: setArrayToDisplay,
       setError: setError,
+      setBarcode: setBarcodeID,
     });
+    console.log("barcodeID", barcodeID)
   };
 
-
+  useEffect(() => {
+    if (barcodeID !== '') {
+      console.log("barcodeID updated, navigating to food details");
+      navigate(`/${sourcePage}/foodById/${barcodeID}`);
+    }
+  }, [barcodeID, navigate, sourcePage]);
+  
 
   const clearSearch = () => {
     setFoodName('');
-    setFoodArray([]);
+    setArrayToDisplay([]);
   };
 
-  if (loading  || !data || !data.user) return <div>Loading...</div>;
+  if (loading || !data || !data.user) return <div>Loading...</div>;
   if (logError) return <div>Error: {error.message}</div>;
-  console.log("foodArray for error", foodArray)
+  console.log("arrayToDisplay", arrayToDisplay)
   return (
     <div className="flex flex-col items-center justify-center min-h-max p-6">
 
@@ -85,13 +98,13 @@ const Search = () => {
       />
 
       {/* Search Results */}
-      {foodArray.length > 0 ? (
+      {arrayToDisplay.length > 0 ? (
         <ul className="list-none mt-4 w-full max-w-lg">
-          {foodArray.map((food) => (
+          {arrayToDisplay.map((food) => (
             <li key={food.food_id} className="py-2 ">
               <div className='rounded-md p-2 bg-teal-100'>
                 <Link to={`/${sourcePage}/foodById/${food.food_id}`} className="text-blue-700 hover:underline">
-                  <strong>{food.food_name}</strong>
+                  <strong>{food.food_name}</strong> <span className={`${food.brand ? 'visible' : 'invisible'}`}>({food.brand_name})</span>
                   <br />
                   <span className='text-sm'>{food.food_description}</span>
                   <br />
@@ -108,10 +121,10 @@ const Search = () => {
               <li key={food.food_id} className="py-2">
                 <div className="rounded-md p-2 bg-teal-100">
                   <Link to={`/${sourcePage}/foodById/${food.food_id}`} className="text-blue-700 hover:underline">
-                    <strong>{food.food_name}</strong>
+                    <strong>{food.food_name}</strong> <span className={`${food.brand ? 'visible' : 'invisible'}`}>({food.brand})</span>
                     <br />
                     <span className='text-sm'>
-                      Calories: {food.calories} | Carb: {food.carbohydrate} | Protein: {food.protein} | Fat: {food.fat} | Number or servings: {food.number_of_servings} | Serving size: {food.serving_size}
+                      Calories: {(food.calories.toFixed(2))} | Carb: {(food.carbohydrate.toFixed(2))} | Protein: {(food.protein.toFixed(2))} | Fat: {(food.fat).toFixed(2)} | Number or servings: {food.number_of_servings} | Serving size: {food.serving_size}
                     </span>
                     <br />
                   </Link>

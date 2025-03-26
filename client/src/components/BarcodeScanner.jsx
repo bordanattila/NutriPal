@@ -9,47 +9,14 @@ const BarcodeScanner = ({ onDetected, onError }) => {
   
   useEffect(() => {
     function handleDetected (result) {
-      console.log('detected:', result);
       const code = result.codeResult.code;
-      const format = result.codeResult.format;
+      // const format = result.codeResult.format;
       
       const isValid = isValidEAN13(code);
       if (isValid) {
         Quagga.stop();
         onDetected(code);
-      }
-    
-  
-      console.log(`Detected ${format} code: ${code}`);
-  
-      // Implement a "vote" system for detected codes to ensure accuracy
-      // if (!detectionsCount.current[code]) {
-      //   detectionsCount.current[code] = 1;
-      // } else {
-      //   detectionsCount.current[code]++;
-      // }
-  
-      // If detect the same code multiple times, it's likely correct
-      // For EAN-13, also validate the checksum
-      // if (detectionsCount.current[code] >= 3 && (format !== 'ean_13' || isValidEAN13(code))) {
-      //   console.log('Confirmed code detected:', code);
-  
-      //   // Reset detections count
-      //   detectionsCount.current = {};
-  
-      //   // Temporarily stop scanning to avoid multiple rapid detections
-      //   Quagga.stop();
-      //   setScanning(false);
-  
-      //   if (onDetected) onDetected(code);
-  
-      //   // Optional: Restart scanning after a short delay
-      //   setTimeout(() => {
-      //     Quagga.start();
-      //     setScanning(true);
-      //   }, 1500);
-      // }
-      // if (onDetected) onDetected(code);
+      }  
     };
     if (scannerRef.current) {
       // Initialize Quagga2 with configuration
@@ -63,12 +30,6 @@ const BarcodeScanner = ({ onDetected, onError }) => {
               height: 720,
               facingMode: 'environment' // Use the back camera on mobile devices
             },
-            // area: { // This helps focus the scanner on the center of the view
-            //   top: "25%",
-            //   right: "10%",
-            //   left: "10%",
-            //   bottom: "25%",
-            // },
           },
           locator: {
             patchSize: "large",
@@ -76,10 +37,7 @@ const BarcodeScanner = ({ onDetected, onError }) => {
           },
           decoder: {
             // Limit to UPC barcode readers for performance
-            // readers: ['upc_e_reader']
             readers: [
-              // 'upc_e_reader',
-              // 'upc_reader',
               'ean_reader'
             ]
           },
@@ -106,8 +64,6 @@ const BarcodeScanner = ({ onDetected, onError }) => {
     // Clean on unmount
     return () => {
       if (scanning) {
-        // Quagga.offDetected(handleDetected);
-        // Quagga.offProcessed(handleProcessed);
         Quagga.stop();
         setScanning(false);
       }
@@ -154,12 +110,12 @@ const BarcodeScanner = ({ onDetected, onError }) => {
 
   return (
     <>
-      <div
+      <div id="scanner-container"
         ref={scannerRef}
         style={{
           position: 'relative',
           width: '100%',
-          height: '100%',
+          height: '50vh',
           overflow: 'hidden'
         }}
       >

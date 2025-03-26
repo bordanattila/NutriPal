@@ -8,6 +8,7 @@ const bodyParser = require('body-parser');
 require('dotenv').config();
 const MongoStore = require('connect-mongo');
 const helmet = require('helmet');
+const fs = require('fs');
 
 // Set up database
 const { typeDefs, resolvers } = require('./schemas');
@@ -16,34 +17,27 @@ const db = require('./config/connection');
 // Set up Express
 const app = express();
 const PORT = process.env.PORT || 4000;
-const isProduction = process.env.NODE_ENV === 'production';
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-  context: authMiddleware,
-  cache: 'bounded',
-  introspection: true, //!isProduction, Disable introspection in production
-  playground: true,
-});
+
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", "https://cdn.jsdelivr.net", "https://rsms.me", "'unsafe-inline'"],
+        scriptSrc: ["'self'", "https://cdn.tailwindcss.com", "https://kit.fontawesome.com"],
+        fontSrc: ["'self'", "data:"],
+        imgSrc: ["'self'", "data:", "https://platform.fatsecret.com"],
+      },
+    },
+  })
+);
 
 app.use(cors({
-  origin: process.env.CLIENT_URL,
-  methods: ['GET', 'POST', 'OPTIONS'],
+  origin: [process.env.CLIENT_URL, 'https://nutripal-hbcff5htezbqdwe9.canadacentral-01.azurewebsites.net'],
+  methods: ['GET', 'POST', 'DELETE', 'PUT'],
   credentials: true
 }));
 
-// Preflight CORS Headers
-// app.use((req, res, next) => {
-//   res.header("Access-Control-Allow-Origin", process.env.CLIENT_URL);
-//   res.header("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
-//   res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-//   res.header("Access-Control-Allow-Credentials", "true");
-//   if (req.method === 'OPTIONS') {
-//     return res.sendStatus(204); // No Content
-//   }
-//   next();
-// });
- 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -70,33 +64,20 @@ app.use(
   })
 );
 
-app.use('/', require('./controllers/'));
+// Mount your API and user routes 
+app.use('/api', require('./controllers/apiRoutes'));
+app.use('/user', require('./controllers/userRoutes'));
 
-// Serve static files from the React app
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../client/build')));
 
-  // Create a route that will serve up the `../client/build/index.html` page
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../client/build', 'index.html'));
-  });
-} else {
-  app.use(express.static(path.join(__dirname, 'public')));
-}
-
-app.use(
-  helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        styleSrc: ["'self'", "https://cdn.jsdelivr.net", "https://rsms.me", "'unsafe-inline'"],
-        scriptSrc: ["'self'", "https://cdn.tailwindcss.com", "https://kit.fontawesome.com"],
-        fontSrc: ["'self'", "data:"],
-        // Add other directives as needed
-      },
-    },
-  })
-);
+// Set up Apollo Server
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  context: authMiddleware,
+  cache: 'bounded',
+  introspection: true, //!isProduction, Disable introspection in production
+  playground: true,
+});
 
 // Start server
 const startApolloServer = async (typeDefs, resolvers) => {
@@ -106,7 +87,6 @@ const startApolloServer = async (typeDefs, resolvers) => {
   db.once('open', () => {
     app.listen(PORT, () => {
       console.log(`API server running on port ${PORT}!`);
-      console.log(`Use GraphQL at http://localhost:${PORT}${server.graphqlPath}`);
     })
   })
 };
@@ -114,3 +94,15 @@ const startApolloServer = async (typeDefs, resolvers) => {
 // Call the async function to start the server
 startApolloServer(typeDefs, resolvers);
 
+// Serve static files from the React app
+if (process.env.NODE_ENV === 'production') {
+  console.log('Serving static files from:', path.join(__dirname, '../client/build'));
+  app.use(express.static(path.join(__dirname, '../client/build')));
+  
+  // Create a route that will serve up the `../client/build/index.html` page
+  app.get('*', (req, res) => {    
+    res.sendFile(path.join(__dirname, '../client/build', 'index.html'));
+  });
+} else {
+  app.use(express.static(path.join(__dirname, 'public')));
+}

@@ -1,6 +1,7 @@
 const { AuthenticationError } = require("apollo-server-express");
 const User = require("../models/User");
 const { signInToken } = require("../utils/auth");
+const DailyLog = require("../models/DailyLog");
 
 const resolvers = {
   Query: {
@@ -71,12 +72,12 @@ const resolvers = {
       if (!context.user) {
         throw new AuthenticationError('You need to be logged in!');
       }
-    
+
       const user = await User.findById(userId);
       if (!user) {
         throw new Error('User not found');
       }
-    
+
       // Update fields if provided
       if (calorieGoal !== undefined && calorieGoal !== null) {
         user.calorieGoal = calorieGoal;
@@ -87,7 +88,7 @@ const resolvers = {
       if (profilePic) {
         user.profilePic = profilePic;
       }
-    
+
       await user.save(); // Trigger pre('save') middleware
       return user;
     },
@@ -101,6 +102,16 @@ const resolvers = {
         nutrition,
       });
       return await recipe.save();
+    },
+
+    // Delete one food item from daily log
+    deleteOneFood: async (_, { log_id, food_id }) => {
+      const updatedDailyLog = await DailyLog.findOneAndUpdate(
+        { _id: log_id },
+        { $pull: { foods: { _id: food_id } } },
+        { new: true }
+      );
+      return updatedDailyLog;
     },
   }
 }
