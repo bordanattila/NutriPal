@@ -34,6 +34,7 @@ const oneFoodSchema = new Schema({
   },
   fraction_of_serving: {
     type: String,
+    required: false,
   },
   calories: {
     type: Number,
@@ -71,6 +72,12 @@ const oneFoodSchema = new Schema({
   brand: {
     type: String,
     required: false,
+  },
+  food_type: {
+    type: String,
+    enum: ['api', 'recipe', 'homemade'],
+    required: true,
+    default: 'api'
   }
 }
 );

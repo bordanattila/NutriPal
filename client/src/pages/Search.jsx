@@ -67,16 +67,14 @@ const Search = () => {
       setError: setError,
       setBarcode: setBarcodeID,
     });
-    console.log("barcodeID", barcodeID)
   };
 
   useEffect(() => {
     if (barcodeID !== '') {
-      console.log("barcodeID updated, navigating to food details");
       navigate(`/${sourcePage}/foodById/${barcodeID}`);
     }
   }, [barcodeID, navigate, sourcePage]);
-  
+
 
   const clearSearch = () => {
     setFoodName('');
@@ -85,7 +83,6 @@ const Search = () => {
 
   if (loading || !data || !data.user) return <div>Loading...</div>;
   if (logError) return <div>Error: {error.message}</div>;
-  console.log("arrayToDisplay", arrayToDisplay)
   return (
     <div className="flex flex-col items-center justify-center min-h-max p-6">
 
@@ -115,7 +112,9 @@ const Search = () => {
         </ul>
       ) : (
         <div>
-          <h2 className='text-center'>Recent History</h2>
+          <h2 className="text-2xl font-bold text-teal-700 tracking-wide uppercase mb-4 border-b-2 border-teal-400 pb-2 shadow-sm text-center">
+            Recent History
+          </h2>
           <ul className="list-none mt-4 w-full max-w-lg">
             {logHistory.map((food) => (
               <li key={food.food_id} className="py-2">
@@ -124,7 +123,7 @@ const Search = () => {
                     <strong>{food.food_name}</strong> <span className={`${food.brand ? 'visible' : 'invisible'}`}>({food.brand})</span>
                     <br />
                     <span className='text-sm'>
-                      Calories: {(food.calories.toFixed(2))} | Carb: {(food.carbohydrate.toFixed(2))} | Protein: {(food.protein.toFixed(2))} | Fat: {(food.fat).toFixed(2)} | Number or servings: {food.number_of_servings} | Serving size: {food.serving_size}
+                      Calories: {(food.calories.toFixed(1))} | Carb: {(food.carbohydrate.toFixed(1))} | Protein: {(food.protein.toFixed(1))} | Fat: {(food.fat).toFixed(1)} | Number or servings: {food.number_of_servings} | Serving size: {food.serving_size}
                     </span>
                     <br />
                   </Link>

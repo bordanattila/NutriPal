@@ -70,7 +70,10 @@ const typeDefs = gql`
     caloriesPerServing: Float!,
     carbohydratePerServing: Float!,
     proteinPerServing: Float!,
-    fatPerServing: Float!
+    fatPerServing: Float!,
+    saturatedFatPerServing: Float!
+    sodiumPerServing: Float!,
+    fiberPerServing: Float!
     }
 
     type Query {
@@ -124,6 +127,7 @@ const typeDefs = gql`
             recipeName: String!,
             user_id: ID!,
             ingredients: [String!]!,
+            servingSize: String,
             nutrition: NutritionInput!
         ): Recipe
 

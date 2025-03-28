@@ -15,11 +15,17 @@ const recipeSchema = new Schema(
             type: Schema.Types.ObjectId,
             ref: 'OneFood'
         }],
+        servingSize: {
+            type: String,
+        },
         nutrition: {
             caloriesPerServing: { type: Number },
             carbohydratePerServing: { type: Number },
             proteinPerServing: { type: Number },
             fatPerServing: { type: Number },
+            saturatedFatPerServing: { type: Number},
+            sodiumPerServing: { type: Number},
+            fiberPerServing: { type: Number},
         }
     },
 );
