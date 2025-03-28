@@ -92,7 +92,7 @@ const FoodDetails = () => {
     };
   
     fetchRecipeDetails();
-  }, [recipeID, servingCount, fractionValue]);
+  }, [recipeID, servingCount, fractionValue, servingID]);
 
   // Prepare stats for chart
   const statsForChart = selectedServing ? [
