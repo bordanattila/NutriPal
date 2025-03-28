@@ -82,7 +82,7 @@ const FoodDetails = () => {
   
         setSelectedServing(serving);
         setServingArray([serving.serving_description]); // wrap in array
-        setServingID(serving.serving_id);
+        setServingID(serving?.serving_id || servingID);
         setLoading(false);
       } catch (err) {
         console.error("Error fetching recipe details:", err);

@@ -68,7 +68,7 @@ const FoodDetails = () => {
         // It prevents potential errors that could occur if the code tries to access properties of undefined or null.
         if (responseData.food?.servings?.serving?.length > 0) {
           setSelectedServing(responseData.food.servings.serving[0]);
-          setServingID(responseData.food.servings.serving[0].serving_id)
+          setServingID(responseData?.food?.servings?.serving?.[0]?.serving_id || servingID);
         }
         setServingArray(responseData.food.servings.serving);
       } catch (error) {
