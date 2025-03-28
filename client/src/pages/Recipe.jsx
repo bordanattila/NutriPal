@@ -18,6 +18,7 @@ const Recipe = () => {
   useAuth();
   const [recipeName, setRecipeName] = useState('');
   const [numberOfServings, setNumberOfServings] = useState('');
+  const [servingSize, setServingSize] = useState('');
   const [ingredientsList, setIngredientsList] = useState([]);
   const [ingredientsID, setIngredientsID] = useState([]);
   const [foodName, setFoodName] = useState('');
@@ -67,8 +68,10 @@ const Recipe = () => {
   useEffect(() => {
     const storedName = localStorage.getItem('recipeName');
     const storedNumOfServings = localStorage.getItem('numOfServings');
+    const storedServingsSize = localStorage.getItem('servingSize');
     if (storedName) setRecipeName(storedName);
     if (storedNumOfServings) setNumberOfServings(storedNumOfServings);
+    if (storedServingsSize) setServingSize(storedServingsSize);
   }, []);
 
 
@@ -122,10 +125,12 @@ const Recipe = () => {
     setIngredientsID([]);
     setRecipeName('');
     setNumberOfServings('');
+    setServingSize('');
     localStorage.removeItem('ingredientsList');
     localStorage.removeItem('ingredientsID');
     localStorage.removeItem('recipeName');
     localStorage.removeItem('numOfServings');
+    localStorage.removeItem('servingSize');
   };
 
   const handleRemoveIngredient = (index) => {
@@ -141,10 +146,11 @@ const Recipe = () => {
 
   const handleAddRecipe = async (req, res) => {
     const newRecipe = {
+      user_id: userID,
       recipeName: recipeName,
       ingredients: ingredientsID,
       servings: numberOfServings,
-      user_id: userID,
+      servingSize: servingSize,
     }
     try {
       // Create Recipe document
@@ -194,11 +200,11 @@ const Recipe = () => {
         />
       </div>
       <div>
-        <label htmlFor="recipeServingSize" className="sr-only">Number of servings</label>
+        <label htmlFor="recipeNumOfServings" className="sr-only">Number of servings</label>
         <input
           type="text"
-          id="recipeServingSize"
-          name="recipeServingSize"
+          id="recipeNumOfServings"
+          name="recipeNumOfServings"
           placeholder="Number of servings"
           aria-autocomplete='list'
           value={numberOfServings}
@@ -208,7 +214,25 @@ const Recipe = () => {
             localStorage.setItem('numOfServings', newValue);
           }}
           required
-          className="border p-2 m-2 rounded-full bg-gray-100 text-gray-700 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-md"
+          className="border p-2 m-2 rounded-full bg-gray-100 text-gray-700 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-md "
+        />
+      </div>
+      <div>
+        <label htmlFor="recipeServingSize" className="sr-only">Servings size</label>
+        <input
+          type="text"
+          id="recipeServingSize"
+          name="recipeServingSize"
+          placeholder="Servings size"
+          aria-autocomplete='list'
+          value={servingSize}
+          onChange={(e) => {
+            const newValue = e.target.value;
+            setServingSize(newValue);
+            localStorage.setItem('servingSize', newValue);
+          }}
+          required
+          className="border p-2 m-2 rounded-full bg-gray-100 text-gray-700 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-md "
         />
       </div>
       <SearchBar

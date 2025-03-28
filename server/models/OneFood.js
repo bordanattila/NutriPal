@@ -72,6 +72,12 @@ const oneFoodSchema = new Schema({
   brand: {
     type: String,
     required: false,
+  },
+  food_type: {
+    type: String,
+    enum: ['api', 'recipe', 'homemade'],
+    required: true,
+    default: 'api'
   }
 }
 );

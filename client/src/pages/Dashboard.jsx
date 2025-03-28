@@ -106,7 +106,7 @@ const Dashboard = () => {
           <div key={stat.name} >
             <dt className="text-sm text-gray-900">{stat.name}</dt>
             <dd className="text-xl font-semibold tracking-tight text-black">
-              {typeof stat.value === 'number' ? stat.value.toFixed(2) : stat.value}
+              {typeof stat.value === 'number' ? stat.value.toFixed(1) : stat.value}
             </dd>
           </div>
         ))}

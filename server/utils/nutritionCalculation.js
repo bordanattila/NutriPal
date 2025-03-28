@@ -11,8 +11,11 @@ function calculateRecipeNutrition(ingredients, servings) {
       total.carbohydrate += ingredient.carbohydrate;
       total.protein += ingredient.protein;
       total.fat += ingredient.fat;
+      total.saturated_fat += ingredient.saturated_fat;
+      total.sodium += ingredient.sodium;
+      total.fiber += ingredient.fiber;
       return total;
-    }, { calories: 0, carbohydrate: 0, protein: 0, fat: 0 });
+    }, { calories: 0, carbohydrate: 0, protein: 0, fat: 0, saturated_fat: 0, sodium: 0, fiber: 0});
   
     // Calculate per serving values.
     return {
@@ -20,6 +23,9 @@ function calculateRecipeNutrition(ingredients, servings) {
       carbohydratePerServing: totals.carbohydrate / servings,
       proteinPerServing: totals.protein / servings,
       fatPerServing: totals.fat / servings,
+      saturatedFatPerServing: totals.saturated_fat / servings,
+      sodiumPerServing: totals.sodium / servings,
+      fiberPerServing: totals.fiber / servings,
     };
   }
   

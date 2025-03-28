@@ -16,6 +16,7 @@ import Recipe from './pages/Recipe';
 import LogOptions from './components/LogOptions';
 import Meals from './pages/Meals';
 import SavedRecipes from './components/SavedRecipes';
+import LogRecipe from './components/LogRecipe';
 
 const routes = [
   {
@@ -61,6 +62,10 @@ const routes = [
   {
     path: '/saved-recipes',
     element: <SavedRecipes />,
+  },
+  {
+    path: '/log-recipe/:recipeName/:recipeID',
+    element: <LogRecipe />,
   },
   {
     path: '/meals',

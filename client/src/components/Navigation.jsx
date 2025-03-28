@@ -14,7 +14,7 @@ const navigationItems = [
 
 const Navigation = () => {
   return (
-    <div className="flex flex-row justify-evenly items-center p-4 bg-gradient-to-r from-green-500 to-teal-600 shadow-lg">
+    <div className="flex flex-row justify-evenly items-center p-4 bg-gradient-to-r from-green-400 to-teal-500 shadow-lg">
       {navigationItems.map((item, index) => (
         <Link
           key={index}

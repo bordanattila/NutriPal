@@ -8,6 +8,7 @@ const OneFood = require('../models/OneFood');
 const Recipe = require('../models/Recipe');
 const { calculateRecipeNutrition } = require('../utils/nutritionCalculation');
 const { DateTime } = require('luxon');
+const { generateFoodId, generateServingId } = require('../utils/idGenerator');
 
 // Endpoint to get the access token
 router.get('/token', async (req, res) => {
@@ -171,20 +172,47 @@ router.get('/saved-recipes/:user_id', async (req, res) => {
     }
 });
 
+// Endpoint to log recipe
+router.get('/log-recipe/:recipeID', async (req, res) => {
+    try {
+        const { recipeID } = req.params;
+        const servings = parseFloat(req.query.servings);
+
+        const selectedRecipe = await Recipe.findById(recipeID).populate('ingredients');
+        if (!selectedRecipe) {
+            return res.status(404).json({ message: 'Recipe not found' });
+        }
+
+        // Use your nutrition calculator
+        const nutrition = calculateRecipeNutrition(selectedRecipe.ingredients, servings);
+        res.json({
+            recipeName: selectedRecipe.recipeName,
+            nutrition,
+            selectedServing: {
+                calories: nutrition.calories,
+                carbohydrate: nutrition.carbohydrate,
+                protein: nutrition.protein,
+                fat: nutrition.fat,
+                saturated_fat: nutrition.saturated_fat,
+                sodium: nutrition.sodium,
+                fiber: nutrition.fiber,
+                serving_description: selectedRecipe.servingSize
+            }
+        });
+    } catch (err) {
+        console.error('Error fetching recipe details:', err);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
+
 // Endpoint for logging one food item
 router.post('/one-food', async (req, res) => {
-    console.log("one-food hit");
     try {
-        // Destructure the required fields from the request body
-        const { user_id, food_id, food_name, serving_id, serving_size, number_of_servings, fraction_of_serving, calories, carbohydrate, protein, fat, saturated_fat, sodium, fiber, meal_type, brand } = req.body;
-
-        // Create a new OneFood entry
-        const newFood = new OneFood({
+        const {
             user_id,
-            created: new Date(),
-            food_id,
             food_name,
-            serving_id,
+            food_id: incomingFoodId,
+            serving_id: incomingServingId,
             serving_size,
             number_of_servings,
             fraction_of_serving,
@@ -195,18 +223,43 @@ router.post('/one-food', async (req, res) => {
             saturated_fat,
             sodium,
             fiber,
-            // Convert to lowercase
+            meal_type,
+            brand,
+            food_type = 'api', // default to 'api' for backwards compatibility
+        } = req.body;
+
+        const food_id = incomingFoodId || await generateFoodId(OneFood);
+        const serving_id = incomingServingId || await generateServingId(OneFood);
+
+        const newFood = new OneFood({
+            user_id,
+            created: new Date(),
+            food_id,
+            serving_id,
+            food_name,
+            serving_size,
+            number_of_servings,
+            fraction_of_serving,
+            calories,
+            carbohydrate,
+            protein,
+            fat,
+            saturated_fat,
+            sodium,
+            fiber,
             meal_type: meal_type.toLowerCase(),
-            brand
+            brand,
+            food_type
         });
+
         await newFood.save();
-        console.log("new food saved");
         res.status(201).json(newFood);
     } catch (error) {
         console.error('Error creating food entry:', error);
-        res.status(400).json({ message: 'Error message for creating food entry', error: error.message });
+        res.status(400).json({ message: 'Failed to create food entry', error: error.message });
     }
 });
+
 
 // Endpoint to add food to Daily Log
 router.post('/daily-log', async (req, res) => {
@@ -256,23 +309,17 @@ router.post('/daily-log', async (req, res) => {
 router.post('/recipe', async (req, res) => {
 
     try {
-        const { user_id, recipeName, servings, ingredients } = req.body;
+        const { user_id, recipeName, servings, servingSize, ingredients } = req.body;
         // Retrieve OneFood entry by its _id
         const ingredient = await OneFood.find({ _id: { $in: ingredients } });
-
         // Calculate the nutrition per serving
         const nutrition = calculateRecipeNutrition(ingredient, servings);
-        console.log("user_id", user_id)
-        console.log("recipeName", recipeName)
-        console.log("servings", servings)
-        console.log("ingredients", ingredients)
-        console.log("nutrition", nutrition)
-
         // Create a new Recipe entry
         const newRecipe = new Recipe({
             user_id,
             recipeName,
             servings,
+            servingSize,
             // Directly use the ingredients from the request body
             ingredients,
             nutrition,
@@ -285,6 +332,7 @@ router.post('/recipe', async (req, res) => {
         res.status(500).json({ message: 'Error creating recipe', error: error.message });
     }
 });
+
 
 // Endpoint to remove one food item
 router.delete('/deleteFood/:user_id/:food_id/:date', async (req, res) => {
