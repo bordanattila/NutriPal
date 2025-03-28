@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useLocation, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import ky from 'ky';
 import DropdownMenu from './Dropdown';
 import Auth from '../utils/auth';
@@ -31,10 +31,6 @@ const FoodDetails = () => {
   const [fractionValue, setFractionValue] = useState(0);
   const [meal, setMeal] = useState(mealTypes[0]);
   const navigate = useNavigate();
-  // const location = useLocation();
-  // const recipeArray = location.state?.recipeArray;
-
-  // const [ingredients, setIngredients] = useState(null);
   const [date, setDate] = useState(DateTime.now());
 
   const todaysDate = date.year + '-' + date.month + '-' + date.day

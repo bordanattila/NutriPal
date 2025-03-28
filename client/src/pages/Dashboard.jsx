@@ -22,6 +22,9 @@ const Dashboard = () => {
   const [carbTotal, setCarbTotal] = useState(0);
   const [proteinTotal, setProteinTotal] = useState(0);
   const [fatTotal, setFatTotal] = useState(0);
+  const [fiberTotal, setFiberTotal] =useState(0);
+  const [sodiumTotal, setSodiumTotal] = useState(0);
+  const [saturatedFatTotal, setSaturatedFatTotal] = useState(0);
   const [goal, setGoal] = useState(0);
   const [date, setDate] = useState(DateTime.now());
   
@@ -71,17 +74,24 @@ const Dashboard = () => {
     };
     setGoal(calgoal)
     fetchTodaysLog();
-  }, [userId, calgoal, todaysDate]);
+  }, [userId, calgoal, todaysDate, todaysLog]);
+
   useEffect(() => {
     const totalCalories = async () => {
       const totalCal = todaysLog?.reduce((sum, { calories = 0 }) => sum + calories, 0) ?? 0;
       const totalCarb = todaysLog?.reduce((sum, { carbohydrate = 0 }) => sum + carbohydrate, 0) ?? 0;
       const totalProtein = todaysLog?.reduce((sum, { protein = 0 }) => sum + protein, 0) ?? 0;
       const totalFat = todaysLog?.reduce((sum, { fat = 0 }) => sum + fat, 0) ?? 0;
+      const totalSodium = todaysLog?.reduce((sum, { sodium = 0 }) => sum + sodium, 0) ?? 0;
+      const totalFiber = todaysLog?.reduce((sum, { fiber = 0 }) => sum + fiber, 0) ?? 0;
+      const totalSaturatedFat = todaysLog?.reduce((sum, { saturated_fat = 0 }) => sum + saturated_fat, 0) ?? 0;
       setCalorieTotal(totalCal);
       setCarbTotal(totalCarb);
       setProteinTotal(totalProtein);
       setFatTotal(totalFat);
+      setSodiumTotal(totalSodium);
+      setFiberTotal(totalFiber);
+      setSaturatedFatTotal(totalSaturatedFat);
     }
     totalCalories();
   }, [todaysLog]);
@@ -91,6 +101,12 @@ const Dashboard = () => {
     { name: 'Protein', value: proteinTotal || 0 },
     { name: 'Fat', value: fatTotal || 0 },
     { name: 'Calories', value: calorieTotal || 0 },
+  ]
+  const statsBottom = [
+    { name: 'Sodium', value: sodiumTotal || 0 },
+    { name: 'Fiber', value: fiberTotal || 0 },
+    { name: 'Saturated Fat', value: saturatedFatTotal || 0 },
+
   ]
 
   if (loading) return <div>Loading...</div>;
@@ -111,7 +127,7 @@ const Dashboard = () => {
           </div>
         ))}
         <div>
-        <dt className="text-sm text-gray-900">Goal</dt>
+        <dt className="text-sm text-gray-900">Calorie Goal</dt>
         <dd className="text-xl font-semibold tracking-tight text-black">{goal}</dd>
         </div>
         </div>
@@ -119,7 +135,18 @@ const Dashboard = () => {
       <div className='flex justify-center'>
         <DonutChart stats={stats} />
       </div>
-
+      <dl className="flex justify-center gap-8 sm:mt-20 sm:grid-cols-2 lg:grid-cols-4 bg-gradient-to-br from-teal-200 via-cyan-300 to-blue-300 p-6">
+      <div className="flex flex-row gap-5">
+      {statsBottom.map((statsBottom) => (
+          <div key={statsBottom.name} >
+            <dt className="text-sm text-gray-900">{statsBottom.name}</dt>
+            <dd className="text-xl font-semibold tracking-tight text-black">
+              {typeof statsBottom.value === 'number' ? statsBottom.value.toFixed(1) : statsBottom.value}
+            </dd>
+          </div>
+        ))}
+        </div>
+        </dl>
     </>
   );
 };

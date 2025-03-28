@@ -47,7 +47,7 @@ const LogOptions = ({ userId }) => {
         onClick={handleLogFromMeal}
         className="w-full py-6 text-lg font-semibold text-white bg-purple-500 hover:bg-purple-600 rounded-2xl shadow-lg transition"
       >
-        Log a Meal
+        Log a Meal - coming soon
       </button>
     </div>
   );
