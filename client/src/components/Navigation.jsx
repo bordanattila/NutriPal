@@ -1,14 +1,14 @@
 import { React } from 'react';
 import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUtensils, faBook, faHouse, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
+import { faUtensils, faBook, faHouse, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { faClipboard as faRegularClipboard } from '@fortawesome/free-regular-svg-icons';
 
 const navigationItems = [
   { to: '/meals', icon: faUtensils, label: 'Meals' },
   { to: '/recipe', icon: faBook, label: 'Recipes' },
   { to: '/dashboard', icon: faHouse, label: 'Dashboard' },
-  { to: '/logOptions', icon: faMagnifyingGlass, label: 'Log Food' },
+  { to: '/logOptions', icon: faPlus, label: 'Log Food' },
   { to: '/dailyLogs', icon: faRegularClipboard, label: 'Logs' },
 ];
 

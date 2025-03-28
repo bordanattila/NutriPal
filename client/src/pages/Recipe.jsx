@@ -223,7 +223,7 @@ const Recipe = () => {
           type="text"
           id="recipeServingSize"
           name="recipeServingSize"
-          placeholder="Servings size"
+          placeholder="Servings size (1 plate)"
           aria-autocomplete='list'
           value={servingSize}
           onChange={(e) => {
