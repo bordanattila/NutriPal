@@ -1,3 +1,8 @@
+/**
+ * @file DailyLogs.jsx
+ * @description Displays the user's daily food log by date, grouped by meal type. Allows deletion of individual items.
+ */
+
 import React, { useEffect, useState } from 'react';
 import ky from 'ky';
 import { useNavigate, Link } from "react-router-dom";
@@ -8,18 +13,34 @@ import useAuth from '../hooks/RefreshToken';
 import Calendar from '../components/Calendar';
 import { DateTime } from 'luxon';
 
-
+/**
+ * @constant api
+ * @description Pre-configured ky instance for making API requests with a base prefix URL.
+ */
 const api = ky.create({
   prefixUrl: process.env.REACT_APP_API_URL,
 });
 
+/**
+ * @component DailyLogs
+ * @description React component for displaying the user's food logs for a selected date, with deletion support.
+ * @returns {JSX.Element}
+ */
 const DailyLogs = () => {
-  useAuth();
+  useAuth(); // Automatically refresh token if needed
+
   const navigate = useNavigate();
+
+  /** @state {Array} logHistory - List of food items logged on the selected date */
   const [logHistory, setLogHistory] = useState([]);
+
+  /** @state {string} logMessage - Fallback message when no logs are found */
   const [logMessage, setLogMessage] = useState('');
+
+  /** @state {DateTime} date - The currently selected date (Luxon DateTime) */
   const [date, setDate] = useState(DateTime.now());
 
+  /** @description Fetch current user data via GraphQL (used for userId) */
   const { loading, data, logError } = useQuery(GET_USER, {
     context: {
       headers: {
@@ -33,7 +54,10 @@ const DailyLogs = () => {
 
   const userId = data?.user?._id;
 
-  // Get the food items logged today
+  /**
+   * @function useEffect
+   * @description Fetches the food logs for the selected date when date or userId changes.
+   */
   useEffect(() => {
     const fetchLogHistory = async () => {
       try {
@@ -62,13 +86,26 @@ const DailyLogs = () => {
     if (userId) fetchLogHistory();
   }, [date, userId]);
 
-  // Group logHistory by meal_type
+  /**
+   * @constant mealTypeOrder
+   * @description Controls the order in which meal groups appear
+   */
   const mealTypeOrder = ["breakfast", "lunch", "dinner", "snack"]
+
+  /**
+   * @constant groupedLogs
+   * @description Groups food logs by meal_type for display
+   */
   const groupedLogs = mealTypeOrder.map(mealType => ({
     mealType,
     foods: logHistory.filter(food => food.meal_type === mealType),
   }));
 
+  /**
+   * @function handleDelete
+   * @description Handles deleting a food item from the daily log.
+   * @param {string} food_id - ID of the food item to delete
+   */
   const handleDelete = async (food_id) => {
     const confirmDelete = window.confirm('Are you sure you want to delete this food item?');
     if (confirmDelete) {
@@ -88,10 +125,11 @@ const DailyLogs = () => {
     }
   };
 
-
+  // Loading and error handling
   if (loading) return <div>Loading...</div>;
   if (logError) return <div>Error: {logError.message}</div>;
 
+  // UI: Render calendar, grouped logs, or fallback message
   return (
     <div className="flex flex-col items-center justify-center min-h-max p-2">
       <h1 className="text-xl font-bold mb-4">Daily Log</h1>

@@ -1,14 +1,28 @@
+/**
+ * @file Donut.jsx
+ * @description A reusable Donut chart component for displaying macronutrient distribution.
+ * @module DonutChart
+ */
 import React from 'react';
 import { Doughnut } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 
+// Register necessary chart.js components
 ChartJS.register(ArcElement, Tooltip, Legend);
-
+/**
+ * DonutChart Component
+ *
+ * @component
+ * @param {Object} props
+ * @param {Array<{ name: string, value: number }>} props.stats - Array of nutrient objects with `name` and `value` keys.
+ * @returns {JSX.Element} A styled Donut chart with calories in the center.
+ */
 const DonutChart = ({ stats }) => {
   // Extracting values from stats
   const macronutrients = stats.filter(stat => stat.name !== 'Calories');
   const calories = stats.find(stat => stat.name === 'Calories').value;
 
+    // Format chart.js dataset
   const data = {
     labels: macronutrients.map(item => item.name),
     datasets: [

@@ -1,8 +1,24 @@
+/**
+ * @file Calendar.jsx
+ * @description Custom calendar dropdown component built with native React and Luxon.
+ */
+
 import { useState, useEffect } from 'react';
-// import { Calendar, ChevronDown } from 'lucide-react';
 import { ChevronDownIcon } from '@heroicons/react/20/solid';
 import { DateTime } from 'luxon';
 
+/**
+ * Calendar Component
+ *
+ * @component
+ * @param {Object} props
+ * @param {DateTime} [props.value=DateTime.now()] - Initial selected date.
+ * @param {function} props.onChange - Callback triggered when the selected date changes.
+ * @param {number} [props.minYear=1920] - Earliest year to include in the dropdown.
+ * @param {number} [props.maxYear=DateTime.now().year] - Latest year to include.
+ * @param {string} [props.className] - Optional tailwind or custom class string.
+ * @returns {JSX.Element}
+ */
 const Calendar = ({
   value = DateTime.now(),
   onChange = () => { },
@@ -10,17 +26,19 @@ const Calendar = ({
   maxYear = DateTime.now().year,
   className = ''
 }) => {
-  // States for individual selects
+  // Selected values for year, month, and day
   const [selectedYear, setSelectedYear] = useState(value.year);
   const [selectedMonth, setSelectedMonth] = useState(value.month);
   const [selectedDay, setSelectedDay] = useState(value.day);
+
+  // Update selections if parent `value` changes
   useEffect(() => {
     setSelectedYear(value.year);
     setSelectedMonth(value.month);
     setSelectedDay(value.day);
   }, [value]);
 
-  // States for dropdowns
+  // Track which dropdown is open
   const [openSelect, setOpenSelect] = useState('');
 
   // Generate options
@@ -36,22 +54,30 @@ const Calendar = ({
     'September', 'October', 'November', 'December'
   ];
 
+  /**
+   * Get number of days in a given month and year.
+   * @param {number} year
+   * @param {number} month
+   * @returns {number}
+   */
   const getDaysInMonth = (year, month) => {
     return DateTime.fromObject({ year, month }).daysInMonth;
   };
 
+  // Generate list of days based on month/year
   const days = Array.from(
     { length: getDaysInMonth(selectedYear, selectedMonth) },
     (_, i) => i + 1
   );
 
-  // Update parent when any selection changes
+  // Notify parent of new date whenever any field changes
   useEffect(() => {
     const newDate = DateTime.fromObject({ year: selectedYear, month: selectedMonth, day: selectedDay });
     onChange(newDate);
   }, [selectedYear, selectedMonth, selectedDay, onChange]);
 
-  // Ensure valid day when month/year changes
+
+  // Auto-adjust invalid days if month/year changes
   useEffect(() => {
     const daysInMonth = getDaysInMonth(selectedYear, selectedMonth);
     if (selectedDay > daysInMonth) {
@@ -59,7 +85,16 @@ const Calendar = ({
     }
   }, [selectedYear, selectedMonth, selectedDay]);
 
-  // Generic select dropdown component
+  /**
+   * @component SelectWrapper
+   * @description Reusable dropdown for selecting a date unit.
+   * @param {Object} props
+   * @param {Array<number>} props.options - Dropdown options (e.g., days, months, years)
+   * @param {number} props.value - Currently selected value
+   * @param {function} props.onChange - Callback for updating the value
+   * @param {string} props.type - Type of the dropdown: 'day', 'month', or 'year'
+   * @param {function} [props.format] - Optional formatting function
+   */
   const SelectWrapper = ({
     options,
     value,

@@ -1,7 +1,28 @@
+/**
+ * @file Dropdown.jsx
+ * @module DropdownMenu
+ * @description A reusable dropdown menu component using @headlessui/react.
+ * Supports dynamic option rendering and customizable key/label logic.
+ */
 import React from 'react';
 import { Label, Listbox, ListboxButton, ListboxOption, ListboxOptions } from '@headlessui/react'
 import { ChevronUpDownIcon } from '@heroicons/react/20/solid'
 
+/**
+ * DropdownMenu component
+ *
+ * @component
+ * @param {Object} props - Component props
+ * @param {string} props.label - Label displayed above the dropdown
+ * @param {*} props.value - The currently selected option
+ * @param {function} props.onChange - Callback function to update the selected value
+ * @param {Array} props.options - Array of option objects to render in the dropdown
+ * @param {function} props.optionLabel - Function to return the display label for an option
+ * @param {function} props.optionKey - Function to return the unique key for each option
+ * @param {string} [props.className] - Optional extra class names for container
+ *
+ * @returns {JSX.Element} A styled dropdown menu with customizable data
+ */
 const DropdownMenu = ({ label, value, onChange, options, optionLabel, optionKey, className = ''  }) => {
     return (
         <div className={`relative mt-2 ${className}`}>

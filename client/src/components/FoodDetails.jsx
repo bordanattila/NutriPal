@@ -1,3 +1,8 @@
+/**
+ * @file FoodDetails.jsx
+ * @module FoodDetails
+ * @description Displays nutritional details for a selected food, allows user to select serving size, quantity, and meal type, then log it to a daily log or recipe.
+ */
 import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import ky from 'ky';
@@ -12,12 +17,24 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { DateTime } from 'luxon';
 
+/**
+ * @constant api
+ * @description Pre-configured ky instance for sending API requests with base URL.
+ */
 const api = ky.create({
   prefixUrl: process.env.REACT_APP_API_URL,
 });
 
+/** Available meal types */
 const mealTypes = ['Breakfast', 'Lunch', 'Dinner', 'Snack'];
 
+/**
+ * FoodDetails component
+ *
+ * @component
+ * @description Fetches detailed information about a food item by ID and allows logging it to the user's daily log or recipe.
+ * @returns {JSX.Element} UI for food selection and logging
+ */
 const FoodDetails = () => {
   const { source, foodId } = useParams();
   const [foodDetails, setFoodDetails] = useState(null);
@@ -31,7 +48,6 @@ const FoodDetails = () => {
   const [fractionValue, setFractionValue] = useState(0);
   const [meal, setMeal] = useState(mealTypes[0]);
   const navigate = useNavigate();
-  // const [ingredients, setIngredients] = useState(null);
   const [date, setDate] = useState(DateTime.now());
 
   const todaysDate = date.year + '-' + date.month + '-' + date.day
@@ -48,8 +64,8 @@ const FoodDetails = () => {
     },
   });
 
-
   const [userID, setUserID] = useState(null);
+
   // Set user ID from log data
   useEffect(() => {
     if (logData?.user) {
@@ -57,6 +73,7 @@ const FoodDetails = () => {
     }
   }, [logData]);
 
+   // Fetch food details on load
   useEffect(() => {
     const fetchFoodDetails = async () => {
       setLoading(true);
@@ -68,7 +85,7 @@ const FoodDetails = () => {
         // It prevents potential errors that could occur if the code tries to access properties of undefined or null.
         if (responseData.food?.servings?.serving?.length > 0) {
           setSelectedServing(responseData.food.servings.serving[0]);
-          setServingID(responseData.food.servings.serving[0].serving_id)
+          setServingID(responseData?.food?.servings?.serving?.[0]?.serving_id || servingID);
         }
         setServingArray(responseData.food.servings.serving);
       } catch (error) {
@@ -79,15 +96,9 @@ const FoodDetails = () => {
       }
     };
     fetchFoodDetails();
-  }, [foodId, source, setServingID]);
+  }, [foodId, source, servingID, setServingID]);
 
-  // Set serving_id when a serving is selected
-  const handleServingChange = (serving) => {
-    setSelectedServing(serving);
-    setServingID(serving.serving_id);
-  };
-
-  // Prepare stats for chart
+    /** Prepare stats for DonutChart */
   const statsForChart = selectedServing ? [
     { name: 'Carbs', value: selectedServing.carbohydrate || 0 },
     { name: 'Protein', value: selectedServing.protein || 0 },
@@ -95,32 +106,39 @@ const FoodDetails = () => {
     { name: 'Calories', value: selectedServing.calories }
   ] : [];
 
-  // Handling change in serving size
+  /** Set selected serving and update serving ID */
+const handleServingChange = (serving) => {
+  setSelectedServing(serving);
+  setServingID(serving.serving_id);
+};
+
+   /** Set number of servings */
   const handleServingCount = (count) => {
     setServingCount(count);
   };
 
-  // Fractions for serving size
+  // Fractions for dropdown menu
   const Fractions = ['0', '1/8', '1/4', '1/3', '3/8', '1/2', '5/8', '2/3', '3/4', '7/8']
 
-  // Handling change in fractions
+   /** Convert fraction string to decimal (e.g., 1/2 => 0.5) */
   function fractionToFloat(fractionStr) {
     const [numerator , denominator ] = fractionStr.split('/');
     return parseFloat(numerator ) / parseFloat(denominator );
   }
   
+    /** Handle selection of fractional serving size */
   const handleFractionCount = (fractionStr) => {
     const fraction = fractionToFloat(fractionStr);
     setFractionCount(fractionStr);
     setFractionValue(fraction);
   };
 
-  // Handling change in serving size
+    /** Handle meal type selection */
   const handleMealChange = (selectedMeal) => {
     setMeal(selectedMeal);
   };
 
-  // Handling addition of food to Daily Log
+  /** Handle the food log submission (to daily log or recipe ingredient) */
   const handleAddFood = async () => {
     if (source === 'search') {
       if (!selectedServing || !meal || !logData) {
@@ -223,6 +241,7 @@ const FoodDetails = () => {
     }
   };
 
+    /** Go back to previous page */
   const goBack = () => {
     navigate(`/${source}`)
   };

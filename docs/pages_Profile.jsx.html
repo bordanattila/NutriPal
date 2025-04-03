@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: pages/Profile.jsx</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: pages/Profile.jsx</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * @file Profile.jsx
+ * @description Allows users to update their profile information, including calorie goal, password, and profile picture.
+ */
+import React, { useState } from 'react';
+import { useNavigate } from "react-router-dom";
+import Auth from '../utils/auth';
+import { useQuery, useMutation } from '@apollo/client';
+import { GET_USER, UPDATE_USER_PROFILE } from '../utils/mutations';
+
+/**
+ * @component Profile
+ * @description Authenticated user profile page that allows updating of personal info and settings.
+ * @returns {JSX.Element}
+ */
+const Profile = () => {
+  // UI state
+  const [user, setUser] = useState({});
+  const navigate = useNavigate();
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  // Form state
+  const [calorieGoal, setCalorieGoal] = useState('');
+  const [password, setPassword] = useState('');
+  const [profilePic, setProfilePic] = useState(null);
+
+  /**
+   * @hook useQuery
+   * @description Fetch user data using GET_USER query.
+   */
+  const { loadingQuery, data, loadingError } = useQuery(GET_USER, {
+    context: {
+      headers: {
+        Authorization: `Bearer ${Auth.getToken()}`,
+      },
+    },
+    onError: (err) => {
+      setLoading(false);
+      console.error(err);
+      // Check if the error is due to an expired token
+      if (err.message.includes("Unauthorized")) {
+        // Attempt to refresh the token
+        const refreshSuccess = Auth.refreshToken();
+        if (!refreshSuccess) {
+          navigate('/login');
+        }
+      } else {
+        // For other errors, navigate to login
+        navigate('/login');
+      }
+    }
+  });
+
+  /**
+   * @hook useMutation
+   * @description Hook for updating user profile via mutation.
+   */
+  const [updateUserProfile, { loading: updateloading, error: updateError }] = useMutation(UPDATE_USER_PROFILE);
+  console.log(updateloading)
+  console.log(updateError)
+  console.log(user)
+
+  /**
+   * @function handleUpdate
+   * @description Handles form submission and sends update mutation with optional fields.
+   * @param {React.FormEvent} e - The form submission event.
+   */
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    try {
+      const userId = data.user._id
+      const variables = {
+        userId, // Always required
+      };
+
+      // Include optional fields only if they have values
+      if (calorieGoal) variables.calorieGoal = parseInt(calorieGoal);
+      if (password) variables.password = password;
+      if (profilePic) variables.profilePic = profilePic;
+      const { data: responseData, updateError } = await updateUserProfile({ variables });
+
+      if (updateError) {
+        console.error('Mutation error:', updateError);
+      }
+      setUser(responseData.updateUserProfile);
+      navigate('/dashboard');
+    } catch (error) {
+      setError(error.message);
+    }
+  };
+
+  /**
+   * @function handleImageUpload
+   * @description Handles profile picture upload and sets file in state.
+   * @param {React.ChangeEvent&lt;HTMLInputElement>} e - File input change event.
+   */
+  const handleImageUpload = (e) => {
+    setProfilePic(e.target.files[0]);
+  };
+
+  if (loadingQuery) return &lt;div>Loading...&lt;/div>;
+  if (loadingError) return &lt;div>Error: {loadingError.message}&lt;/div>;
+
+  // UI rendering
+  return (
+    &lt;div className="flex flex-col h-dvh">
+      &lt;h1 className="text-center">Profile&lt;/h1>
+      {loadingQuery ? (
+        &lt;div>Loading...&lt;/div>
+      ) : (
+        &lt;form onSubmit={handleUpdate} className="flex flex-col m-12 gap-8 space-y-4">
+          &lt;h1 className="text-center">Profile &lt;/h1>
+
+          &lt;label htmlFor="calorieGoal" >Calorie Goal&lt;/label>
+          &lt;input
+            type="number"
+            id="calorieGoal"
+            name="calorieGoal"
+            placeholder="Calorie Goal"
+            value={calorieGoal}
+            onChange={(e) => setCalorieGoal(e.target.value)}
+            required
+            className="border p-2 rounded"
+          />
+
+          &lt;label htmlFor="password" >New Password&lt;/label>
+          &lt;input
+            type="password"
+            id="password"
+            name="password"
+            placeholder="New Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="border p-2 rounded"
+          />
+
+          &lt;label htmlFor="profilePic" className="sr-only">Profile Picture&lt;/label>
+          &lt;input
+            type="file"
+            id="profilePic"
+            name="profilePic"
+            onChange={handleImageUpload}
+            className="border p-2 rounded"
+          />
+          &lt;button
+            type="submit"
+            disabled={loading}
+            className="w-full sm:w-1/2 bg-gradient-to-r from-green-400 to-teal-500 hover:from-green-500 hover:to-teal-600 text-white font-bold py-3 px-6 rounded-full shadow-lg transition duration-300 ease-in-out"
+          >
+            Update Profile
+          &lt;/button>
+          {error &amp;&amp; &lt;p className="text-red-500">{error}&lt;/p>}
+        &lt;/form>
+      )}
+    &lt;/div>
+  );
+};
+
+export default Profile;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-DonutChart.html">DonutChart</a></li><li><a href="module-DropdownMenu.html">DropdownMenu</a></li><li><a href="module-FoodDetails.html">FoodDetails</a></li><li><a href="module-Footer.html">Footer</a></li><li><a href="module-Header.html">Header</a></li><li><a href="module-LogOptions.html">LogOptions</a></li><li><a href="module-LogRecipe.html">LogRecipe</a></li><li><a href="module-Navigation.html">Navigation</a></li><li><a href="module-SavedRecipes.html">SavedRecipes</a></li><li><a href="module-SearchBar.html">SearchBar</a></li><li><a href="module-SearchComponent.html">SearchComponent</a></li><li><a href="module-useAuth.html">useAuth</a></li></ul><h3>Classes</h3><ul><li><a href="AuthService.html">AuthService</a></li></ul><h3>Global</h3><ul><li><a href="global.html#BarcodeScanner">BarcodeScanner</a></li><li><a href="global.html#Calendar">Calendar</a></li><li><a href="global.html#DailyLogs">DailyLogs</a></li><li><a href="global.html#Dashboard">Dashboard</a></li><li><a href="global.html#GET_ONE_FOOD">GET_ONE_FOOD</a></li><li><a href="global.html#GET_USER">GET_USER</a></li><li><a href="global.html#Home">Home</a></li><li><a href="global.html#Login">Login</a></li><li><a href="global.html#Profile">Profile</a></li><li><a href="global.html#Recipe">Recipe</a></li><li><a href="global.html#Search">Search</a></li><li><a href="global.html#Signup">Signup</a></li><li><a href="global.html#UPDATE_USER_PROFILE">UPDATE_USER_PROFILE</a></li><li><a href="global.html#api">api</a></li><li><a href="global.html#authLink">authLink</a></li><li><a href="global.html#clearIngredients">clearIngredients</a></li><li><a href="global.html#clearSearch">clearSearch</a></li><li><a href="global.html#clearSearch-Clearsfoodsearchinputandresults">clearSearch - Clears food search input and results</a></li><li><a href="global.html#client">client</a></li><li><a href="global.html#getAccessToken">getAccessToken</a></li><li><a href="global.html#getAccessTokenValue">getAccessTokenValue</a></li><li><a href="global.html#groupedLogs">groupedLogs</a></li><li><a href="global.html#handleAddRecipe">handleAddRecipe</a></li><li><a href="global.html#handleDelete">handleDelete</a></li><li><a href="global.html#handleImageUpload">handleImageUpload</a></li><li><a href="global.html#handleLoginClick">handleLoginClick</a></li><li><a href="global.html#handleLoginSubmit">handleLoginSubmit</a></li><li><a href="global.html#handleRemoveIngredient">handleRemoveIngredient</a></li><li><a href="global.html#handleSignupClick">handleSignupClick</a></li><li><a href="global.html#handleSubmit">handleSubmit</a></li><li><a href="global.html#handleUpdate">handleUpdate</a></li><li><a href="global.html#httpLink">httpLink</a></li><li><a href="global.html#mealTypeOrder">mealTypeOrder</a></li><li><a href="global.html#onSearchSubmit">onSearchSubmit</a></li><li><a href="global.html#stats">stats</a></li><li><a href="global.html#statsBottom">statsBottom</a></li><li><a href="global.html#useEffect">useEffect</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Wed Apr 02 2025 21:47:28 GMT-0400 (Eastern Daylight Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

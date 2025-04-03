@@ -1,11 +1,25 @@
+/**
+ * @file Signup.jsx
+ * @description Signup page that allows new users to register and log in immediately upon successful registration.
+ */
 import React, { useState } from 'react';
 import ky from 'ky';
 import { useNavigate } from 'react-router-dom';
 import Auth from "../utils/auth";
 
+/**
+ * @constant api
+ * @description Pre-configured ky instance for making API requests to the backend.
+ */
 const api = ky.create({
   prefixUrl: process.env.REACT_APP_API_URL,
 });
+
+/**
+ * @component Signup
+ * @description Renders a signup form and handles user registration logic.
+ * @returns {JSX.Element}
+ */
 
 const Signup = () => {
   const [username, setUsername] = useState('');
@@ -15,6 +29,11 @@ const Signup = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  /**
+   * @function handleSubmit
+   * @description Handles form submission and registers the user via API. On success, logs in the user and navigates to dashboard.
+   * @param {React.FormEvent<HTMLFormElement>} e - The form submission event.
+   */
   const handleSubmit = async (e) => {
     e.preventDefault();
     // Set loading state to true
@@ -22,12 +41,14 @@ const Signup = () => {
     // Reset error state
     setError(null);
 
+    // Simple front-end validation
     if (!username || !email || !password) {
       setError('All fields are required.');
       return;
     }
 
     try {
+      // Call signup API endpoint
       const response = await api.post('user/signup', {
         json: { username, email, password },
       });
@@ -39,8 +60,15 @@ const Signup = () => {
       }
 
       const data = await response.json();
+
+      // Login user immediately upon successful signup
       if (data?.token) {
         Auth.login(data.token);
+        
+           // Store refresh token if available
+           if (data?.refreshToken) {
+            localStorage.setItem('refreshToken', data.refreshToken);
+          }
         navigate('/dashboard');
       } else {
         setError('Login failed. Please try again.');
@@ -62,7 +90,7 @@ const Signup = () => {
       }
       setError('An unexpected error occurred. Please try again.');
 
-      // Handle different types of errors
+      // Display user-friendly error messages
       if (error.message.includes("duplicate key")) {
         setError('Username already taken. Please choose a different username.');
       } else if (error.message.includes("validation failed")) {

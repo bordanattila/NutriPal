@@ -1,3 +1,9 @@
+/**
+ * @file Recipe.jsx
+ * @description Allows users to create custom recipes by adding ingredients from the food search.
+ * Ingredients are persisted using localStorage until saved to the backend.
+ */
+
 import React, { useEffect, useState } from 'react';
 import SearchBar from '../components/SearchBar';
 import ky from 'ky';
@@ -10,12 +16,25 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { handleSearch } from '../components/SearchComponent';
 
+/**
+ * @constant api
+ * @description Pre-configured ky instance with API base URL.
+ */
 const api = ky.create({
   prefixUrl: process.env.REACT_APP_API_URL,
 });
 
+/**
+ * @component Recipe
+ * @description Page for creating, saving, and viewing ingredients in a custom recipe.
+ * @returns {JSX.Element}
+ */
 const Recipe = () => {
-  useAuth();
+  useAuth(); // Refresh token if needed
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Form and state fields
   const [recipeName, setRecipeName] = useState('');
   const [numberOfServings, setNumberOfServings] = useState('');
   const [servingSize, setServingSize] = useState('');
@@ -24,9 +43,14 @@ const Recipe = () => {
   const [foodName, setFoodName] = useState('');
   const [arrayToDisplay, setArrayToDisplay] = useState([]);
   const [error, setError] = useState(null);
-  const navigate = useNavigate();
-  const location = useLocation();
+  const [userID, setUserID] = useState(null);
+  // Destructure values from navigation state (ingredient data passed from FoodDetails)
   const { ingredientID, addedIngredient, ingredientServingCount, IngredientServingSize } = location.state || {};
+
+  /**
+   * @hook useQuery
+   * @description Fetch authenticated user info
+   */
 
   const { loading, data, logError } = useQuery(GET_USER, {
     context: {
@@ -39,8 +63,10 @@ const Recipe = () => {
     }
   });
 
-  const [userID, setUserID] = useState(null);
-  // Set user ID from log data
+  /**
+   * @hook useEffect
+   * @description Set user ID once user data is loaded
+   */
   useEffect(() => {
     if (data?.user) {
       setUserID(data.user._id);
@@ -50,6 +76,10 @@ const Recipe = () => {
   // Identify source page for FoodDetails.jsx
   const sourcePage = 'recipe';
 
+  /**
+   * @function onSearchSubmit
+   * @description Handles search submission and populates search result array
+   */
   const onSearchSubmit = async (e) => {
     e.preventDefault();
     await handleSearch({
@@ -59,12 +89,17 @@ const Recipe = () => {
     });
   };
 
+  /** @function clearSearch - Clears food search input and results */
   const clearSearch = () => {
     setFoodName('');
     setArrayToDisplay([]);
   };
 
-  // Add recipe name and num of servings to local storage
+
+  /**
+   * @hook useEffect
+   * @description Load recipe fields from localStorage
+   */
   useEffect(() => {
     const storedName = localStorage.getItem('recipeName');
     const storedNumOfServings = localStorage.getItem('numOfServings');
@@ -75,7 +110,11 @@ const Recipe = () => {
   }, []);
 
 
-  // Add ingredients to local storage
+
+  /**
+   * @hook useEffect
+   * @description Append new ingredient to localStorage and update state
+   */
   useEffect(() => {
     if (addedIngredient && ingredientID) {
       // Get the stored ingredients list from localStorage, if it exists.
@@ -96,7 +135,11 @@ const Recipe = () => {
     }
   }, [addedIngredient, ingredientID, ingredientServingCount, IngredientServingSize]);
 
-  // Add _id to local storage
+
+  /**
+   * @hook useEffect
+   * @description Update stored ingredient ID list in localStorage
+   */
   useEffect(() => {
     if (addedIngredient && ingredientID) {
       const storedIDs = localStorage.getItem('ingredientsID');
@@ -107,7 +150,11 @@ const Recipe = () => {
     }
   }, [addedIngredient, ingredientID]);
 
-  // Get the list of ingredients and _ids from local storage
+
+  /**
+   * @hook useEffect
+   * @description Load ingredients and IDs from localStorage
+   */
   useEffect(() => {
     const storedIngredientsList = localStorage.getItem('ingredientsList');
     const storedIngredientsID = localStorage.getItem('ingredientsID');
@@ -119,7 +166,11 @@ const Recipe = () => {
     }
   }, []);
 
-  // Clear  local storage
+
+  /**
+   * @function clearIngredients
+   * @description Clears all ingredient and recipe form data + localStorage
+   */
   const clearIngredients = () => {
     setIngredientsList([]);
     setIngredientsID([]);
@@ -133,6 +184,11 @@ const Recipe = () => {
     localStorage.removeItem('servingSize');
   };
 
+  /**
+   * @function handleRemoveIngredient
+   * @description Removes an ingredient from the list by index
+   * @param {number} index - Index of the ingredient to remove
+   */
   const handleRemoveIngredient = (index) => {
     const updatedIngredients = ingredientsList.filter((_, i) => i !== index);
     const updatedIDs = ingredientsID.filter((_, i) => i !== index); // keep IDs in sync 
@@ -144,6 +200,10 @@ const Recipe = () => {
     localStorage.setItem('ingredientsID', JSON.stringify(updatedIDs));
   }
 
+  /**
+   * @function handleAddRecipe
+   * @description Sends a POST request to create a new recipe with form values and ingredient IDs
+   */
   const handleAddRecipe = async (req, res) => {
     const newRecipe = {
       user_id: userID,
@@ -176,9 +236,11 @@ const Recipe = () => {
     }
   }
 
+  // Handle loading and error states
   if (loading) return <div>Loading...</div>;
   if (logError) return <div>Error: {error.message}</div>;
 
+  // UI rendering
   return (
     <div className="flex flex-col items-center justify-center min-h-max p-6">
       <div>

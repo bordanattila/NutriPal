@@ -1,6 +1,13 @@
+/**
+ * @file typeDefs.js
+ * @description GraphQL schema definitions for types, queries, and mutations.
+ */
 const { gql } = require('apollo-server-express');
 
 const typeDefs = gql`
+  """
+  A registered user with profile and nutrition-related data
+  """
     type User {
         _id: ID!
         username: String!
@@ -13,17 +20,26 @@ const typeDefs = gql`
         saved_recipe: [Recipe]
     }
 
+  """
+  Represents a meal saved by the user
+  """
     type Meal {
         _id: ID!
         name: String!
         calorieCount: Int!
     }
 
+  """
+  JWT auth response containing user and signed token
+  """
     type Auth {
         token: ID!
         user: User!
     }
 
+  """
+  Daily log that contains foods consumed on a given day
+  """
     type DailyLog {
         _id: ID!
         user_id: User!
@@ -31,6 +47,10 @@ const typeDefs = gql`
         foods: [OneFood]
       }
       
+        """
+  One food entry logged by the user
+  """
+
       type OneFood {
         _id: ID!
         created: String!
@@ -51,6 +71,9 @@ const typeDefs = gql`
         brand: String
       }
 
+  """
+  Nutritional breakdown used in recipes
+  """
     type Nutrition {
     caloriesPerServing: Float!,
     carbohydratePerServing: Float!,
@@ -58,6 +81,9 @@ const typeDefs = gql`
     fatPerServing: Float!
     }
 
+  """
+  Saved recipe composed of multiple OneFood entries
+  """
     type Recipe {
         _id: ID!
         recipeName: String!
@@ -66,6 +92,9 @@ const typeDefs = gql`
         nutrition: Nutrition!
     }
 
+  """
+  Input type for nutrition details (used in recipe creation)
+  """
     input NutritionInput {
     caloriesPerServing: Float!,
     carbohydratePerServing: Float!,
@@ -77,20 +106,32 @@ const typeDefs = gql`
     }
 
     type Query {
+        """
+        Query for a single user
+        """
         user: User
 
+        """
+        Query for a DailyLog
+        """
         getDailyLog(
             user_id: ID!, 
             date: String!
             calorieGoal: Int
         ): DailyLog
 
+        """
+        Query for a OneFood
+        """
         getOneFood(
             user_id: ID!
             food_id: ID!
             created: String!
         ): OneFood
     
+        """
+        Query for a Recipe
+        """
         getRecipe(
             user_id: ID!
             recipeName: String!
@@ -100,22 +141,32 @@ const typeDefs = gql`
     }
 
     type Mutation {
+        """
+        Mutation to create a new user
+        """
         signup(
             username: String!
             email: String!
             password: String!
         ): Auth
-        
+        """
+        Mutation to log in a User
+        """
         login(
             username: String!
             password: String!
         ): Auth
 
+        """
+        Mutation to create a new DailyLog
+        """
         createDailyLog(
             user_id: ID!, 
             foods: [ID!]!
         ): DailyLog
-
+        """
+        Mutation to update User data
+        """
         updateUserProfile(
             userId: ID!,
             calorieGoal: Int
@@ -123,6 +174,9 @@ const typeDefs = gql`
             profilePic: String,
         ): User
 
+         """
+        Mutation to create a new Recipe
+        """
         createRecipe(
             recipeName: String!,
             user_id: ID!,
@@ -131,6 +185,9 @@ const typeDefs = gql`
             nutrition: NutritionInput!
         ): Recipe
 
+        """
+        Mutation to delete a OneFood
+        """
         deleteOneFood(
             _id: ID!,
             food_id: ID!,

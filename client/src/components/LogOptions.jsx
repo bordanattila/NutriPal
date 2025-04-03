@@ -1,23 +1,48 @@
+/**
+ * @file LogOptions.jsx
+ * @module LogOptions
+ * @description Provides options to log food from different sources such as search, recipes, or meals.
+ */
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import ky from 'ky';
 
+/**
+ * Configure the API client with base URL and credentials.
+ */
 const api = ky.create({
   prefixUrl: process.env.REACT_APP_API_URL,
   credentials: 'include',
 });
 
+/**
+ * Component that renders three buttons to allow users to log food from search, recipes, or meals.
+ * 
+ * @component
+ * @param {Object} props
+ * @param {string} props.userId - ID of the current logged-in user.
+ * @returns {JSX.Element}
+ */
 const LogOptions = ({ userId }) => {
   const navigate = useNavigate();
 
+  /**
+   * Navigate user to the food search page.
+   */
   const handleSearchClick = () => {
     navigate('/search');
   };
 
+  /**
+   * Navigate user to the saved recipes page to log from a recipe.
+   */
   const handleLogFromRecipe = async () => {    
       navigate('/saved-recipes');   
   };
 
+  /**
+   * Fetch saved meals from the backend and navigate to the saved meals page with data.
+   */
   const handleLogFromMeal = async () => {
     try {
       const response = await api.get(`api/saved-meals/${userId}`).json();

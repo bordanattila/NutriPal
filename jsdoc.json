@@ -1,0 +1,13 @@
+{
+    "source": {
+      "include": ["client/src/components", "client/src/pages", "client/src/utils", "client/src/hooks", "server/config", "server/controllers", "server/models", "server/schemas", "server/utils"],
+      "exclude": ["node_modules"],
+      "includePattern": ".+\\.jsx?$",
+      "excludePattern": "(^|\\/|\\\\)_"
+    },
+    "opts": {
+      "destination": "./docs",
+      "recurse": true
+    }
+  }
+  

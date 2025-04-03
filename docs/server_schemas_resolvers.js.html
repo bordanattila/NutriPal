@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: server/schemas/resolvers.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: server/schemas/resolvers.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * @file resolvers.js
+ * @description GraphQL resolvers for queries and mutations related to users, logs, and recipes.
+ */
+const { AuthenticationError } = require("apollo-server-express");
+const User = require("../models/User");
+const { signInToken } = require("../utils/auth");
+const DailyLog = require("../models/DailyLog");
+
+const resolvers = {
+  /**
+   * @type {Query}
+   * @description Handles all GraphQL queries
+   */
+  Query: {
+    /**
+     * @route GET /graphql -> user
+     * @desc Returns the authenticated user's data
+     * @access Private
+     */
+    user: async (parent, args, context) => {
+      // Check if user is still logged in. If not throw error
+      if (!context.user) {
+        throw new AuthenticationError('You need to be logged in!');
+      }
+      // If the user exist retrieve it's data
+      const userData = await User.findById(context.user._id)
+        .select('-__v -password');
+      return userData;
+    },
+
+    /**
+     * @route GET /graphql -> getDailyLog
+     * @desc Retrieves a user's daily log by user_id and date
+     * @access Private
+     */
+    getDailyLog: async (_, { user_id, date }) => {
+      return DailyLog.findOne({ user_id, dateCreated: date });
+    },
+
+    /**
+     * @route GET /graphql -> getOneFood
+     * @desc Fetches a single logged food item by user_id and food_id
+     * @access Private
+     */
+    getOneFood: async (_, { user_id, food_id }) => {
+      return OneFood.findOne({ _id: food_id, user_id, created });
+    }
+  },
+
+  /**
+   * @type {Mutation}
+   * @description Handles all GraphQL mutations
+   */
+  Mutation: {
+    /**
+     * @route POST /graphql -> login
+     * @desc Authenticates a user and returns a signed JWT
+     * @access Public
+     */
+    login: async (parent, { username, password }) => {
+      const user = await User.findOne({ username });
+      if (!user) {
+        throw new AuthenticationError("Incorrect credentials");
+      }
+      const validPassword = await user.isCorrectPassword(password);
+      if (!validPassword) {
+        throw new AuthenticationError("Incorrect credentials");
+      }
+      const token = signInToken(user);
+      return { token, user };
+    },
+
+    /**   
+     * @route POST /graphql -> signup
+     * @desc Registers a new user
+     * @access Public
+     */
+    signup: async (parent, { username, email, password }) => {
+
+      // Check if username or email already exists
+      const existingUser = await User.findOne({ $or: [{ username }, { email }] });
+      if (existingUser) {
+        console.error("User already exists:", existingUser);
+        throw new Error('Username or email already taken. Please choose a different one.');
+      }
+
+      const user = new User({ username, email, password });
+      try {
+        await user.save();
+      } catch (error) {
+        console.error('Error saving user:', error);
+        throw new Error('User  creation failed. Please try again.');
+      }
+
+      const token = signInToken(user);
+      return { token, user };
+    },
+
+    /**   
+     * @route POST /graphql -> createDailyLog
+     * @desc Creates a new daily log with selected foods
+     * @access Private
+     */
+
+    createDailyLog: async (_, { user_id, foods }) => {
+      const newLog = new DailyLog({
+        user_id,
+        dateCreated: new Date(),
+        foods
+      });
+      return await newLog.save();
+    },
+
+    /**
+     * @route POST /graphql -> updateUserProfile
+     * @desc Updates a user's profile details (password, calorie goal, profile pic)
+     * @access Private
+     */
+    updateUserProfile: async (_, { userId, calorieGoal, password, profilePic }, context) => {
+      if (!context.user) {
+        throw new AuthenticationError('You need to be logged in!');
+      }
+
+      const user = await User.findById(userId);
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      // Update fields if provided
+      if (calorieGoal !== undefined &amp;&amp; calorieGoal !== null) {
+        user.calorieGoal = calorieGoal;
+      }
+      if (password) {
+        user.password = password; // Schema will hash the password
+      }
+      if (profilePic) {
+        user.profilePic = profilePic;
+      }
+
+      await user.save(); // Trigger pre('save') middleware
+      return user;
+    },
+
+    /**
+     * @route POST /graphql -> createRecipe
+     * @desc Saves a custom recipe based on OneFood entries
+     * @access Private
+     */
+    createRecipe: async (_, { user_id, recipeName, ingredients, servingSize, nutrition }) => {
+      const recipe = new Recipe({
+        user_id,
+        recipeName,
+        ingredients,
+        servingSize,
+        nutrition,
+      });
+      return await recipe.save();
+    },
+
+    /**
+     * @route DELETE /graphql -> deleteOneFood
+     * @desc Deletes a food entry from a user's daily log
+     * @access Private
+     */
+    deleteOneFood: async (_, { log_id, food_id }) => {
+      const updatedDailyLog = await DailyLog.findOneAndUpdate(
+        { _id: log_id },
+        { $pull: { foods: { _id: food_id } } },
+        { new: true }
+      );
+      return updatedDailyLog;
+    },
+  }
+}
+
+module.exports = resolvers;
+
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-DonutChart.html">DonutChart</a></li><li><a href="module-DropdownMenu.html">DropdownMenu</a></li><li><a href="module-FoodDetails.html">FoodDetails</a></li><li><a href="module-Footer.html">Footer</a></li><li><a href="module-Header.html">Header</a></li><li><a href="module-LogOptions.html">LogOptions</a></li><li><a href="module-LogRecipe.html">LogRecipe</a></li><li><a href="module-Navigation.html">Navigation</a></li><li><a href="module-SavedRecipes.html">SavedRecipes</a></li><li><a href="module-SearchBar.html">SearchBar</a></li><li><a href="module-SearchComponent.html">SearchComponent</a></li><li><a href="module-User.html">User</a></li><li><a href="module-useAuth.html">useAuth</a></li><li><a href="module-%257BtypeDefs,.html">{typeDefs,</a></li><li><a href="mongoose.module_connection.html">connection</a></li></ul><h3>Classes</h3><ul><li><a href="AuthService.html">AuthService</a></li></ul><h3>Global</h3><ul><li><a href="global.html#BarcodeScanner">BarcodeScanner</a></li><li><a href="global.html#Calendar">Calendar</a></li><li><a href="global.html#DailyLog">DailyLog</a></li><li><a href="global.html#DailyLogs">DailyLogs</a></li><li><a href="global.html#Dashboard">Dashboard</a></li><li><a href="global.html#GET_ONE_FOOD">GET_ONE_FOOD</a></li><li><a href="global.html#GET_USER">GET_USER</a></li><li><a href="global.html#Home">Home</a></li><li><a href="global.html#Login">Login</a></li><li><a href="global.html#OneFood">OneFood</a></li><li><a href="global.html#Profile">Profile</a></li><li><a href="global.html#Recipe">Recipe</a></li><li><a href="global.html#Search">Search</a></li><li><a href="global.html#Signup">Signup</a></li><li><a href="global.html#UPDATE_USER_PROFILE">UPDATE_USER_PROFILE</a></li><li><a href="global.html#User">User</a></li><li><a href="global.html#api">api</a></li><li><a href="global.html#authLink">authLink</a></li><li><a href="global.html#authMiddleware">authMiddleware</a></li><li><a href="global.html#authenticateUser">authenticateUser</a></li><li><a href="global.html#brand">brand</a></li><li><a href="global.html#calculateRecipeNutrition">calculateRecipeNutrition</a></li><li><a href="global.html#calorieGoal">calorieGoal</a></li><li><a href="global.html#calories">calories</a></li><li><a href="global.html#carbohydrate">carbohydrate</a></li><li><a href="global.html#clearIngredients">clearIngredients</a></li><li><a href="global.html#clearSearch">clearSearch</a></li><li><a href="global.html#clearSearch-Clearsfoodsearchinputandresults">clearSearch - Clears food search input and results</a></li><li><a href="global.html#client">client</a></li><li><a href="global.html#convertUpcEtoUpcA">convertUpcEtoUpcA</a></li><li><a href="global.html#createDailyLog">createDailyLog</a></li><li><a href="global.html#created">created</a></li><li><a href="global.html#dailyLogSchema">dailyLogSchema</a></li><li><a href="global.html#daily_log">daily_log</a></li><li><a href="global.html#dateCreated">dateCreated</a></li><li><a href="global.html#email">email</a></li><li><a href="global.html#fat">fat</a></li><li><a href="global.html#fiber">fiber</a></li><li><a href="global.html#food_id">food_id</a></li><li><a href="global.html#food_name">food_name</a></li><li><a href="global.html#food_type">food_type</a></li><li><a href="global.html#foods">foods</a></li><li><a href="global.html#fraction_of_serving">fraction_of_serving</a></li><li><a href="global.html#generateFoodId">generateFoodId</a></li><li><a href="global.html#generateServingId">generateServingId</a></li><li><a href="global.html#getAccessToken">getAccessToken</a></li><li><a href="global.html#getAccessTokenValue">getAccessTokenValue</a></li><li><a href="global.html#groupedLogs">groupedLogs</a></li><li><a href="global.html#handleAddRecipe">handleAddRecipe</a></li><li><a href="global.html#handleDelete">handleDelete</a></li><li><a href="global.html#handleImageUpload">handleImageUpload</a></li><li><a href="global.html#handleLoginClick">handleLoginClick</a></li><li><a href="global.html#handleLoginSubmit">handleLoginSubmit</a></li><li><a href="global.html#handleRemoveIngredient">handleRemoveIngredient</a></li><li><a href="global.html#handleSignupClick">handleSignupClick</a></li><li><a href="global.html#handleSubmit">handleSubmit</a></li><li><a href="global.html#handleUpdate">handleUpdate</a></li><li><a href="global.html#httpLink">httpLink</a></li><li><a href="global.html#ingredients">ingredients</a></li><li><a href="global.html#isCorrectPassword">isCorrectPassword</a></li><li><a href="global.html#mealTypeOrder">mealTypeOrder</a></li><li><a href="global.html#meal_type">meal_type</a></li><li><a href="global.html#number_of_servings">number_of_servings</a></li><li><a href="global.html#nutrition">nutrition</a></li><li><a href="global.html#onSearchSubmit">onSearchSubmit</a></li><li><a href="global.html#oneFoodSchema">oneFoodSchema</a></li><li><a href="global.html#password">password</a></li><li><a href="global.html#profilePic">profilePic</a></li><li><a href="global.html#protein">protein</a></li><li><a href="global.html#recipe">recipe</a></li><li><a href="global.html#recipeName">recipeName</a></li><li><a href="global.html#recipeSchema">recipeSchema</a></li><li><a href="global.html#refreshToken">refreshToken</a></li><li><a href="global.html#saturated_fat">saturated_fat</a></li><li><a href="global.html#servingSize">servingSize</a></li><li><a href="global.html#serving_id">serving_id</a></li><li><a href="global.html#serving_size">serving_size</a></li><li><a href="global.html#signInToken">signInToken</a></li><li><a href="global.html#sodium">sodium</a></li><li><a href="global.html#stats">stats</a></li><li><a href="global.html#statsBottom">statsBottom</a></li><li><a href="global.html#useEffect">useEffect</a></li><li><a href="global.html#userSchema">userSchema</a></li><li><a href="global.html#user_id">user_id</a></li><li><a href="global.html#username">username</a></li><li><a href="global.html#verifyRefreshToken">verifyRefreshToken</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Wed Apr 02 2025 21:51:50 GMT-0400 (Eastern Daylight Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

@@ -1,3 +1,9 @@
+/**
+ * @file Header.jsx
+ * @module Header
+ * @description Renders the top navigation bar with the NutriPal logo, settings icon, and user profile menu.
+ */
+
 import React from 'react';
 import Auth from '../utils/auth';
 import { Disclosure, Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
@@ -5,6 +11,12 @@ import { UserCircleIcon, Cog6ToothIcon } from '@heroicons/react/24/outline'
 import NutriPalLogo from '../images/NutripalLogo.png';
 import { Link } from 'react-router-dom';
 
+/**
+ * Header component for displaying the logo and user menu.
+ *
+ * @component
+ * @returns {JSX.Element} Navigation header with user options and settings icon.
+ */
 const Header = () => {
 
   return (

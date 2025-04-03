@@ -1,7 +1,18 @@
+/**
+ * @file Footer.jsx
+ * @module Footer
+ * @description Displays the social media icons and FatSecret branding at the bottom of the page.
+ */
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faInstagram, faFacebook, faTwitter, faYoutube } from '@fortawesome/free-brands-svg-icons';
 
+/**
+ * Footer component
+ *
+ * @component
+ * @returns {JSX.Element} A footer with social media links and "Powered by FatSecret" image.
+ */
 const Footer = () => {
     return (
         <footer className="footer flex flex-col items-center justify-center min-h-max bg-gradient-to-r from-green-400 to-teal-500 shadow-lg p-6">
