@@ -1,11 +1,21 @@
+/**
+ * @file apiAuth.js
+ * @description Handles OAuth 2.0 authentication with FatSecret API. Exports utility functions for requesting and storing access tokens.
+ */
 const axios = require('axios');  // Using axios for the HTTP request instead of request.
 const qs = require('qs');  // The qs module is used to properly format the data as application/x-www-form-urlencoded.
 require('dotenv').config();
 const { CLIENT_ID, CLIENT_SECRET } = process.env;
 
 let accessToken;
+let tokenExpiration;
 
-// Function to get the OAuth 2.0 access token
+/**
+ * @function getAccessToken
+ * @async
+ * @description Requests a new access token from the FatSecret OAuth endpoint using client credentials.
+ * @returns {Promise<string>} The new access token.
+ */
 async function getAccessToken() {
   // const tokenUrl = 'https://3.87.33.87/connect/token';
   const tokenUrl = 'https://oauth.fatsecret.com/connect/token';
@@ -30,7 +40,12 @@ async function getAccessToken() {
   }
 }
 
-// Function to share accessToken with other API calls
+/**
+ * @function getAccessTokenValue
+ * @async
+ * @description Returns a valid access token. Refreshes it if expired or missing.
+ * @returns {Promise<string>} The valid (cached or refreshed) access token.
+ */
 async function getAccessTokenValue() {
   if (!accessToken || Date.now() >= tokenExpiration) {
     console.log('Waiting for access token')

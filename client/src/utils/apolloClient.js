@@ -1,11 +1,22 @@
+/**
+ * @file apolloClient.js
+ * @description Sets up the Apollo Client for making authenticated GraphQL requests using JWT.
+ */
 import { ApolloClient, InMemoryCache, createHttpLink } from '@apollo/client';
 import { setContext } from '@apollo/client/link/context';
 
+/**
+ * @constant httpLink
+ * @description The HTTP connection to the GraphQL server
+ */
 const httpLink = createHttpLink({
   uri: process.env.REACT_APP_API_URL+'/graphql', // GraphQL endpoint
 });
 
-// Construct request middleware that will attach the JWT token to every request as an `authorization` header
+/**
+ * @constant authLink
+ * @description Middleware for attaching the JWT from localStorage to outgoing GraphQL requests
+ */
 const authLink = setContext((_, { headers }) => {
     // Get the authentication token from local storage if it exists
   const token = localStorage.getItem('id_token');
@@ -18,7 +29,10 @@ const authLink = setContext((_, { headers }) => {
   };
 });
 
-// Create the Apollo Client
+/**
+ * @constant client
+ * @description Configured Apollo Client instance with auth middleware and caching
+ */
 const client = new ApolloClient({
   link: authLink.concat(httpLink),
   cache: new InMemoryCache(),

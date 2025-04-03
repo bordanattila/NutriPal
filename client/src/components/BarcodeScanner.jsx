@@ -1,23 +1,41 @@
+/**
+ * @file BarcodeScanner.jsx
+ * @description A React component for scanning barcodes using the device camera and Quagga2.
+ */
 import React, { useState, useEffect, useRef } from 'react';
 import Quagga from '@ericblade/quagga2';
 
+/**
+ * BarcodeScanner Component
+ * 
+ * @component
+ * @param {Object} props
+ * @param {function} props.onDetected - Callback function triggered when a valid barcode is detected.
+ * @param {function} props.onError - Optional callback for handling initialization errors.
+ * @returns {JSX.Element}
+ */
 const BarcodeScanner = ({ onDetected, onError }) => {
   const scannerRef = useRef(null);
   const [scanning, setScanning] = useState(false);
   // const detectionsCount = useRef({});
 
-  
+  /**
+ * Callback triggered when a barcode is successfully detected.
+ * @param {Object} result - The detection result object from Quagga.
+ */
   useEffect(() => {
-    function handleDetected (result) {
+    function handleDetected(result) {
       const code = result.codeResult.code;
       // const format = result.codeResult.format;
-      
+
       const isValid = isValidEAN13(code);
       if (isValid) {
         Quagga.stop();
         onDetected(code);
-      }  
+      }
     };
+
+    // Only initialize if DOM ref exists
     if (scannerRef.current) {
       // Initialize Quagga2 with configuration
       Quagga.init(
@@ -70,6 +88,11 @@ const BarcodeScanner = ({ onDetected, onError }) => {
     };
   }, [onDetected, onError, scanning]);
 
+  /**
+   * Validates an EAN-13 barcode.
+   * @param {string} code - EAN-13 code as a string.
+   * @returns {boolean} Whether the code passes the checksum.
+   */
   function isValidEAN13(code) {
     if (!/^\d{13}$/.test(code)) return false;
     let sum = 0;
@@ -81,8 +104,10 @@ const BarcodeScanner = ({ onDetected, onError }) => {
     return checkDigit === parseInt(code[12], 10);
   }
 
-
-  // Visual feedback for scanning
+  /**
+   * Handles the visual feedback for Quagga's detection processing.
+   * @param {Object} result - Result object with image processing data.
+   */
   const handleProcessed = (result) => {
     const drawingCtx = Quagga.canvas.ctx.overlay;
     const drawingCanvas = Quagga.canvas.dom.overlay;
@@ -110,6 +135,7 @@ const BarcodeScanner = ({ onDetected, onError }) => {
 
   return (
     <>
+      {/* Video stream container where Quagga mounts the camera feed */}
       <div id="scanner-container"
         ref={scannerRef}
         style={{
@@ -119,8 +145,8 @@ const BarcodeScanner = ({ onDetected, onError }) => {
           overflow: 'hidden'
         }}
       >
-        {/* Quagga mounts the video stream here */}
       </div>
+      {/* Visual overlay box */}
       <div className="scanner-overlay" style={{
         position: 'absolute',
         top: 0,

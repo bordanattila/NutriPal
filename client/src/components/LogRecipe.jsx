@@ -1,3 +1,8 @@
+/**
+ * @file LogRecipe.jsx
+ * @module LogRecipe
+ * @description Allows users to view a recipe's nutrition details and log it to their Daily Log.
+ */
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import ky from 'ky';
@@ -12,12 +17,18 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { DateTime } from 'luxon';
 
+/** API instance with environment prefix */
 const api = ky.create({
   prefixUrl: process.env.REACT_APP_API_URL,
 });
 
+/** Meal types available for logging */
 const mealTypes = ['Breakfast', 'Lunch', 'Dinner', 'Snack'];
 
+/**
+ * FoodDetails component displays the recipe information and allows logging it to Daily Log.
+ * @returns {JSX.Element}
+ */
 const FoodDetails = () => {
   const { recipeName, recipeID } = useParams();
   const [foodDetails, setFoodDetails] = useState(null);
@@ -35,6 +46,7 @@ const FoodDetails = () => {
 
   const todaysDate = date.year + '-' + date.month + '-' + date.day
 
+  /** GraphQL query to get current user data */
   const { data: logData, loading: logLoading, error: logError } = useQuery(GET_USER, {
     context: {
       headers: {
@@ -47,8 +59,9 @@ const FoodDetails = () => {
     },
   });
 
-
+  /** User ID extracted from user data */
   const [userID, setUserID] = useState(null);
+
   // Set user ID from log data
   useEffect(() => {
     if (logData?.user) {
@@ -56,18 +69,21 @@ const FoodDetails = () => {
     }
   }, [logData]);
 
+  /**
+   * Fetch nutrition and serving data for a recipe by ID.
+   */
   useEffect(() => {
     const fetchRecipeDetails = async () => {
       try {
         const response = await api.get(`api/log-recipe/${recipeID}?servings=${servingCount + fractionValue}`);
         const responseData = await response.json();
-  
+
         setFoodDetails({
           food: {
             food_name: responseData.recipeName
           }
         });
-  
+
         const serving = {
           serving_description: responseData.selectedServing.serving_description,
           calories: responseData.nutrition.caloriesPerServing,
@@ -77,9 +93,9 @@ const FoodDetails = () => {
           saturated_fat: responseData.nutrition.saturatedFatPerServing,
           sodium: responseData.nutrition.sodiumPerServing,
           fiber: responseData.nutrition.fiberPerServing,
-          serving_id: 'S-custom' 
+          serving_id: 'S-custom'
         };
-  
+
         setSelectedServing(serving);
         setServingArray([serving.serving_description]); // wrap in array
         setServingID(serving?.serving_id || servingID);
@@ -90,7 +106,7 @@ const FoodDetails = () => {
         setLoading(false);
       }
     };
-  
+
     fetchRecipeDetails();
   }, [recipeID, servingCount, fractionValue, servingID]);
 
@@ -102,7 +118,7 @@ const FoodDetails = () => {
     { name: 'Calories', value: selectedServing.calories }
   ] : [];
 
-  // Handling change in serving size
+  /** Handles number of servings */
   const handleServingCount = (count) => {
     setServingCount(count);
   };
@@ -110,90 +126,100 @@ const FoodDetails = () => {
   // Fractions for serving size
   const Fractions = ['0', '1/8', '1/4', '1/3', '3/8', '1/2', '5/8', '2/3', '3/4', '7/8']
 
-  // Handling change in fractions
+
+  /**
+   * Converts a fraction string (e.g., '1/4') to a float value.
+   * @param {string} fractionStr 
+   * @returns {number}
+   */
   function fractionToFloat(fractionStr) {
-    const [numerator , denominator ] = fractionStr.split('/');
-    return parseFloat(numerator ) / parseFloat(denominator );
+    const [numerator, denominator] = fractionStr.split('/');
+    return parseFloat(numerator) / parseFloat(denominator);
   }
-  
+
+  /** Handles change in fraction drop-down */
   const handleFractionCount = (fractionStr) => {
     const fraction = fractionToFloat(fractionStr);
     setFractionCount(fractionStr);
     setFractionValue(fraction);
   };
 
-   // Handling change in serving size
-   const handleMealChange = (selectedMeal) => {
+  /** Handles meal type selection */
+  const handleMealChange = (selectedMeal) => {
     setMeal(selectedMeal);
   };
 
-  // Handling addition of food to Daily Log
-  const handleAddFood = async () => {
-      if (!selectedServing || !meal || !logData) {
-        alert('Please select serving size, number of servings, and meal type.');
-        return;
-      }
-      const foodEntry = {
-        user_id: userID,
-        food_name: recipeName,
-        serving_size: selectedServing.serving_description,
-        number_of_servings: servingCount,
-        fraction_of_serving: fractionCount,
-        calories: selectedServing.calories * (servingCount + fractionValue),
-        carbohydrate: selectedServing.carbohydrate * (servingCount + fractionValue),
-        protein: selectedServing.protein * (servingCount + fractionValue),
-        fat: selectedServing.fat * (servingCount + fractionValue),
-        saturated_fat: selectedServing.saturated_fat * (servingCount + fractionValue),
-        sodium: selectedServing.sodium * (servingCount + fractionValue),
-        fiber: selectedServing.fiber * (servingCount + fractionValue),
-        meal_type: meal.toLocaleLowerCase(),
-        food_type: 'recipe'
-      };
-
-      try {
-        // Create OneFood document
-        const foodResponse = await api.post('api/one-food', {
-          json: foodEntry,
-        });
-        const foodData = await foodResponse.json();
-
-        if (!foodResponse.ok) {
-          throw new Error('Failed to create food entry.');
-        }
-
-        // Add the food entry to the DailyLog
-        const dailyLogResponse = await api.post('api/daily-log', {
-          json: {
-            user_id: userID,
-            foods: [foodData._id],
-            dateCreated: todaysDate,
-          },
-        });
-
-        if (dailyLogResponse.ok) {
-          toast.success('Food added successfully!');
-          setTimeout(() => { navigate(`/saved-recipes`) }, 1000)
-        } else {
-          toast.error('Failed to add food.');
-        }
-      } catch (error) {
-        console.error('Error adding food:', error);
-        toast.error('Error adding food. Please try again.');
-      }
-    
+  /** Handles serving dropdown selection */
+  const handleServingChange = (servingId) => {
+    const selected = servingArray.find((s) => s.serving_id === servingId);
+    setSelectedServing(selected);
+    setServingID(servingId);
   };
 
+
+  /**
+   * Logs the current recipe into the user's Daily Log.
+   */
+  const handleAddFood = async () => {
+    if (!selectedServing || !meal || !logData) {
+      alert('Please select serving size, number of servings, and meal type.');
+      return;
+    }
+    const foodEntry = {
+      user_id: userID,
+      food_name: recipeName,
+      serving_size: selectedServing.serving_description,
+      number_of_servings: servingCount,
+      fraction_of_serving: fractionCount,
+      calories: selectedServing.calories * (servingCount + fractionValue),
+      carbohydrate: selectedServing.carbohydrate * (servingCount + fractionValue),
+      protein: selectedServing.protein * (servingCount + fractionValue),
+      fat: selectedServing.fat * (servingCount + fractionValue),
+      saturated_fat: selectedServing.saturated_fat * (servingCount + fractionValue),
+      sodium: selectedServing.sodium * (servingCount + fractionValue),
+      fiber: selectedServing.fiber * (servingCount + fractionValue),
+      meal_type: meal.toLocaleLowerCase(),
+      food_type: 'recipe'
+    };
+
+    try {
+      // Create OneFood document
+      const foodResponse = await api.post('api/one-food', {
+        json: foodEntry,
+      });
+      const foodData = await foodResponse.json();
+
+      if (!foodResponse.ok) {
+        throw new Error('Failed to create food entry.');
+      }
+
+      // Add the food entry to the DailyLog
+      const dailyLogResponse = await api.post('api/daily-log', {
+        json: {
+          user_id: userID,
+          foods: [foodData._id],
+          dateCreated: todaysDate,
+        },
+      });
+
+      if (dailyLogResponse.ok) {
+        toast.success('Food added successfully!');
+        setTimeout(() => { navigate(`/saved-recipes`) }, 1000)
+      } else {
+        toast.error('Failed to add food.');
+      }
+    } catch (error) {
+      console.error('Error adding food:', error);
+      toast.error('Error adding food. Please try again.');
+    }
+
+  };
+
+  /** Navigate back to saved recipes */
   const goBack = () => {
     navigate(`/saved-recipes`)
   };
 
-
-    // Set serving_id when a serving is selected
-    const handleServingChange = (servingId) => {
-      const selected = servingArray.find((s) => s.serving_id === servingId);
-      setSelectedServing(selected);
-      setServingID(servingId); 
-    };
 
   if (loading || logLoading) return <div>Loading...</div>;
   if (error || logError) return <div>Error: {error.message}</div>;
@@ -239,57 +265,57 @@ const FoodDetails = () => {
           <DonutChart stats={statsForChart} />
         </div>
       </div>
-     
+
       <>
-          {/* Dropdown for serving size */}
+        {/* Dropdown for serving size */}
+        <DropdownMenu
+          label="Serving size"
+          value={selectedServing}
+          // value={servingID}
+          onChange={handleServingChange}
+          options={servingArray}
+          optionLabel={(serving) => serving.serving_description}
+          optionKey={(serving) => serving.serving_id}
+        />
+
+        <div className="flex space-x-4">
+          {/* Dropdown for serving count*/}
           <DropdownMenu
-            label="Serving size"
-            value={selectedServing}
-            // value={servingID}
-            onChange={handleServingChange}
-            options={servingArray}
-            optionLabel={(serving) => serving.serving_description}
-            optionKey={(serving) => serving.serving_id}
+            label="Number of servings"
+            className="w-1/2"
+            value={servingCount}
+            onChange={handleServingCount}
+            options={[...Array(101).keys()]}
+            optionLabel={(count) => count}
+            optionKey={(count) => count}
           />
 
-          <div className="flex space-x-4">
-            {/* Dropdown for serving count*/}
-            <DropdownMenu
-              label="Number of servings"
-              className="w-1/2"
-              value={servingCount}
-              onChange={handleServingCount}
-              options={[...Array(101).keys()]}
-              optionLabel={(count) => count}
-              optionKey={(count) => count}
-            />
-
-            {/* Dropdown for fraction count*/}
-            <DropdownMenu
-              label="Fraction of serving"
-              className="w-1/2"
-              value={fractionCount}
-              onChange={handleFractionCount}
-              options={Fractions}
-              optionLabel={(fraction) => fraction}
-              optionKey={(fraction) => fraction}
-            />
-          </div>
-
-          {/* Dropdown for meal type*/}
+          {/* Dropdown for fraction count*/}
           <DropdownMenu
-            label="Meal type"
-            value={meal}
-            onChange={handleMealChange}
-            options={mealTypes}
-            optionLabel={(meal) => meal}
-            optionKey={(meal) => meal}
+            label="Fraction of serving"
+            className="w-1/2"
+            value={fractionCount}
+            onChange={handleFractionCount}
+            options={Fractions}
+            optionLabel={(fraction) => fraction}
+            optionKey={(fraction) => fraction}
           />
-        </>
-      
+        </div>
+
+        {/* Dropdown for meal type*/}
+        <DropdownMenu
+          label="Meal type"
+          value={meal}
+          onChange={handleMealChange}
+          options={mealTypes}
+          optionLabel={(meal) => meal}
+          optionKey={(meal) => meal}
+        />
+      </>
+
 
       <br />
-     
+
       <div>
         {/* Toaster to provide feedback to user */}
         <ToastContainer autoClose={500} />

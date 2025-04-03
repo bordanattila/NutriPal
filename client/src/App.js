@@ -1,3 +1,8 @@
+/**
+ * @file App.js
+ * @description Main application component. Handles routing and shared UI layout (Header, Navbar, Footer).
+ */
+
 import React from 'react';
 import { Route, Routes, useLocation, useMatch } from 'react-router-dom';
 import Home from './pages/Home';
@@ -18,6 +23,10 @@ import Meals from './pages/Meals';
 import SavedRecipes from './components/SavedRecipes';
 import LogRecipe from './components/LogRecipe';
 
+/**
+ * @constant routes
+ * @description Array of route configurations for react-router-dom.
+ */
 const routes = [
   {
     path: '/',
@@ -77,6 +86,11 @@ const routes = [
   },
 ];
 
+/**
+ * @function App
+ * @description Main component rendered by ReactDOM. Handles routing and layout.
+ * @returns {JSX.Element}
+ */
 const App = () => {
   const location = useLocation();
   const isHome = location.pathname === '/';

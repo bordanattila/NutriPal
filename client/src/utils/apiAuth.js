@@ -1,3 +1,8 @@
+/**
+ * @file apiAuth.js
+ * @description Handles fetching and caching of FatSecret OAuth 2.0 access tokens for client-side API use.
+ */
+
 const ky = require('ky'); // Importing the ky library for HTTP requests.
 const qs = require('qs'); // The qs module is used to properly format the data 
 const { REACT_APP_CLIENT_ID, REACT_APP_CLIENT_SECRET } = process.env;
@@ -5,7 +10,12 @@ const { REACT_APP_CLIENT_ID, REACT_APP_CLIENT_SECRET } = process.env;
 let accessToken;
 let tokenExpiration;
 
-// Function to get the OAuth 2.0 access token
+/**
+ * Fetches a new access token from the FatSecret OAuth 2.0 token endpoint.
+ * @async
+ * @function getAccessToken
+ * @returns {Promise<string>} The newly fetched access token
+ */
 async function getAccessToken() {
   const tokenUrl = 'https://oauth.fatsecret.com/connect/token';
   const data = qs.stringify({
@@ -38,7 +48,12 @@ async function getAccessToken() {
   }
 }
 
-// Function to share accessToken with other API calls
+/**
+ * Returns a valid access token, fetching a new one if expired or missing.
+ * @async
+ * @function getAccessTokenValue
+ * @returns {Promise<string>} Valid access token
+ */
 async function getAccessTokenValue() {
   if (!accessToken || Date.now() >= tokenExpiration) {
     console.log('Access token expired or missing, fetching a new one...');

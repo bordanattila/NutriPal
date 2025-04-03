@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: server/utils/auth.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: server/utils/auth.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * @file auth.js
+ * @description Provides JWT-based authentication utilities including middleware, token creation, refresh token handling, and verification.
+ */
+const jwt = require('jsonwebtoken');
+require('dotenv').config();
+
+// Set token expiration date
+const secret = process.env.TOKEN_SECRET;
+
+module.exports = {
+/**
+ * @function authMiddleware
+ * @description Verifies JWT from request headers/query/body and attaches decoded user data to request object.
+ * @param {Object} context - The context object passed into ApolloServer (containing the request).
+ * @returns {Object} The modified request with the user info attached if authenticated.
+ */
+
+  authMiddleware: function ({ req }) {
+    // Allows token to be sent via  req.query or headers
+    let token = req.body.token || req.query.token || req.headers.authorization;
+
+    // ["Bearer", "&lt;tokenvalue>"]
+    if (req.headers.authorization) {
+      token = token.split(' ').pop().trim();
+    }
+
+    if (!token) {
+      return req;
+    }
+
+    // Verify token and get user data out of it
+    try {
+      const { data } = jwt.verify(token, secret, { algorithm: 'HS256', expiresIn: '15m' });
+      req.user = data;
+    } catch {
+      console.log('Invalid token', err);
+    }
+    return req;
+  },
+
+/**
+ * @function refreshToken
+ * @description Creates a refresh token for the user.
+ * @param {Object} user - User object containing `_id`.
+ * @returns {string} A new refresh token (1 hour expiration).
+ */
+  refreshToken: function (user) {
+    const payload = { userId: user._id };
+    return jwt.sign(payload, secret, { algorithm: 'HS256', expiresIn: '1h' });
+  },
+
+/**
+ * @function verifyRefreshToken
+ * @description Verifies a refresh token.
+ * @param {string} token - The refresh token to verify.
+ * @returns {Promise&lt;Object>} The decoded token payload.
+ */
+  verifyRefreshToken: function (token) {
+    return new Promise((resolve, reject) => {
+      jwt.verify(token, secret, { algorithm: 'HS256' }, (err, payload) => {
+        if (err) return reject(err);
+        // Resolve with payload, which includes userId
+        resolve(payload);
+      });
+    });
+  },
+
+/**
+ * @function signInToken
+ * @description Signs a short-lived JWT for the user.
+ * @param {Object} user - User object containing username, email, and _id.
+ * @returns {string} A signed JWT valid for 15 minutes.
+ */
+  signInToken: function ({ username, email, _id }) {
+    const payload = { username, email, _id };
+    return jwt.sign({ data: payload }, secret, { algorithm: 'HS256', expiresIn: '15m' });
+  },
+};</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-DonutChart.html">DonutChart</a></li><li><a href="module-DropdownMenu.html">DropdownMenu</a></li><li><a href="module-FoodDetails.html">FoodDetails</a></li><li><a href="module-Footer.html">Footer</a></li><li><a href="module-Header.html">Header</a></li><li><a href="module-LogOptions.html">LogOptions</a></li><li><a href="module-LogRecipe.html">LogRecipe</a></li><li><a href="module-Navigation.html">Navigation</a></li><li><a href="module-SavedRecipes.html">SavedRecipes</a></li><li><a href="module-SearchBar.html">SearchBar</a></li><li><a href="module-SearchComponent.html">SearchComponent</a></li><li><a href="module-User.html">User</a></li><li><a href="module-useAuth.html">useAuth</a></li><li><a href="module-%257BtypeDefs,.html">{typeDefs,</a></li><li><a href="mongoose.module_connection.html">connection</a></li></ul><h3>Classes</h3><ul><li><a href="AuthService.html">AuthService</a></li></ul><h3>Global</h3><ul><li><a href="global.html#BarcodeScanner">BarcodeScanner</a></li><li><a href="global.html#Calendar">Calendar</a></li><li><a href="global.html#DailyLog">DailyLog</a></li><li><a href="global.html#DailyLogs">DailyLogs</a></li><li><a href="global.html#Dashboard">Dashboard</a></li><li><a href="global.html#GET_ONE_FOOD">GET_ONE_FOOD</a></li><li><a href="global.html#GET_USER">GET_USER</a></li><li><a href="global.html#Home">Home</a></li><li><a href="global.html#Login">Login</a></li><li><a href="global.html#OneFood">OneFood</a></li><li><a href="global.html#Profile">Profile</a></li><li><a href="global.html#Recipe">Recipe</a></li><li><a href="global.html#Search">Search</a></li><li><a href="global.html#Signup">Signup</a></li><li><a href="global.html#UPDATE_USER_PROFILE">UPDATE_USER_PROFILE</a></li><li><a href="global.html#User">User</a></li><li><a href="global.html#api">api</a></li><li><a href="global.html#authLink">authLink</a></li><li><a href="global.html#authMiddleware">authMiddleware</a></li><li><a href="global.html#authenticateUser">authenticateUser</a></li><li><a href="global.html#brand">brand</a></li><li><a href="global.html#calculateRecipeNutrition">calculateRecipeNutrition</a></li><li><a href="global.html#calorieGoal">calorieGoal</a></li><li><a href="global.html#calories">calories</a></li><li><a href="global.html#carbohydrate">carbohydrate</a></li><li><a href="global.html#clearIngredients">clearIngredients</a></li><li><a href="global.html#clearSearch">clearSearch</a></li><li><a href="global.html#clearSearch-Clearsfoodsearchinputandresults">clearSearch - Clears food search input and results</a></li><li><a href="global.html#client">client</a></li><li><a href="global.html#convertUpcEtoUpcA">convertUpcEtoUpcA</a></li><li><a href="global.html#createDailyLog">createDailyLog</a></li><li><a href="global.html#created">created</a></li><li><a href="global.html#dailyLogSchema">dailyLogSchema</a></li><li><a href="global.html#daily_log">daily_log</a></li><li><a href="global.html#dateCreated">dateCreated</a></li><li><a href="global.html#email">email</a></li><li><a href="global.html#fat">fat</a></li><li><a href="global.html#fiber">fiber</a></li><li><a href="global.html#food_id">food_id</a></li><li><a href="global.html#food_name">food_name</a></li><li><a href="global.html#food_type">food_type</a></li><li><a href="global.html#foods">foods</a></li><li><a href="global.html#fraction_of_serving">fraction_of_serving</a></li><li><a href="global.html#generateFoodId">generateFoodId</a></li><li><a href="global.html#generateServingId">generateServingId</a></li><li><a href="global.html#getAccessToken">getAccessToken</a></li><li><a href="global.html#getAccessTokenValue">getAccessTokenValue</a></li><li><a href="global.html#groupedLogs">groupedLogs</a></li><li><a href="global.html#handleAddRecipe">handleAddRecipe</a></li><li><a href="global.html#handleDelete">handleDelete</a></li><li><a href="global.html#handleImageUpload">handleImageUpload</a></li><li><a href="global.html#handleLoginClick">handleLoginClick</a></li><li><a href="global.html#handleLoginSubmit">handleLoginSubmit</a></li><li><a href="global.html#handleRemoveIngredient">handleRemoveIngredient</a></li><li><a href="global.html#handleSignupClick">handleSignupClick</a></li><li><a href="global.html#handleSubmit">handleSubmit</a></li><li><a href="global.html#handleUpdate">handleUpdate</a></li><li><a href="global.html#httpLink">httpLink</a></li><li><a href="global.html#ingredients">ingredients</a></li><li><a href="global.html#isCorrectPassword">isCorrectPassword</a></li><li><a href="global.html#mealTypeOrder">mealTypeOrder</a></li><li><a href="global.html#meal_type">meal_type</a></li><li><a href="global.html#number_of_servings">number_of_servings</a></li><li><a href="global.html#nutrition">nutrition</a></li><li><a href="global.html#onSearchSubmit">onSearchSubmit</a></li><li><a href="global.html#oneFoodSchema">oneFoodSchema</a></li><li><a href="global.html#password">password</a></li><li><a href="global.html#profilePic">profilePic</a></li><li><a href="global.html#protein">protein</a></li><li><a href="global.html#recipe">recipe</a></li><li><a href="global.html#recipeName">recipeName</a></li><li><a href="global.html#recipeSchema">recipeSchema</a></li><li><a href="global.html#refreshToken">refreshToken</a></li><li><a href="global.html#saturated_fat">saturated_fat</a></li><li><a href="global.html#servingSize">servingSize</a></li><li><a href="global.html#serving_id">serving_id</a></li><li><a href="global.html#serving_size">serving_size</a></li><li><a href="global.html#signInToken">signInToken</a></li><li><a href="global.html#sodium">sodium</a></li><li><a href="global.html#stats">stats</a></li><li><a href="global.html#statsBottom">statsBottom</a></li><li><a href="global.html#useEffect">useEffect</a></li><li><a href="global.html#userSchema">userSchema</a></li><li><a href="global.html#user_id">user_id</a></li><li><a href="global.html#username">username</a></li><li><a href="global.html#verifyRefreshToken">verifyRefreshToken</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Wed Apr 02 2025 21:51:50 GMT-0400 (Eastern Daylight Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

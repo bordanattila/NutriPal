@@ -1,3 +1,7 @@
+/**
+ * @file apiRoutes.js
+ * @description Contains routes for fetching, logging, and managing food and recipe data.
+ */
 const express = require('express');
 const router = express.Router();
 const { getAccessTokenValue } = require('../utils/apiAuth');
@@ -9,8 +13,13 @@ const Recipe = require('../models/Recipe');
 const { calculateRecipeNutrition } = require('../utils/nutritionCalculation');
 const { DateTime } = require('luxon');
 const { generateFoodId, generateServingId } = require('../utils/idGenerator');
+const { convertUpcEtoUpcA } = require('../utils/barcodeConverter')
 
-// Endpoint to get the access token
+/**
+ * @route GET /api/token
+ * @desc Get FatSecret access token
+ * @access Public
+ */
 router.get('/token', async (req, res) => {
     try {
         const token = await getAccessTokenValue();
@@ -21,7 +30,11 @@ router.get('/token', async (req, res) => {
     }
 });
 
-// Endpoint to search foods via FatSecret API by name
+/**
+ * @route GET /api/foodByName
+ * @desc Search for food by name using FatSecret API
+ * @access Public
+ */
 router.get('/foodByName', async (req, res) => {
     const { query } = req;
     const token = await getAccessTokenValue();
@@ -46,8 +59,11 @@ router.get('/foodByName', async (req, res) => {
     }
 });
 
-const { convertUpcEtoUpcA } = require('../utils/barcodeConverter')
-// Endpoint to search foods via FatSecret API by barcode
+/**
+ * @route GET /api/foodByBarcode
+ * @desc Search for food by barcode using FatSecret API
+ * @access Public
+ */
 router.get('/foodByBarcode', async (req, res) => {
 
     const { query } = req;
@@ -74,7 +90,11 @@ router.get('/foodByBarcode', async (req, res) => {
     }
 });
 
-// Endpoint to search food by id
+/**
+ * @route GET /api/:sourcePage/foodById
+ * @desc Fetch food details by FatSecret food_id
+ * @access Public
+ */
 router.get('/:sourcePage/foodById', async (req, res) => {
     const food_Id = req.query.food_id;
 
@@ -103,7 +123,11 @@ router.get('/:sourcePage/foodById', async (req, res) => {
 });
 
 
-// Endpoint to query the last 5 food logs for a user
+/**
+ * @route GET /api/recent-foods/:user_id
+ * @desc Get 5 most recent food logs for a user
+ * @access Private
+ */
 router.get('/recent-foods/:user_id', async (req, res) => {
     try {
         const userId = req.params.user_id;
@@ -119,7 +143,11 @@ router.get('/recent-foods/:user_id', async (req, res) => {
     }
 });
 
-// Endpoint to query selected day's food logs for a user
+/**
+ * @route GET /api/foodByDate/:user_id/date/:dateCreated
+ * @desc Get food logs for a specific date
+ * @access Private
+ */
 router.get('/foodByDate/:user_id/date/:dateCreated', async (req, res) => {
     try {
         const userId = req.params.user_id;
@@ -156,7 +184,11 @@ router.get('/foodByDate/:user_id/date/:dateCreated', async (req, res) => {
 });
 
 
-// Endpoint to query recipe logs for a user
+/**
+ * @route GET /api/saved-recipes/:user_id
+ * @desc Get saved recipes for a user
+ * @access Private
+ */
 router.get('/saved-recipes/:user_id', async (req, res) => {
     try {
         const userId = req.params.user_id;
@@ -172,7 +204,11 @@ router.get('/saved-recipes/:user_id', async (req, res) => {
     }
 });
 
-// Endpoint to log recipe
+/**
+ * @route POST /api/log-recipe/:recipeID
+ * @desc Log a single recipe to the database
+ * @access Private
+ */
 router.get('/log-recipe/:recipeID', async (req, res) => {
     try {
         const { recipeID } = req.params;
@@ -205,7 +241,11 @@ router.get('/log-recipe/:recipeID', async (req, res) => {
     }
 });
 
-// Endpoint for logging one food item
+/**
+ * @route POST /api/one-food
+ * @desc Log a single food item to the database
+ * @access Private
+ */
 router.post('/one-food', async (req, res) => {
     try {
         const {
@@ -261,7 +301,11 @@ router.post('/one-food', async (req, res) => {
 });
 
 
-// Endpoint to add food to Daily Log
+/**
+ * @route POST /api/daily-log
+ * @desc Add or update a user's daily log
+ * @access Private
+ */
 router.post('/daily-log', async (req, res) => {
     try {
         const { user_id, foods } = req.body;
@@ -305,7 +349,11 @@ router.post('/daily-log', async (req, res) => {
     }
 });
 
-// Endpoint to add a recipe
+/**
+ * @route POST /api/recipe
+ * @desc Create a new recipe
+ * @access Private
+ */
 router.post('/recipe', async (req, res) => {
 
     try {
@@ -334,7 +382,11 @@ router.post('/recipe', async (req, res) => {
 });
 
 
-// Endpoint to remove one food item
+/**
+ * @route DELETE /api/deleteFood/:user_id/:food_id/:date
+ * @desc Remove a food item from a user's daily log by date
+ * @access Private
+ */
 router.delete('/deleteFood/:user_id/:food_id/:date', async (req, res) => {
     try {
         const { user_id, date, food_id } = req.params;
@@ -369,7 +421,11 @@ router.delete('/deleteFood/:user_id/:food_id/:date', async (req, res) => {
     }
 })
 
-// Endpoint to handle token refreshing
+/**
+ * @route DELETE /api/refresh
+ * @desc Handles access token refreshing. (WIP – check refreshToken reference).
+ * @access Private
+ */
 router.post('/refresh', async (req, res) => {
     const { token } = req.body;
 

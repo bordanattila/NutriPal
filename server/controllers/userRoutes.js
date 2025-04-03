@@ -1,3 +1,7 @@
+/**
+ * Routes for user authentication (login & signup).
+ * Uses JWT for signing tokens and interacts with the User model.
+ */
 const User = require('../models/User');
 const express = require('express');
 const router = express.Router();
@@ -5,12 +9,16 @@ const { signInToken } = require('../utils/auth');
 require('dotenv').config();
 const refreshTokens = [];
 
-// Login route
+/**
+ * @route POST /login
+ * @desc Authenticate user by username and password
+ * @access Public
+ * @returns {Object} JWT token, refresh token, and username if successful
+ */
 router.post('/login', async (req, res) => {
     const { username, password } = req.body;
     console.log('Session data size:', JSON.stringify(req.session).length);
     try {
-        // const user = await authenticateUser(username, password);
         const user = await User.findOne({ username });
         if (!user) {
             return res.status(401).json({ message: 'Invalid username or password' });
@@ -35,7 +43,12 @@ router.post('/login', async (req, res) => {
     }
 });
 
-// Signup route
+/**
+ * @route POST /signup
+ * @desc Register a new user and return signed JWT token
+ * @access Public
+ * @returns {Object} JWT token and success message if successful
+ */
 router.post('/signup', async (req, res) => {
     const { username, email, password } = req.body;
     try {
@@ -58,7 +71,14 @@ router.post('/signup', async (req, res) => {
     }
 });
 
-// // Profile update route
+/**
+ * @route POST /profile
+ * @desc (Commented Out) Update user's profile with calorie goal, password, and profile picture
+ * @access Private
+ * @remarks 
+ * - Hashes password if updated
+ * - Uses Mongoose's findByIdAndUpdate
+ */
 // router.post('/profile', async (req, res) => {
 //     const { userId, user_calorieGoal, password, profilePic } = req.body;
 

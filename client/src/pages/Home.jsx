@@ -1,10 +1,24 @@
+/**
+ * @file Home.jsx
+ * @description Landing page for NutryPal. Redirects authenticated users to dashboard and offers login/signup options.
+ */
+
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Auth from "../utils/auth";
 
+/**
+ * @component Home
+ * @description Public landing page. Redirects logged-in users to dashboard and provides login/signup navigation.
+ * @returns {JSX.Element}
+ */
 const Home = () => {
   const navigate = useNavigate();
   
+  /**
+   * @function useEffect
+   * @description Redirects user to /dashboard if already logged in
+   */
   useEffect(() => {
     // If the user is already logged in, redirect them to the dashboard
     if (Auth.loggedIn()) {
@@ -12,15 +26,23 @@ const Home = () => {
     }
   }, [navigate]);
 
+  /**
+   * @function handleLoginClick
+   * @description Navigates to the login page
+   */
   const handleLoginClick = () => {
     navigate('/login');
   };
 
+  /**
+   * @function handleSignupClick
+   * @description Navigates to the signup page
+   */
   const handleSignupClick = () => {
     navigate('/signup');
   };
   
-
+  // UI rendering
   return (
     <div className="flex flex-col items-center justify-center min-h-[500px] max-h-dvh bg-gradient-to-br from-teal-200 via-cyan-300 to-blue-300 p-6">
       <h1 className="text-5xl font-extrabold text-gray-800 mb-4 tracking-tight text-center">Welcome to NutryPal</h1>

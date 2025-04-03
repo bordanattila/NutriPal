@@ -1,3 +1,8 @@
+/**
+ * @file Search.jsx
+ * @description Search page where users can look up food items by name or barcode, and view their recent food log history.
+ */
+
 import React, { useEffect, useState } from 'react';
 import ky from 'ky';
 import { useNavigate, Link } from 'react-router-dom';
@@ -8,19 +13,35 @@ import useAuth from '../hooks/RefreshToken';
 import SearchBar from '../components/SearchBar';
 import { handleSearch } from '../components/SearchComponent';
 
+/**
+ * @constant api
+ * @description Preconfigured ky instance for making API requests with a set prefix URL.
+ */
 const api = ky.create({
   prefixUrl: process.env.REACT_APP_API_URL,
 });
 
+/**
+ * @component Search
+ * @description Displays a food search bar and user's recent food history. Supports searching by name and barcode.
+ * @returns {JSX.Element}
+ */
 const Search = () => {
-  useAuth();
+  useAuth(); // Refresh access token if expired
   const [foodName, setFoodName] = useState('');
   const [arrayToDisplay, setArrayToDisplay] = useState([]);
   const [error, setError] = useState(null);
-  const navigate = useNavigate();
   const [logHistory, setLogHistory] = useState([]);
   const [barcodeID, setBarcodeID] = useState('');
+  const navigate = useNavigate();
 
+  // Identify source page for FoodDetails.jsx
+  const sourcePage = 'search';
+
+  /**
+   * @hook useQuery
+   * @description Retrieves authenticated user info using GET_USER query
+   */
   const { loading, data, logError } = useQuery(GET_USER, {
     context: {
       headers: {
@@ -32,11 +53,13 @@ const Search = () => {
     }
   });
 
-  // Identify source page for FoodDetails.jsx
-  const sourcePage = 'search';
-
   // Get the last 5 food logs for the user
   const userId = data?.user?._id;
+  
+  /**
+   * @function useEffect
+   * @description Fetches the last 5 food log entries for the authenticated user.
+   */
   useEffect(() => {
     if (!userId) return;
     const fetchLogHistory = async () => {
@@ -55,6 +78,11 @@ const Search = () => {
     fetchLogHistory();
   }, [userId]);
 
+  /**
+   * @function onSearchSubmit
+   * @description Triggers a food search by name using handleSearch.
+   * @param {React.FormEvent} e - Form submit event.
+   */
   const onSearchSubmit = async (e) => {
     e.preventDefault();
     if (foodName === '') {
@@ -69,13 +97,20 @@ const Search = () => {
     });
   };
 
+  /**
+   * @function useEffect
+   * @description If a food is found via barcode, auto-navigate to its FoodDetails page.
+   */
   useEffect(() => {
     if (barcodeID !== '') {
       navigate(`/${sourcePage}/foodById/${barcodeID}`);
     }
   }, [barcodeID, navigate, sourcePage]);
 
-
+  /**
+   * @function clearSearch
+   * @description Clears the search input and result list.
+   */
   const clearSearch = () => {
     setFoodName('');
     setArrayToDisplay([]);
@@ -83,6 +118,7 @@ const Search = () => {
 
   if (loading || !data || !data.user) return <div>Loading...</div>;
   if (logError) return <div>Error: {error.message}</div>;
+  
   return (
     <div className="flex flex-col items-center justify-center min-h-max p-6">
 

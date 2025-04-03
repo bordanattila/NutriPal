@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: components/BarcodeScanner.jsx</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: components/BarcodeScanner.jsx</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * @file BarcodeScanner.jsx
+ * @description A React component for scanning barcodes using the device camera and Quagga2.
+ */
+import React, { useState, useEffect, useRef } from 'react';
+import Quagga from '@ericblade/quagga2';
+
+/**
+ * BarcodeScanner Component
+ * 
+ * @component
+ * @param {Object} props
+ * @param {function} props.onDetected - Callback function triggered when a valid barcode is detected.
+ * @param {function} props.onError - Optional callback for handling initialization errors.
+ * @returns {JSX.Element}
+ */
+const BarcodeScanner = ({ onDetected, onError }) => {
+  const scannerRef = useRef(null);
+  const [scanning, setScanning] = useState(false);
+  // const detectionsCount = useRef({});
+
+  /**
+ * Callback triggered when a barcode is successfully detected.
+ * @param {Object} result - The detection result object from Quagga.
+ */
+  useEffect(() => {
+    function handleDetected(result) {
+      const code = result.codeResult.code;
+      // const format = result.codeResult.format;
+
+      const isValid = isValidEAN13(code);
+      if (isValid) {
+        Quagga.stop();
+        onDetected(code);
+      }
+    };
+
+    // Only initialize if DOM ref exists
+    if (scannerRef.current) {
+      // Initialize Quagga2 with configuration
+      Quagga.init(
+        {
+          inputStream: {
+            type: 'LiveStream',
+            target: scannerRef.current, // Mount the video stream to this element
+            constraints: {
+              width: 1280,
+              height: 720,
+              facingMode: 'environment' // Use the back camera on mobile devices
+            },
+          },
+          locator: {
+            patchSize: "large",
+            halfSample: false
+          },
+          decoder: {
+            // Limit to UPC barcode readers for performance
+            readers: [
+              'ean_reader'
+            ]
+          },
+          locate: true // Enable locating the barcode in the image
+        },
+        (err) => {
+          if (err) {
+            console.error('Quagga initialization error:', err);
+            if (onError) onError(err);
+            return;
+          }
+          console.log('Quagga initialized successfully');
+          Quagga.start();
+          setScanning(true);
+        }
+      );
+
+      // Set up the event listener for when a barcode is detected
+      Quagga.onDetected(handleDetected);
+      // Set up a listener for processing errors
+      Quagga.onProcessed(handleProcessed);
+    }
+
+    // Clean on unmount
+    return () => {
+      if (scanning) {
+        Quagga.stop();
+        setScanning(false);
+      }
+    };
+  }, [onDetected, onError, scanning]);
+
+  /**
+   * Validates an EAN-13 barcode.
+   * @param {string} code - EAN-13 code as a string.
+   * @returns {boolean} Whether the code passes the checksum.
+   */
+  function isValidEAN13(code) {
+    if (!/^\d{13}$/.test(code)) return false;
+    let sum = 0;
+    for (let i = 0; i &lt; 12; i++) {
+      const digit = parseInt(code[i], 10);
+      sum += i % 2 === 0 ? digit : digit * 3;
+    }
+    const checkDigit = (10 - (sum % 10)) % 10;
+    return checkDigit === parseInt(code[12], 10);
+  }
+
+  /**
+   * Handles the visual feedback for Quagga's detection processing.
+   * @param {Object} result - Result object with image processing data.
+   */
+  const handleProcessed = (result) => {
+    const drawingCtx = Quagga.canvas.ctx.overlay;
+    const drawingCanvas = Quagga.canvas.dom.overlay;
+
+    if (result) {
+      if (drawingCtx &amp;&amp; drawingCanvas) {
+        drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+
+        if (result.boxes) {
+          result.boxes.filter(box => box !== result.box).forEach(box => {
+            Quagga.ImageDebug.drawPath(box, { x: 0, y: 1 }, drawingCtx, { color: "green", lineWidth: 2 });
+          });
+        }
+
+        if (result.box) {
+          Quagga.ImageDebug.drawPath(result.box, { x: 0, y: 1 }, drawingCtx, { color: "#00F", lineWidth: 2 });
+        }
+
+        if (result.codeResult &amp;&amp; result.codeResult.code) {
+          Quagga.ImageDebug.drawPath(result.line, { x: 'x', y: 'y' }, drawingCtx, { color: 'red', lineWidth: 3 });
+        }
+      }
+    }
+  };
+
+  return (
+    &lt;>
+      {/* Video stream container where Quagga mounts the camera feed */}
+      &lt;div id="scanner-container"
+        ref={scannerRef}
+        style={{
+          position: 'relative',
+          width: '100%',
+          height: '50vh',
+          overflow: 'hidden'
+        }}
+      >
+      &lt;/div>
+      {/* Visual overlay box */}
+      &lt;div className="scanner-overlay" style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 10,
+        pointerEvents: 'none'
+      }}>
+        &lt;div style={{
+          position: 'absolute',
+          top: '25%',
+          left: '10%',
+          width: '80%',
+          height: '50%',
+          border: '2px solid #00FF00',
+          boxSizing: 'border-box'
+        }}>&lt;/div>
+      &lt;/div>
+    &lt;/>
+  );
+};
+
+export default BarcodeScanner;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-DonutChart.html">DonutChart</a></li><li><a href="module-DropdownMenu.html">DropdownMenu</a></li><li><a href="module-FoodDetails.html">FoodDetails</a></li><li><a href="module-Footer.html">Footer</a></li><li><a href="module-Header.html">Header</a></li><li><a href="module-LogOptions.html">LogOptions</a></li><li><a href="module-LogRecipe.html">LogRecipe</a></li><li><a href="module-Navigation.html">Navigation</a></li><li><a href="module-SavedRecipes.html">SavedRecipes</a></li><li><a href="module-SearchBar.html">SearchBar</a></li><li><a href="module-SearchComponent.html">SearchComponent</a></li><li><a href="module-useAuth.html">useAuth</a></li></ul><h3>Classes</h3><ul><li><a href="AuthService.html">AuthService</a></li></ul><h3>Global</h3><ul><li><a href="global.html#BarcodeScanner">BarcodeScanner</a></li><li><a href="global.html#Calendar">Calendar</a></li><li><a href="global.html#DailyLogs">DailyLogs</a></li><li><a href="global.html#Dashboard">Dashboard</a></li><li><a href="global.html#GET_ONE_FOOD">GET_ONE_FOOD</a></li><li><a href="global.html#GET_USER">GET_USER</a></li><li><a href="global.html#Home">Home</a></li><li><a href="global.html#Login">Login</a></li><li><a href="global.html#Profile">Profile</a></li><li><a href="global.html#Recipe">Recipe</a></li><li><a href="global.html#Search">Search</a></li><li><a href="global.html#Signup">Signup</a></li><li><a href="global.html#UPDATE_USER_PROFILE">UPDATE_USER_PROFILE</a></li><li><a href="global.html#api">api</a></li><li><a href="global.html#authLink">authLink</a></li><li><a href="global.html#clearIngredients">clearIngredients</a></li><li><a href="global.html#clearSearch">clearSearch</a></li><li><a href="global.html#clearSearch-Clearsfoodsearchinputandresults">clearSearch - Clears food search input and results</a></li><li><a href="global.html#client">client</a></li><li><a href="global.html#getAccessToken">getAccessToken</a></li><li><a href="global.html#getAccessTokenValue">getAccessTokenValue</a></li><li><a href="global.html#groupedLogs">groupedLogs</a></li><li><a href="global.html#handleAddRecipe">handleAddRecipe</a></li><li><a href="global.html#handleDelete">handleDelete</a></li><li><a href="global.html#handleImageUpload">handleImageUpload</a></li><li><a href="global.html#handleLoginClick">handleLoginClick</a></li><li><a href="global.html#handleLoginSubmit">handleLoginSubmit</a></li><li><a href="global.html#handleRemoveIngredient">handleRemoveIngredient</a></li><li><a href="global.html#handleSignupClick">handleSignupClick</a></li><li><a href="global.html#handleSubmit">handleSubmit</a></li><li><a href="global.html#handleUpdate">handleUpdate</a></li><li><a href="global.html#httpLink">httpLink</a></li><li><a href="global.html#mealTypeOrder">mealTypeOrder</a></li><li><a href="global.html#onSearchSubmit">onSearchSubmit</a></li><li><a href="global.html#stats">stats</a></li><li><a href="global.html#statsBottom">statsBottom</a></li><li><a href="global.html#useEffect">useEffect</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Wed Apr 02 2025 21:47:28 GMT-0400 (Eastern Daylight Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

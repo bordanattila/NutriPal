@@ -1,16 +1,38 @@
+/**
+ * @file SearchBar.jsx
+ * @module SearchBar
+ * @description Component for searching food by name or scanning barcodes.
+ */
 import React, { useState } from "react";
 import { MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/20/solid';
 import BarcodeScanner from './BarcodeScanner';
 
+/**
+ * Renders a search bar with text input and barcode scanning functionality.
+ *
+ * @param {Object} props
+ * @param {string} props.nameOfFood - The current food name input value.
+ * @param {Function} props.setNameOfFood - Function to update the food name.
+ * @param {Function} props.handleSearch - Function to trigger food search.
+ * @param {Function} props.clearSearch - Function to clear the input.
+ * @param {string} props.error - Error message to display.
+ * @returns {JSX.Element} The rendered search bar component.
+ */
 const SearchBar = ({ nameOfFood, setNameOfFood, handleSearch, clearSearch, error }) => {
   const [scanning, setScanning] = useState(false);
-
+  /**
+   * Toggles the visibility of the barcode scanner.
+   */
   const handleToggleScanning = () => {
     // Toggle the scanner on or off.
     setScanning(prev => !prev);
   };
 
-  // When BarcodeScanner detects a barcode.
+  /**
+   * Callback for barcode scanner success.
+   * Sets the scanned barcode as the search input.
+   * @param {string} barcode - The detected barcode string.
+   */
   const handleDetectedBarcode = (barcode) => {
     setNameOfFood(barcode);
     // Stop scanning once a barcode is detected

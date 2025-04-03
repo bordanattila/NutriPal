@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: pages/Dashboard.jsx</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: pages/Dashboard.jsx</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * @file Dashboard.jsx
+ * @description Displays a dashboard with daily nutrition statistics using charts and summaries. Fetches today's food logs from the backend API.
+ */
+
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from "react-router-dom";
+import Auth from '../utils/auth';
+import { useQuery } from '@apollo/client';
+import { GET_USER } from '../utils/mutations';
+import DonutChart from '../components/Donut';
+import useAuth from '../hooks/RefreshToken';
+import ky from 'ky';
+import { DateTime } from "luxon";
+
+/**
+ * @constant api
+ * @description Pre-configured ky instance for sending API requests with base URL.
+ */
+const api = ky.create({
+  prefixUrl: process.env.REACT_APP_API_URL,
+});
+
+/**
+ * @component Dashboard
+ * @description Main dashboard component for logged-in users. Displays nutrition totals and visual summaries.
+ * @returns {JSX.Element}
+ */
+const Dashboard = () => {
+  const navigate = useNavigate();
+  // Validate token and refresh if needed
+  useAuth();
+  // State: raw log data and totals
+  const [todaysLog, setTodaysLog] = useState([]);
+  const [calorieTotal, setCalorieTotal] = useState(0);
+  const [carbTotal, setCarbTotal] = useState(0);
+  const [proteinTotal, setProteinTotal] = useState(0);
+  const [fatTotal, setFatTotal] = useState(0);
+  const [fiberTotal, setFiberTotal] = useState(0);
+  const [sodiumTotal, setSodiumTotal] = useState(0);
+  const [saturatedFatTotal, setSaturatedFatTotal] = useState(0);
+  const [goal, setGoal] = useState(0);
+  /** @state {DateTime} date - Current selected day (default: today) */
+  const [date, setDate] = useState(DateTime.now());
+
+  const luxonDate = DateTime.isDateTime(date) ? date : DateTime.fromJSDate(date);
+  const todaysDate = luxonDate.toFormat('yyyy-MM-dd');
+
+  /**
+   * @description Query current user using JWT in headers
+   */
+  const { loading, data, error } = useQuery(GET_USER, {
+    context: {
+      headers: {
+        Authorization: `Bearer ${Auth.getToken()}`,
+      },
+    },
+    onError: (err) => {
+      setDate(DateTime.now())
+      console.error(err);
+      // Check if the error is due to an expired token
+      if (err.message.includes("Unauthorized")) {
+        // Attempt to refresh the token
+        const refreshSuccess = Auth.refreshToken();
+        if (!refreshSuccess) {
+          navigate('/login');
+        }
+      } else {
+        // For other errors, navigate to login
+        navigate('/login');
+      }
+    }
+  });
+
+
+  const userId = data?.user?._id;
+  const calgoal = data?.user?.calorieGoal;
+
+  /**
+   * @function useEffect
+   * @description Fetches today's food log for the user and sets the daily goal.
+   */
+  useEffect(() => {
+    const fetchTodaysLog = async () => {
+      if (!userId) return;
+      try {
+        const response = await api.get(`api/foodByDate/${userId}/date/${todaysDate}`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        const data = await response.json();
+        setTodaysLog(data.foods);
+      } catch (error) {
+        console.error('Error fetching todays foods:', error);
+      }
+    };
+    setGoal(calgoal)
+    fetchTodaysLog();
+  }, [userId, calgoal, todaysDate, todaysLog]);
+
+  /**
+   * @function useEffect
+   * @description Aggregates totals for calories and macros from today's logged foods.
+   */
+  useEffect(() => {
+    const totalCalories = async () => {
+      const totalCal = todaysLog?.reduce((sum, { calories = 0 }) => sum + calories, 0).toFixed(1) ?? 0;
+      const totalCarb = todaysLog?.reduce((sum, { carbohydrate = 0 }) => sum + carbohydrate, 0).toFixed(1) ?? 0;
+      const totalProtein = todaysLog?.reduce((sum, { protein = 0 }) => sum + protein, 0).toFixed(1) ?? 0;
+      const totalFat = todaysLog?.reduce((sum, { fat = 0 }) => sum + fat, 0).toFixed(1) ?? 0;
+      const totalSodium = todaysLog?.reduce((sum, { sodium = 0 }) => sum + sodium, 0).toFixed(1) ?? 0;
+      const totalFiber = todaysLog?.reduce((sum, { fiber = 0 }) => sum + fiber, 0).toFixed(1) ?? 0;
+      const totalSaturatedFat = todaysLog?.reduce((sum, { saturated_fat = 0 }) => sum + saturated_fat, 0).toFixed(1) ?? 0;
+      setCalorieTotal(totalCal);
+      setCarbTotal(totalCarb);
+      setProteinTotal(totalProtein);
+      setFatTotal(totalFat);
+      setSodiumTotal(totalSodium);
+      setFiberTotal(totalFiber);
+      setSaturatedFatTotal(totalSaturatedFat);
+    }
+    totalCalories();
+  }, [todaysLog]);
+
+  /**
+   * @constant stats
+   * @description Macro nutrient stats for top section
+   */
+  const stats = [
+    { name: 'Carb', value: carbTotal || 0 },
+    { name: 'Protein', value: proteinTotal || 0 },
+    { name: 'Fat', value: fatTotal || 0 },
+    { name: 'Calories', value: calorieTotal || 0 },
+  ]
+
+  /**
+   * @constant statsBottom
+   * @description Supplementary stats for bottom section
+   */
+  const statsBottom = [
+    { name: 'Sodium', value: sodiumTotal || 0 },
+    { name: 'Fiber', value: fiberTotal || 0 },
+    { name: 'Saturated Fat', value: saturatedFatTotal || 0 },
+
+  ]
+
+  // Handle loading and error states
+  if (loading) return &lt;div>Loading...&lt;/div>;
+  if (error) return &lt;div>Error: {error.message}&lt;/div>;
+
+  // UI rendering
+  return (
+    &lt;>
+      &lt;h1 className="text-center text-4xl font-bold text-gray-800 mb-4">Dashboard&lt;/h1>
+
+      &lt;dl className="flex justify-center gap-8 sm:mt-20 sm:grid-cols-2 lg:grid-cols-4 bg-gradient-to-br from-teal-200 via-cyan-300 to-blue-300 p-6">
+        &lt;div className="flex flex-row gap-5">
+          {stats.map((stat) => (
+            &lt;div key={stat.name} >
+              &lt;dt className="text-sm text-gray-900">{stat.name}&lt;/dt>
+              &lt;dd className="text-xl font-semibold tracking-tight text-black">
+                {typeof stat.value === 'number' ? stat.value.toFixed(1) : stat.value}
+              &lt;/dd>
+            &lt;/div>
+          ))}
+          &lt;div>
+            &lt;dt className="text-sm text-gray-900">Calorie Goal&lt;/dt>
+            &lt;dd className="text-xl font-semibold tracking-tight text-black">{goal}&lt;/dd>
+          &lt;/div>
+        &lt;/div>
+      &lt;/dl>
+      &lt;div className='flex justify-center'>
+        &lt;DonutChart stats={stats} />
+      &lt;/div>
+      &lt;dl className="flex justify-center gap-8 sm:mt-20 sm:grid-cols-2 lg:grid-cols-4 bg-gradient-to-br from-teal-200 via-cyan-300 to-blue-300 p-6">
+        &lt;div className="flex flex-row gap-5">
+          {statsBottom.map((statsBottom) => (
+            &lt;div key={statsBottom.name} >
+              &lt;dt className="text-sm text-gray-900">{statsBottom.name}&lt;/dt>
+              &lt;dd className="text-xl font-semibold tracking-tight text-black">
+                {typeof statsBottom.value === 'number' ? statsBottom.value.toFixed(1) : statsBottom.value}
+              &lt;/dd>
+            &lt;/div>
+          ))}
+        &lt;/div>
+      &lt;/dl>
+    &lt;/>
+  );
+};
+
+export default Dashboard;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-DonutChart.html">DonutChart</a></li><li><a href="module-DropdownMenu.html">DropdownMenu</a></li><li><a href="module-FoodDetails.html">FoodDetails</a></li><li><a href="module-Footer.html">Footer</a></li><li><a href="module-Header.html">Header</a></li><li><a href="module-LogOptions.html">LogOptions</a></li><li><a href="module-LogRecipe.html">LogRecipe</a></li><li><a href="module-Navigation.html">Navigation</a></li><li><a href="module-SavedRecipes.html">SavedRecipes</a></li><li><a href="module-SearchBar.html">SearchBar</a></li><li><a href="module-SearchComponent.html">SearchComponent</a></li><li><a href="module-useAuth.html">useAuth</a></li></ul><h3>Classes</h3><ul><li><a href="AuthService.html">AuthService</a></li></ul><h3>Global</h3><ul><li><a href="global.html#BarcodeScanner">BarcodeScanner</a></li><li><a href="global.html#Calendar">Calendar</a></li><li><a href="global.html#DailyLogs">DailyLogs</a></li><li><a href="global.html#Dashboard">Dashboard</a></li><li><a href="global.html#GET_ONE_FOOD">GET_ONE_FOOD</a></li><li><a href="global.html#GET_USER">GET_USER</a></li><li><a href="global.html#Home">Home</a></li><li><a href="global.html#Login">Login</a></li><li><a href="global.html#Profile">Profile</a></li><li><a href="global.html#Recipe">Recipe</a></li><li><a href="global.html#Search">Search</a></li><li><a href="global.html#Signup">Signup</a></li><li><a href="global.html#UPDATE_USER_PROFILE">UPDATE_USER_PROFILE</a></li><li><a href="global.html#api">api</a></li><li><a href="global.html#authLink">authLink</a></li><li><a href="global.html#clearIngredients">clearIngredients</a></li><li><a href="global.html#clearSearch">clearSearch</a></li><li><a href="global.html#clearSearch-Clearsfoodsearchinputandresults">clearSearch - Clears food search input and results</a></li><li><a href="global.html#client">client</a></li><li><a href="global.html#getAccessToken">getAccessToken</a></li><li><a href="global.html#getAccessTokenValue">getAccessTokenValue</a></li><li><a href="global.html#groupedLogs">groupedLogs</a></li><li><a href="global.html#handleAddRecipe">handleAddRecipe</a></li><li><a href="global.html#handleDelete">handleDelete</a></li><li><a href="global.html#handleImageUpload">handleImageUpload</a></li><li><a href="global.html#handleLoginClick">handleLoginClick</a></li><li><a href="global.html#handleLoginSubmit">handleLoginSubmit</a></li><li><a href="global.html#handleRemoveIngredient">handleRemoveIngredient</a></li><li><a href="global.html#handleSignupClick">handleSignupClick</a></li><li><a href="global.html#handleSubmit">handleSubmit</a></li><li><a href="global.html#handleUpdate">handleUpdate</a></li><li><a href="global.html#httpLink">httpLink</a></li><li><a href="global.html#mealTypeOrder">mealTypeOrder</a></li><li><a href="global.html#onSearchSubmit">onSearchSubmit</a></li><li><a href="global.html#stats">stats</a></li><li><a href="global.html#statsBottom">statsBottom</a></li><li><a href="global.html#useEffect">useEffect</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Wed Apr 02 2025 21:47:28 GMT-0400 (Eastern Daylight Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

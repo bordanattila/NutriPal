@@ -1,6 +1,14 @@
+/**
+ * @file auth.js
+ * @description Client-side authentication utility to handle JWT tokens, login state, token refreshing, and redirection.
+ */
 import { jwtDecode } from 'jwt-decode';
 import ky from 'ky';
 
+/**
+ * @constant api
+ * @description Ky instance for authenticated HTTP requests
+ */
 const api = ky.create({
   prefixUrl: process.env.REACT_APP_API_URL,
   headers: {
@@ -8,39 +16,62 @@ const api = ky.create({
   },
 });
 
+/**
+ * @class AuthService
+ * @classdesc Utility class for managing user authentication and tokens on the client.
+ */
 class AuthService {
-  // Retrieve user data from the decoded token
+  /**
+   * Get decoded user profile from token.
+   * @returns {Object|null} Decoded token payload
+   */
   getProfile = () => {
     return this.decodeToken(this.getToken());
   };
 
-  // Check if the user is logged in
+   /**
+   * Check if the user is currently logged in.
+   * @returns {boolean}
+   */
   loggedIn = () => {
     const token = this.getToken();
     return !!token && !this.isTokenExpired(token);
   };
 
-  // Check if the token is expired
+   /**
+   * Determine if token is expired.
+   * @param {string} token - JWT token string
+   * @returns {boolean}
+   */
   isTokenExpired = (token) => {
     const decoded = this.decodeToken(token);
     const isExpired = decoded ? decoded.exp < Date.now() / 1000 : true; // Return true if token is invalid or expired
     return isExpired;
   };
 
-  // Retrieve the user token from localStorage
+  /**
+   * Retrieve JWT from localStorage.
+   * @returns {string|null}
+   */
   getToken = () => {
     const token = localStorage.getItem('id_token');
     return token;
   };
 
-  // Save user token to localStorage and redirect to dashboard
+    /**
+   * Save JWT to localStorage and redirect to dashboard.
+   * @param {string} idToken - JWT token
+   */
   login = (idToken) => {
     // localStorage.removeItem('id_token');
     localStorage.setItem('id_token', idToken);
     window.location.assign('/dashboard');
   };
 
-  // Refresh token for user
+  /**
+   * Attempt to refresh token using stored refresh token.
+   * @returns {Promise<boolean>} Success of token refresh
+   */
   refreshToken = async () => {
     const refreshToken = localStorage.getItem('refreshToken');
     if (refreshToken) {
@@ -59,13 +90,20 @@ class AuthService {
     }
   };
 
-  // Clear user token and redirect to home
+  /**
+   * Clear token and redirect to homepage.
+   */
   logout = () => {
     localStorage.removeItem('id_token');
+    localStorage.removeItem('refreshToken'); 
     window.location.assign('/');
   };
 
-  // Decode the token with error handling
+  /**
+   * Decode a JWT token safely.
+   * @param {string} token - JWT string
+   * @returns {Object|null} Decoded payload
+   */
   decodeToken = (token) => {
     try {
       return jwtDecode(token);

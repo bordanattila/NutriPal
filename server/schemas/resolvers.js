@@ -1,10 +1,23 @@
+/**
+ * @file resolvers.js
+ * @description GraphQL resolvers for queries and mutations related to users, logs, and recipes.
+ */
 const { AuthenticationError } = require("apollo-server-express");
 const User = require("../models/User");
 const { signInToken } = require("../utils/auth");
 const DailyLog = require("../models/DailyLog");
 
 const resolvers = {
+  /**
+   * @type {Query}
+   * @description Handles all GraphQL queries
+   */
   Query: {
+    /**
+     * @route GET /graphql -> user
+     * @desc Returns the authenticated user's data
+     * @access Private
+     */
     user: async (parent, args, context) => {
       // Check if user is still logged in. If not throw error
       if (!context.user) {
@@ -15,15 +28,36 @@ const resolvers = {
         .select('-__v -password');
       return userData;
     },
+
+    /**
+     * @route GET /graphql -> getDailyLog
+     * @desc Retrieves a user's daily log by user_id and date
+     * @access Private
+     */
     getDailyLog: async (_, { user_id, date }) => {
       return DailyLog.findOne({ user_id, dateCreated: date });
     },
+
+    /**
+     * @route GET /graphql -> getOneFood
+     * @desc Fetches a single logged food item by user_id and food_id
+     * @access Private
+     */
     getOneFood: async (_, { user_id, food_id }) => {
       return OneFood.findOne({ _id: food_id, user_id, created });
     }
   },
 
+  /**
+   * @type {Mutation}
+   * @description Handles all GraphQL mutations
+   */
   Mutation: {
+    /**
+     * @route POST /graphql -> login
+     * @desc Authenticates a user and returns a signed JWT
+     * @access Public
+     */
     login: async (parent, { username, password }) => {
       const user = await User.findOne({ username });
       if (!user) {
@@ -36,6 +70,12 @@ const resolvers = {
       const token = signInToken(user);
       return { token, user };
     },
+
+    /**   
+     * @route POST /graphql -> signup
+     * @desc Registers a new user
+     * @access Public
+     */
     signup: async (parent, { username, email, password }) => {
 
       // Check if username or email already exists
@@ -57,7 +97,12 @@ const resolvers = {
       return { token, user };
     },
 
-    // Create daily log mutation
+    /**   
+     * @route POST /graphql -> createDailyLog
+     * @desc Creates a new daily log with selected foods
+     * @access Private
+     */
+
     createDailyLog: async (_, { user_id, foods }) => {
       const newLog = new DailyLog({
         user_id,
@@ -67,7 +112,11 @@ const resolvers = {
       return await newLog.save();
     },
 
-    // Update user profile mutation
+    /**
+     * @route POST /graphql -> updateUserProfile
+     * @desc Updates a user's profile details (password, calorie goal, profile pic)
+     * @access Private
+     */
     updateUserProfile: async (_, { userId, calorieGoal, password, profilePic }, context) => {
       if (!context.user) {
         throw new AuthenticationError('You need to be logged in!');
@@ -93,7 +142,11 @@ const resolvers = {
       return user;
     },
 
-    // Create recipe mutation
+    /**
+     * @route POST /graphql -> createRecipe
+     * @desc Saves a custom recipe based on OneFood entries
+     * @access Private
+     */
     createRecipe: async (_, { user_id, recipeName, ingredients, servingSize, nutrition }) => {
       const recipe = new Recipe({
         user_id,
@@ -105,7 +158,11 @@ const resolvers = {
       return await recipe.save();
     },
 
-    // Delete one food item from daily log
+    /**
+     * @route DELETE /graphql -> deleteOneFood
+     * @desc Deletes a food entry from a user's daily log
+     * @access Private
+     */
     deleteOneFood: async (_, { log_id, food_id }) => {
       const updatedDailyLog = await DailyLog.findOneAndUpdate(
         { _id: log_id },
