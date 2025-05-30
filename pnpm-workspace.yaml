@@ -1,0 +1,7 @@
+packages:
+  # apps
+  - "apps/*"
+  # server (because it’s still its own Node project)
+  - "server"
+  # shared libraries (you’ll make this folder soon, if you haven’t)
+  - "packages/*"
