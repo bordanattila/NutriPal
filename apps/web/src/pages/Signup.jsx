@@ -5,7 +5,8 @@
 import React, { useState } from 'react';
 import ky from 'ky';
 import { useNavigate } from 'react-router-dom';
-import Auth from "../utils/auth";
+import Auth from "../../../../packages/hared/src/utils/auth";
+
 
 /**
  * @constant api

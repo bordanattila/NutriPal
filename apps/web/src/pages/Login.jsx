@@ -4,7 +4,7 @@
  */
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Auth from "../utils/auth";
+import Auth from "../../../../packages/hared/src/utils/auth";
 import ky from 'ky';
 
 /**

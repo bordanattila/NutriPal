@@ -5,7 +5,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "watch": "nodemon server.js"
+    "watch": "nodemon server.js",
+    "dev": "nodemon src/index.js"
   },
   "author": "Attila",
   "license": "ISC",

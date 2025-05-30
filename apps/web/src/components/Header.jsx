@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import Auth from '../utils/auth';
+import Auth from '../../../../packages/hared/src/utils/auth';
 import { Disclosure, Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
 import { UserCircleIcon, Cog6ToothIcon } from '@heroicons/react/24/outline'
 import NutriPalLogo from '../images/NutripalLogo.png';

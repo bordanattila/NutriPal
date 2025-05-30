@@ -6,10 +6,10 @@
 import React, { useEffect, useState } from 'react';
 import ky from 'ky';
 import { useNavigate, Link } from 'react-router-dom';
-import Auth from '../utils/auth';
+import Auth from '../../../../packages/hared/src/utils/auth';
 import { useQuery } from '@apollo/client';
-import { GET_USER } from '../utils/mutations';
-import useAuth from '../hooks/RefreshToken';
+import { GET_USER } from '../../../../packages/hared/src/utils/mutations';
+import useAuth from '../../../../hooks/RefreshToken';
 import SearchBar from '../components/SearchBar';
 import { handleSearch } from '../components/SearchComponent';
 

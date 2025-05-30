@@ -127,12 +127,12 @@ startApolloServer(typeDefs, resolvers);
  * - In development: serves from /public folder
  */
 if (process.env.NODE_ENV === 'production') {
-  console.log('Serving static files from:', path.join(__dirname, '../client/build'));
+  console.log('Serving static files from:', path.join(__dirname, '../apps/web/build'));
   app.use(express.static(path.join(__dirname, '../apps/web/build')));
   
-  // Create a route that will serve up the `../client/build/index.html` page
+  // Create a route that will serve up the `../apps/web/build/index.html` page
   app.get('*', (req, res) => {    
-    res.sendFile(path.join(__dirname, '../client/build', 'index.html'));
+    res.sendFile(path.join(__dirname, '../apps.web/build', 'index.html'));
   });
 } else {
   app.use(express.static(path.join(__dirname, 'public')));

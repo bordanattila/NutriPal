@@ -175,6 +175,9 @@ importers:
       react-toastify:
         specifier: ^10.0.6
         version: 10.0.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      rg:
+        specifier: ^0.0.2
+        version: 0.0.2
       tailwindcss:
         specifier: ^3.4.13
         version: 3.4.17
@@ -7057,6 +7060,10 @@ packages:
   reusify@1.1.0:
     resolution: {integrity: sha512-g6QUff04oZpHs0eG5p83rFLhHeV00ug/Yf9nZM6fLeUrPguBTkTQOdpAWWspMh55TZfVQDPaN3NQJfbVRAxdIw==}
     engines: {iojs: '>=1.0.0', node: '>=0.10.0'}
+
+  rg@0.0.2:
+    resolution: {integrity: sha512-mDR+iODuzY3LJj6dMxwhYmylHAnh050edYRsSRcCR+jZx7Pacz+VVAwqGTOFAV+058N53504CglWitWZ16/yQg==}
+    hasBin: true
 
   rimraf@3.0.2:
     resolution: {integrity: sha512-JZkJMZkAGFFPP2YqXZXPbMlMBgsxzE8ILs4lMIX/2o0L9UBw9O/Y3o6wFw/i9YLapcUJWwqbi3kdxIPdC62TIA==}
@@ -17145,6 +17152,8 @@ snapshots:
   retry@0.13.1: {}
 
   reusify@1.1.0: {}
+
+  rg@0.0.2: {}
 
   rimraf@3.0.2:
     dependencies:

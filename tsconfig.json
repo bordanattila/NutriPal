@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    /* === generic settings === */
+    "target": "ES2020",
+    "moduleResolution": "Node",
+    "module": "ESNext",
+    "jsx": "react-jsx",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+
+    /* === path alias so both apps & server see shared code === */
+    "baseUrl": ".",
+    "paths": {
+      "@nutripal/shared/*": ["packages/shared/src/*"]
+    }
+  },
+
+  /* Let tsc know each sub-project is its own compilation unit */
+  "references": [
+    { "path": "apps/web" },
+    { "path": "apps/mobile" },
+    { "path": "server" },
+    { "path": "packages/shared" }
+  ]
+}
