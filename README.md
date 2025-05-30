@@ -5,8 +5,8 @@
 
 ## 📸 Preview
 
-![NutriPal UI Screenshot](./client/src/images/dashboard.png)
-![NutriPal UI Screenshot](./client/src/images/NutripalFoodDetails.png)
+![NutriPal UI Dashboard](./client/src/images/dashboard.png)
+![NutriPal UI Food Details](./client/src/images/NutripalFoodDetails.png)
 
 
 ## 🚀 Features
@@ -48,11 +48,10 @@ cd nutripal
 `npm install`
 
 ### 3️⃣ Create `.env` File
-`
-REACT_APP_API_URL=http://localhost:3001
-REACT_APP_CLIENT_ID=your-fatsecret-client-id
-REACT_APP_CLIENT_SECRET=your-fatsecret-client-secret
-`
+`REACT_APP_API_URL=http://localhost:3001`
+`REACT_APP_CLIENT_ID=your-fatsecret-client-id`
+`REACT_APP_CLIENT_SECRET=your-fatsecret-client-secret`
+
 Note: Ensure your FatSecret API credentials are valid and whitelisted by IP.
 
 ### ▶️ Running the App
@@ -66,9 +65,18 @@ client/
 ├── pages/             # Pages like Dashboard, Profile, Recipe, Search
 ├── utils/             # Auth, API wrappers, Apollo setup
 ├── hooks/             # Custom hooks like useAuth()
-├── styles/            # Tailwind / CSS files
 ├── App.jsx
 └── index.js
+
+server/
+├── config/            # Connection to the MongoDB
+├── controllers/       # API routes
+├── models/            # MongoDB schema definitions
+├── schemas            # GraphQL schema definition
+├── utils/             # Auth, Barcode converter, Nutrition calculator
+├── server.js          # Express setup
+└── package.json
+
 ```
 
 ### 🔐 Authentication Flow
