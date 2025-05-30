@@ -5,8 +5,8 @@
 
 ## 📸 Preview
 
-![NutriPal UI Dashboard](./client/src/images/dashboard.png)
-![NutriPal UI Food Details](./client/src/images/NutripalFoodDetails.png)
+![NutriPal UI Dashboard](./apps/web/src/images/dashboard.png)
+![NutriPal UI Food Details](./apps/web/src/images/NutriPalFoodDetails.png)
 
 
 ## 🚀 Features
