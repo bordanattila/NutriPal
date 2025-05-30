@@ -27,23 +27,23 @@ jobs:
         run: |
           echo "Current directory structure:"
           ls -la
-          echo "Client directory structure:"
-          ls -la client || echo "Client directory not found"
+          echo "Web directory structure:"
+          ls -la apps/web || echo "Web directory not found"
 
       - name: Build client application
         run: |
-          echo "Building client application..."
-          cd client
+          echo "Building web application..."
+          cd apps/web
           npm install
           npm run build
-          cd ..
-          echo "Client build complete. Checking build directory:"
-          ls -la client/build || echo "Build directory not found"
+          cd ../..
+          echo "Web build complete. Checking build directory:"
+          ls -la apps/web/build || echo "Build directory not found"
 
       - name: Debug client build directory
         run: |
-          echo "Listing client/build contents:"
-          ls -la client/build
+          echo "Listing apps/web/build contents:"
+          ls -la apps/web/build
 
       - name: Server dependencies and build
         run: |
@@ -66,8 +66,8 @@ jobs:
       
       - name: Prepare deployment package
         run: |
-          echo "Copying client build to deployment folder..."
-          cp -r client/build ./build
+          echo "Copying web build to deployment folder..."
+          cp -r apps/web/build ./build
           echo "Contents of build folder:"
           ls -la build
           echo "Creating deployment package..."
@@ -103,8 +103,8 @@ jobs:
         run: |
           echo "Checking deployed directory structure:"
           ls -la
-          echo "Checking client build directory:"
-          ls -la client/build || echo "Build directory not found"
+          echo "Checking web build directory:"
+          ls -la apps/web/build || echo "Build directory not found"
       
       - name: Login to Azure
         uses: azure/login@v2
