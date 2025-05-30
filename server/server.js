@@ -128,7 +128,7 @@ startApolloServer(typeDefs, resolvers);
  */
 if (process.env.NODE_ENV === 'production') {
   console.log('Serving static files from:', path.join(__dirname, '../client/build'));
-  app.use(express.static(path.join(__dirname, '../client/build')));
+  app.use(express.static(path.join(__dirname, '../apps/web/build')));
   
   // Create a route that will serve up the `../client/build/index.html` page
   app.get('*', (req, res) => {    
