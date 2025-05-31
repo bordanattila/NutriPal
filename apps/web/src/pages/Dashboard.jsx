@@ -5,11 +5,11 @@
 
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from "react-router-dom";
-import Auth from '../../../../packages/hared/src/utils/auth';
+import Auth from '@nutripal/shared/src/utils/auth';
 import { useQuery } from '@apollo/client';
-import { GET_USER } from '../../../../packages/hared/src/utils/mutations';
+import { GET_USER } from '@nutripal/shared/src/utils/mutations';
 import DonutChart from '../components/Donut';
-import useAuth from '../../../../hooks/RefreshToken';
+import useAuth from '@nutripal/shared/src/hooks/RefreshToken';
 import ky from 'ky';
 import { DateTime } from "luxon";
 

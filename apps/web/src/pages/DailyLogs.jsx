@@ -6,10 +6,10 @@
 import React, { useEffect, useState } from 'react';
 import ky from 'ky';
 import { useNavigate, Link } from "react-router-dom";
-import Auth from '../../../../packages/hared/src/utils/auth';
+import Auth from '@nutripal/shared/src/utils/auth';
 import { useQuery } from '@apollo/client';
-import { GET_USER } from '../../../../packages/hared/src/utils/mutations';
-import useAuth from '../../../../hooks/RefreshToken';
+import { GET_USER } from '@nutripal/shared/src/utils/mutations';
+import useAuth from '@nutripal/shared/src/hooks/RefreshToken';
 import Calendar from '../components/Calendar';
 import { DateTime } from 'luxon';
 

@@ -1,6 +1,7 @@
 {
   "name": "NutriPal",
   "version": "1.0.0",
+  "packageManager": "pnpm@10.11.0",
   "private": true,                
   "description": "calorie tracking app",
   "main": "server/server.js",

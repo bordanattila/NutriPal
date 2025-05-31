@@ -4,9 +4,9 @@
  */
 import React, { useState } from 'react';
 import { useNavigate } from "react-router-dom";
-import Auth from '../../../../../packages/hared/src/utils/auth';
+import Auth from '@nutripal/shared/src/utils/auth';
 import { useQuery, useMutation } from '@apollo/client';
-import { GET_USER, UPDATE_USER_PROFILE } from '../../packages/hared/src/utils/mutations';
+import { GET_USER, UPDATE_USER_PROFILE } from '@nutripal/shared/src/utils/mutations';
 
 /**
  * @component Profile

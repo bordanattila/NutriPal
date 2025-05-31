@@ -3,7 +3,7 @@
  * @description Mongoose model for application users, including authentication logic.
  */
 const { Schema, model } = require("mongoose");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const dailyLogSchema = require('./DailyLog');
 
 /**

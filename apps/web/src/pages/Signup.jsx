@@ -5,7 +5,7 @@
 import React, { useState } from 'react';
 import ky from 'ky';
 import { useNavigate } from 'react-router-dom';
-import Auth from "../../../../packages/hared/src/utils/auth";
+import Auth from "@nutripal/shared/src/utils/auth";
 
 
 /**
