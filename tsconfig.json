@@ -9,6 +9,11 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
+    
+    /* === output settings === */
+    "outDir": "./dist",
+    "rootDir": ".",
+    "composite": true,
 
     /* === path alias so both apps & server see shared code === */
     "baseUrl": ".",
@@ -21,7 +26,6 @@
   "references": [
     { "path": "apps/web" },
     { "path": "apps/mobile" },
-    { "path": "server" },
-    { "path": "packages/shared" }
+    { "path": "server" }
   ]
 }

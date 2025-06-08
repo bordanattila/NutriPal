@@ -47,7 +47,11 @@ app.use(
  * Allows credentials (cookies) to be sent with requests.
  */
 app.use(cors({
-  origin: [process.env.CLIENT_URL, 'https://nutripal-hbcff5htezbqdwe9.canadacentral-01.azurewebsites.net'],
+  origin: [
+    process.env.CLIENT_URL,
+    'https://nutripal-hbcff5htezbqdwe9.canadacentral-01.azurewebsites.net',
+    'http://192.168.1.13:4000' // Mobile app expo dev server
+  ],
   methods: ['GET', 'POST', 'DELETE', 'PUT'],
   credentials: true
 }));
