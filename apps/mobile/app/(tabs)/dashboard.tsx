@@ -6,15 +6,16 @@ import { mobileAuthService as Auth } from "@/utils/authServiceMobile";
 import ky from 'ky';
 import { DateTime } from 'luxon';
 import Footer from '@/components/Footer';
+import DonutChart from '@/components/DonutChart';
 
 interface FoodLog {
   calories: number;
-  carbs: number;
+  carbohydrate: number;
   protein: number;
   fat: number;
   fiber: number;
   sodium: number;
-  saturatedFat: number;
+  saturated_fat: number;
 }
 
 interface DashboardData {
@@ -34,6 +35,17 @@ export default function Dashboard() {
   const [date, setDate] = useState(DateTime.now());
   const [calorieGoal, setCalorieGoal] = useState<number | null>(null);
 
+  // State for nutrient totals
+  const [totals, setTotals] = useState({
+    calories: 0,
+    carbs: 0,
+    protein: 0,
+    fat: 0,
+    fiber: 0,
+    sodium: 0,
+    saturatedFat: 0
+  });
+
   const fetchDashboardData = async () => {
     setLoading(true);
     setError(null);
@@ -46,21 +58,18 @@ export default function Dashboard() {
 
       const token = await Auth.getToken();
       if (!token) {
-        console.log('No token found');
         router.replace('/login');
         return;
       }
 
       const profile = await Auth.getProfile();
       if (!profile) {
-        console.log('No profile found');
         router.replace('/login');
         return;
       }
 
       const userId = profile.data?._id || profile.data?.id || profile._id || profile.id;
       if (!userId) {
-        console.log('Profile data:', profile);
         router.replace('/login');
         return;
       }
@@ -72,12 +81,11 @@ export default function Dashboard() {
       });
 
       const data: any = await response.json();
-
-      const dashboardData: DashboardData = {
+      setDashboardData({
         foods: data.message === "No food has been logged for this day." ? [] : (data.foods || []),
         calorieGoal: data.calorieGoal
-      };
-      setDashboardData(dashboardData);
+      });
+      setCalorieGoal(data.calorieGoal);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
       setError('Failed to fetch dashboard data');
@@ -90,9 +98,17 @@ export default function Dashboard() {
     fetchDashboardData();
   }, [date]);
 
-  const calculateTotals = (foods: FoodLog[] | undefined | null) => {
-    if (!foods || !Array.isArray(foods)) {
-      return {
+  useEffect(() => {
+    const calculateTotals = () => {
+      const newTotals = dashboardData.foods.reduce((acc, food) => ({
+        calories: acc.calories + (food.calories || 0),
+        carbs: acc.carbs + (food.carbohydrate || 0),
+        protein: acc.protein + (food.protein || 0),
+        fat: acc.fat + (food.fat || 0),
+        fiber: acc.fiber + (food.fiber || 0),
+        sodium: acc.sodium + (food.sodium || 0),
+        saturatedFat: acc.saturatedFat + (food.saturated_fat || 0)
+      }), {
         calories: 0,
         carbs: 0,
         protein: 0,
@@ -100,30 +116,26 @@ export default function Dashboard() {
         fiber: 0,
         sodium: 0,
         saturatedFat: 0
-      };
-    }
-    return foods.reduce((acc, food) => {
-      return {
-        calories: acc.calories + (food.calories || 0),
-        carbs: acc.carbs + (food.carbs || 0),
-        protein: acc.protein + (food.protein || 0),
-        fat: acc.fat + (food.fat || 0),
-        fiber: acc.fiber + (food.fiber || 0),
-        sodium: acc.sodium + (food.sodium || 0),
-        saturatedFat: acc.saturatedFat + (food.saturatedFat || 0)
-      };
-    }, {
-      calories: 0,
-      carbs: 0,
-      protein: 0,
-      fat: 0,
-      fiber: 0,
-      sodium: 0,
-      saturatedFat: 0
-    });
-  };
+      });
 
-  const totals = calculateTotals(dashboardData.foods);
+      setTotals(newTotals);
+    };
+
+    calculateTotals();
+  }, [dashboardData.foods]);
+
+  const stats = [
+    { name: 'Carbs', value: totals.carbs },
+    { name: 'Protein', value: totals.protein },
+    { name: 'Fat', value: totals.fat },
+    { name: 'Calories', value: totals.calories },
+  ];
+
+  const statsBottom = [
+    { name: 'Sodium', value: totals.sodium },
+    { name: 'Fiber', value: totals.fiber },
+    { name: 'Saturated Fat', value: totals.saturatedFat },
+  ];
 
   return (
     <View style={styles.container}>
@@ -137,35 +149,50 @@ export default function Dashboard() {
         >
           <Text style={styles.title}>Today's Nutrition</Text>
           
+          <View style={styles.statsCard}>
+            <View style={styles.statsRow}>
+              <View style={styles.statItem}>
+                <Text style={styles.statLabel}>Carb</Text>
+                <Text style={styles.statValue}>{totals.carbs.toFixed(1)}g</Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <Text style={styles.statLabel}>Protein</Text>
+                <Text style={styles.statValue}>{totals.protein.toFixed(1)}g</Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <Text style={styles.statLabel}>Fat</Text>
+                <Text style={styles.statValue}>{totals.fat.toFixed(1)}g</Text>
+              </View>
+            </View>
+            
+            <View style={styles.rowDivider} />
+            
+            <View style={styles.statsRow}>
+              <View style={styles.statItem}>
+                <Text style={styles.statLabel}>Calories</Text>
+                <Text style={styles.statValue}>{totals.calories.toFixed(1)} kcal</Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <Text style={styles.statLabel}>Goal</Text>
+                <Text style={styles.statValue}>{(calorieGoal || 0).toFixed(1)} kcal</Text>
+              </View>
+            </View>
+          </View>
+
+          <DonutChart stats={stats} />
+
           <View style={styles.statsContainer}>
-            <View style={styles.statCard}>
-              <Text style={styles.statLabel}>Calories</Text>
-              <Text style={styles.statValue}>{totals.calories}</Text>
-            </View>
-            <View style={styles.statCard}>
-              <Text style={styles.statLabel}>Carbs</Text>
-              <Text style={styles.statValue}>{totals.carbs}g</Text>
-            </View>
-            <View style={styles.statCard}>
-              <Text style={styles.statLabel}>Protein</Text>
-              <Text style={styles.statValue}>{totals.protein}g</Text>
-            </View>
-            <View style={styles.statCard}>
-              <Text style={styles.statLabel}>Fat</Text>
-              <Text style={styles.statValue}>{totals.fat}g</Text>
-            </View>
-            <View style={styles.statCard}>
-              <Text style={styles.statLabel}>Fiber</Text>
-              <Text style={styles.statValue}>{totals.fiber}g</Text>
-            </View>
-            <View style={styles.statCard}>
-              <Text style={styles.statLabel}>Sodium</Text>
-              <Text style={styles.statValue}>{totals.sodium}mg</Text>
-            </View>
-            <View style={styles.statCard}>
-              <Text style={styles.statLabel}>Saturated Fat</Text>
-              <Text style={styles.statValue}>{totals.saturatedFat}g</Text>
-            </View>
+            {statsBottom.map((stat) => (
+              <View key={stat.name} style={styles.statItem}>
+                <Text style={styles.statLabel}>{stat.name}</Text>
+                <Text style={styles.statValue}>
+                  {stat.value.toFixed(1)}{stat.name === 'Sodium' ? 'mg' : 'g'}
+                </Text>
+              </View>
+            ))}
           </View>
         </ScrollView>
         <Footer />
@@ -199,22 +226,51 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     gap: 12,
-  },
-  statCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     padding: 16,
-    width: '48%',
-    marginBottom: 12,
+    borderRadius: 12,
+    marginBottom: 20,
+  },
+  statsCard: {
+    flexDirection: 'column',
+    backgroundColor: '#00b4d8',
+    borderRadius: 8,
+    marginBottom: 20,
+    marginHorizontal: 4,
+    padding: 8,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+  },
+  statItem: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 4,
+  },
+  statDivider: {
+    width: 1,
+    height: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    marginHorizontal: 4,
+  },
+  rowDivider: {
+    height: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    marginVertical: 4,
+    marginHorizontal: 12,
   },
   statLabel: {
-    fontSize: 16,
-    color: '#333',
-    marginBottom: 8,
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.8)',
+    marginBottom: 2,
   },
   statValue: {
-    fontSize: 20,
+    fontSize: 16,
     fontWeight: 'bold',
-    color: '#0077b6',
+    color: '#ffffff',
   },
 }); 
