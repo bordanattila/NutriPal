@@ -1,34 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
-import { useNavigation, NavigationProp } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-
-type RootStackParamList = {
-  dashboard: undefined;
-  signup: undefined;
-};
-
-interface LoginResponse {
-  token?: string;
-  refreshToken?: string;
-  message?: string;
-}
+import Footer from '@/components/Footer';
 import * as SecureStore from 'expo-secure-store';
-
-interface LoginResponse {
-  token?: string;
-  refreshToken?: string;
-  message?: string;
-}
 import { mobileAuthService as Auth } from "@/utils/authServiceMobile";
 import ky from 'ky';
+
+interface LoginResponse {
+  token?: string;
+  refreshToken?: string;
+  message?: string;
+}
 
 const api = ky.create({
   prefixUrl: process.env.EXPO_PUBLIC_API_URL || 'http://192.168.1.13:4000',
 });
 
 export default function Login() {
-  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const router = useRouter();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -71,7 +61,7 @@ export default function Login() {
           if (data?.refreshToken) {
             await SecureStore.setItemAsync('refreshToken', data.refreshToken);
           }
-          navigation.navigate('dashboard');
+          router.replace('/(tabs)/dashboard');
         } else {
           setError('Failed to complete login process');
         }
@@ -89,7 +79,6 @@ export default function Login() {
       setLoading(false);
     }
   };
-
 
   if (loading) return (
     <View style={styles.container}>
@@ -137,11 +126,12 @@ export default function Login() {
 
         <TouchableOpacity
           style={styles.signupLink}
-          onPress={() => navigation.navigate('signup')}
+          onPress={() => router.push('/signup')}
         >
           <Text style={styles.signupText}>Don't have an account? Sign up</Text>
         </TouchableOpacity>
       </View>
+      <Footer />
     </LinearGradient>
   );
 }

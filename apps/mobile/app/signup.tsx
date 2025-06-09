@@ -4,6 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { AppStackNavigationProp } from '../types/navigation';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as SecureStore from 'expo-secure-store';
+import Footer from '@/components/Footer';
 
 interface SignupResponse {
   token?: string;
@@ -120,6 +121,7 @@ export default function Signup() {
           <Text style={styles.loginText}>Already have an account? Login</Text>
         </TouchableOpacity>
       </View>
+      <Footer />
     </LinearGradient>
   );
 }

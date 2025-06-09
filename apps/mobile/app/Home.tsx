@@ -1,8 +1,9 @@
 import React, { useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { mobileAuthService as Auth } from '@/utils/authServiceMobile';
+import Footer from '@/components/Footer';
 
 export default function Home() {
   const router = useRouter();
@@ -52,6 +53,7 @@ export default function Home() {
           <Text style={styles.buttonText}>Signup</Text>
         </TouchableOpacity>
       </View>
+      <Footer />
     </LinearGradient>
   );
 }
@@ -112,4 +114,4 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 20,
   },
-});
+}); 
