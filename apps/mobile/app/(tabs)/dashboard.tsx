@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { mobileAuthService as Auth } from "@/utils/authServiceMobile";
 import ky from 'ky';
 import { DateTime } from 'luxon';
+import Footer from '@/components/Footer';
 
 interface FoodLog {
   calories: number;
@@ -19,7 +20,7 @@ interface FoodLog {
 interface DashboardData {
   foods: FoodLog[];
   calorieGoal?: number;
-};
+}
 
 const api = ky.create({
   prefixUrl: process.env.EXPO_PUBLIC_API_URL || 'http://192.168.1.13:4000',
@@ -37,14 +38,12 @@ export default function Dashboard() {
     setLoading(true);
     setError(null);
     try {
-      // First check if we're logged in
       const isLoggedIn = await Auth.loggedIn();
       if (!isLoggedIn) {
         router.replace('/login');
         return;
       }
 
-      // Get the token
       const token = await Auth.getToken();
       if (!token) {
         console.log('No token found');
@@ -52,7 +51,6 @@ export default function Dashboard() {
         return;
       }
 
-      // Get the profile
       const profile = await Auth.getProfile();
       if (!profile) {
         console.log('No profile found');
@@ -60,7 +58,6 @@ export default function Dashboard() {
         return;
       }
 
-      // Try to get user ID from profile - it's nested inside data object
       const userId = profile.data?._id || profile.data?.id || profile._id || profile.id;
       if (!userId) {
         console.log('Profile data:', profile);
@@ -76,56 +73,22 @@ export default function Dashboard() {
 
       const data: any = await response.json();
 
-      // Handle case where no food has been logged
       const dashboardData: DashboardData = {
         foods: data.message === "No food has been logged for this day." ? [] : (data.foods || []),
         calorieGoal: data.calorieGoal
       };
       setDashboardData(dashboardData);
-      setLoading(false);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
-      setError('Failed to fetch dashboard data. Please try again.');
+      setError('Failed to fetch dashboard data');
+    } finally {
       setLoading(false);
-      
-      // If we get an unauthorized error, try to refresh the token
-      if (error instanceof Error && error.message.includes('Unauthorized')) {
-        const refreshSuccess = await Auth.refreshToken();
-        if (refreshSuccess) {
-          fetchDashboardData();
-        } else {
-          Auth.logout();
-          router.replace('/login');
-        }
-      }
     }
   };
 
   useEffect(() => {
     fetchDashboardData();
-  }, []);
-
-  useEffect(() => {
-    fetchDashboardData();
   }, [date]);
-
-  if (loading) return (
-    <View style={styles.container}>
-      <Text>Loading...</Text>
-    </View>
-  );
-
-  if (error) return (
-    <View style={styles.container}>
-      <Text style={styles.error}>{error}</Text>
-      <TouchableOpacity 
-        style={styles.retryButton} 
-        onPress={fetchDashboardData}
-      >
-        <Text style={styles.retryButtonText}>Retry</Text>
-      </TouchableOpacity>
-    </View>
-  );
 
   const calculateTotals = (foods: FoodLog[] | undefined | null) => {
     if (!foods || !Array.isArray(foods)) {
@@ -163,55 +126,51 @@ export default function Dashboard() {
   const totals = calculateTotals(dashboardData.foods);
 
   return (
-    <LinearGradient
-      colors={['#00b4d8', '#0077b6', '#023e8a']}
-      style={styles.container}
-    >
-      <ScrollView 
-        style={styles.scrollView}
-        contentContainerStyle={styles.content}
+    <View style={styles.container}>
+      <LinearGradient
+        colors={['#00b4d8', '#0077b6', '#023e8a']}
+        style={styles.gradient}
       >
-        <Text style={styles.title}>Today's Nutrition</Text>
-        
-        <View style={styles.statsContainer}>
-          <View style={styles.statCard}>
-            <Text style={styles.statLabel}>Calories</Text>
-            <Text style={styles.statValue}>{totals.calories}</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statLabel}>Carbs</Text>
-            <Text style={styles.statValue}>{totals.carbs}g</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statLabel}>Protein</Text>
-            <Text style={styles.statValue}>{totals.protein}g</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statLabel}>Fat</Text>
-            <Text style={styles.statValue}>{totals.fat}g</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statLabel}>Fiber</Text>
-            <Text style={styles.statValue}>{totals.fiber}g</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statLabel}>Sodium</Text>
-            <Text style={styles.statValue}>{totals.sodium}mg</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statLabel}>Saturated Fat</Text>
-            <Text style={styles.statValue}>{totals.saturatedFat}g</Text>
-          </View>
-        </View>
-
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => router.push('/logOptions')}
+        <ScrollView 
+          style={styles.scrollView}
+          contentContainerStyle={styles.content}
         >
-          <Text style={styles.buttonText}>Add Food</Text>
-        </TouchableOpacity>
-      </ScrollView>
-    </LinearGradient>
+          <Text style={styles.title}>Today's Nutrition</Text>
+          
+          <View style={styles.statsContainer}>
+            <View style={styles.statCard}>
+              <Text style={styles.statLabel}>Calories</Text>
+              <Text style={styles.statValue}>{totals.calories}</Text>
+            </View>
+            <View style={styles.statCard}>
+              <Text style={styles.statLabel}>Carbs</Text>
+              <Text style={styles.statValue}>{totals.carbs}g</Text>
+            </View>
+            <View style={styles.statCard}>
+              <Text style={styles.statLabel}>Protein</Text>
+              <Text style={styles.statValue}>{totals.protein}g</Text>
+            </View>
+            <View style={styles.statCard}>
+              <Text style={styles.statLabel}>Fat</Text>
+              <Text style={styles.statValue}>{totals.fat}g</Text>
+            </View>
+            <View style={styles.statCard}>
+              <Text style={styles.statLabel}>Fiber</Text>
+              <Text style={styles.statValue}>{totals.fiber}g</Text>
+            </View>
+            <View style={styles.statCard}>
+              <Text style={styles.statLabel}>Sodium</Text>
+              <Text style={styles.statValue}>{totals.sodium}mg</Text>
+            </View>
+            <View style={styles.statCard}>
+              <Text style={styles.statLabel}>Saturated Fat</Text>
+              <Text style={styles.statValue}>{totals.saturatedFat}g</Text>
+            </View>
+          </View>
+        </ScrollView>
+        <Footer />
+      </LinearGradient>
+    </View>
   );
 }
 
@@ -219,17 +178,19 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  gradient: {
+    flex: 1,
+  },
   scrollView: {
     flex: 1,
   },
   content: {
-    padding: 20,
-    flexGrow: 1,
+    padding: 16,
   },
   title: {
-    fontSize: 32,
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#fff',
+    color: 'white',
     marginBottom: 20,
     textAlign: 'center',
   },
@@ -237,67 +198,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    marginBottom: 20,
+    gap: 12,
   },
   statCard: {
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    borderRadius: 10,
-    padding: 15,
+    borderRadius: 12,
+    padding: 16,
     width: '48%',
-    marginBottom: 15,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    marginBottom: 12,
   },
   statLabel: {
     fontSize: 16,
     color: '#333',
-    marginBottom: 5,
+    marginBottom: 8,
   },
   statValue: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#0077b6',
-  },
-  button: {
-    backgroundColor: '#fff',
-    padding: 15,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginTop: 20,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  buttonText: {
-    color: '#0077b6',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  error: {
-    color: '#ff0033',
-    fontSize: 16,
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  retryButton: {
-    backgroundColor: '#fff',
-    padding: 10,
-    borderRadius: 5,
-    alignItems: 'center',
-  },
-  retryButtonText: {
-    color: '#0077b6',
-    fontSize: 16,
   },
 }); 
