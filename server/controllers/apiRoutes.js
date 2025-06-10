@@ -149,33 +149,41 @@ router.get('/recent-foods/:user_id', async (req, res) => {
  * @access Private
  */
 router.get('/foodByDate/:user_id/date/:dateCreated', async (req, res) => {
+    console.log('FoodByDate route called with params:', req.params);
     try {
         const userId = req.params.user_id;
-        const selectedDate = (req.params.dateCreated);
+        const dateCreated = req.params.dateCreated;
 
-        // Parse the date using Luxon (assumes the format 'yyyy-MM-dd')
-        const selected = DateTime.fromFormat(selectedDate, 'yyyy-MM-dd', { zone: 'America/New_York' });
+        // Parse the date in ET timezone
+        const baseDate = DateTime.fromFormat(dateCreated, 'yyyy-MM-dd', { zone: 'America/New_York' });
+        
+        // Set to start of day in ET
+        const startOfDay = baseDate.startOf('day');
+        
+        // Convert to UTC for database queries
+        const utcStartOfDay = startOfDay.toUTC();
+        const utcEndOfDay = startOfDay.plus({ days: 1 }).toUTC().minus({ seconds: 1 });
 
-        // Compute the start and end of the selected day
-        const startOfDay = selected
-            .startOf('day')
-            .toUTC()
-            .toJSDate();
-        const endOfDay = selected
-            .endOf('day')
-            .toUTC()
-            .toJSDate();
-
-        const adjustedStartOfDay = new Date(startOfDay.getTime() - 4 * 60 * 60 * 1000);
+        console.log('Date handling debug:');
+        console.log('Input date:', dateCreated);
+        console.log('Base date in ET:', baseDate.toISO());
+        console.log('Start of day ET:', startOfDay.toISO());
+        console.log('UTC start:', utcStartOfDay.toISO());
+        console.log('UTC end:', utcEndOfDay.toISO());
 
         const recentFoods = await DailyLog.findOne({
             user_id: userId,
-            dateCreated: { $gte: adjustedStartOfDay, $lte: endOfDay }
-        }).populate('foods')
+            dateCreated: {
+                $gte: utcStartOfDay.toJSDate(),
+                $lte: utcEndOfDay.toJSDate()
+            }
+        }).populate('foods');
+
         if (!recentFoods) {
             return res.json({ message: 'No food has been logged for this day.' });
         }
 
+        console.log('Found foods:', recentFoods);
         res.json(recentFoods);
     } catch (err) {
         console.error(err);
@@ -308,36 +316,42 @@ router.post('/one-food', async (req, res) => {
  */
 router.post('/daily-log', async (req, res) => {
     try {
-        const { user_id, foods } = req.body;
+        const { user_id, foods, dateCreated } = req.body;
 
-        // Get current date and compute start and end of day.
-        const startOfDay = DateTime.now()
-            .setZone('America/New_York')
-            .startOf('day')
-            .toUTC()
-            .toJSDate();
-        const endOfDay = DateTime.now()
-            .setZone('America/New_York')
-            .endOf('day')
-            .toUTC()
-            .toJSDate();
+        // Use provided date if available, otherwise use current date
+        const baseDate = dateCreated 
+            ? DateTime.fromFormat(dateCreated, 'yyyy-MM-dd', { zone: 'America/New_York' })
+            : DateTime.now().setZone('America/New_York');
 
-        const adjustedStartOfDay = new Date(startOfDay.getTime() - 4 * 60 * 60 * 1000);
-        // Check if a DailyLog exists for this user for today.
+        // Set to start of day in ET
+        const startOfDay = baseDate.startOf('day');
+        const endOfDay = startOfDay.plus({ days: 1 }).minus({ seconds: 1 });
+
+        console.log('Date handling debug:');
+        console.log('Input date:', dateCreated);
+        console.log('Base date in ET:', baseDate.toISO());
+        console.log('Start of day ET:', startOfDay.toISO());
+        console.log('End of day ET:', endOfDay.toISO());
+
+        // Check if a DailyLog exists for this user for this day
         let dailyLog = await DailyLog.findOne({
             user_id,
-            dateCreated: { $gte: adjustedStartOfDay, $lte: endOfDay }
+            dateCreated: {
+                $gte: startOfDay.toJSDate(),
+                $lte: endOfDay.toJSDate()
+            }
         });
+
         if (dailyLog) {
-            // Update the existing DailyLog by appending new foods.
+            // Update the existing DailyLog by appending new foods
             dailyLog.foods = dailyLog.foods.concat(foods);
             await dailyLog.save();
             res.status(200).json(dailyLog);
         } else {
-            // Create a new DailyLog if none exists for today.
+            // Create a new DailyLog if none exists
             dailyLog = new DailyLog({
                 user_id,
-                dateCreated: adjustedStartOfDay,
+                dateCreated: dateCreated, // Let the schema handle the date conversion
                 foods
             });
             await dailyLog.save();

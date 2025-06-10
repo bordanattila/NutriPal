@@ -1,23 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, Stack } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import ky from 'ky';
 import { mobileAuthService as Auth } from "@/utils/authServiceMobile";
 import SearchBar from '@/components/SearchBar';
-
-interface Food {
-  food_id: string;
-  food_name: string;
-  brand_name?: string;
-  food_description?: string;
-  calories: number;
-  carbohydrate: number;
-  protein: number;
-  fat: number;
-  number_of_servings: number;
-  serving_size: string;
-}
+import { handleSearch as handleFoodSearch } from '@/utils/searchUtils';
+import { Food } from '../types/food';
 
 interface SearchResponse {
   foods: Food[];
@@ -44,9 +34,12 @@ export default function SearchFood() {
     }
 
     try {
-      const response = await api.get(`api/search/${foodName}`).json<SearchResponse>();
-      setSearchResults(response.foods || []);
-      setError(null);
+      await handleFoodSearch({
+        name: foodName,
+        setArray: setSearchResults,
+        setError: setError,
+        setBarcode: setBarcodeID,
+      });
     } catch (err) {
       console.error('Search error:', err);
       setError('Failed to search for food');
@@ -84,6 +77,12 @@ export default function SearchFood() {
     fetchLogHistory();
   }, []);
 
+  useEffect(() => {
+    if (barcodeID !== '') {
+      router.push(`/foodDetails/${barcodeID}`);
+    }
+  }, [barcodeID]);
+
   const clearSearch = () => {
     setFoodName('');
     setSearchResults([]);
@@ -113,21 +112,52 @@ export default function SearchFood() {
     </TouchableOpacity>
   );
 
+  const handleBarcodeScan = () => {
+    router.push('/barcodeScan');
+  };
+
   return (
     <View style={styles.container}>
+      <Stack.Screen
+        options={{
+          title: "Search Food",
+          headerShown: true,
+          headerStyle: {
+            backgroundColor: '#00b4d8',
+          },
+          headerTintColor: '#fff',
+          headerTitleStyle: {
+            fontWeight: 'bold',
+          },
+        }}
+      />
       <LinearGradient
         colors={['#00b4d8', '#0077b6', '#023e8a']}
         style={styles.gradient}
       >
-        <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
-          <SearchBar
-            nameOfFood={foodName}
-            setNameOfFood={setFoodName}
-            handleSearch={handleSearch}
-            clearSearch={clearSearch}
-            error={error}
-          />
+        <View style={styles.searchContainer}>
+          <View style={styles.searchBarContainer}>
+            <SearchBar
+              nameOfFood={foodName}
+              setNameOfFood={setFoodName}
+              handleSearch={handleSearch}
+              clearSearch={clearSearch}
+              error={error}
+            />
+          </View>
+          <TouchableOpacity 
+            style={styles.barcodeButton}
+            onPress={handleBarcodeScan}
+          >
+            <MaterialCommunityIcons 
+              name="barcode-scan" 
+              size={24} 
+              color="#0077b6"
+            />
+          </TouchableOpacity>
+        </View>
 
+        <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
           {searchResults.length > 0 ? (
             <View style={styles.resultsContainer}>
               {searchResults.map(renderFoodItem)}
@@ -157,19 +187,48 @@ const styles = StyleSheet.create({
   gradient: {
     flex: 1,
   },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 16,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+  },
+  searchBarContainer: {
+    flex: 1,
+  },
+  barcodeButton: {
+    backgroundColor: 'white',
+    width: 48,
+    height: 48,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
+  },
   scrollView: {
     flex: 1,
   },
   content: {
-    padding: 16,
+    paddingBottom: 16,
   },
   resultsContainer: {
     gap: 12,
     marginBottom: 20,
+    paddingHorizontal: 16,
   },
   historyContainer: {
     gap: 12,
     marginBottom: 20,
+    paddingHorizontal: 16,
   },
   historyTitle: {
     fontSize: 20,

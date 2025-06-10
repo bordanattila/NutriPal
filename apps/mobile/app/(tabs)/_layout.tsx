@@ -23,7 +23,16 @@ export default function TabLayout() {
           paddingBottom: 8,
           paddingTop: 8,
         },
-      }}>
+        headerStyle: {
+          backgroundColor: '#00b4d8',
+        },
+        headerTintColor: '#fff',
+        headerTitleStyle: {
+          fontWeight: 'bold',
+        },
+      }}
+      initialRouteName="dashboard"
+    >
       <Tabs.Screen
         name="meals"
         options={{

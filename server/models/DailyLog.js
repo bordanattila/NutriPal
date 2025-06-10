@@ -3,6 +3,7 @@
  * @description Mongoose model for tracking a user's daily food log.
  */
 const { Schema, model } = require("mongoose");
+const { DateTime } = require("luxon");
 
 /**
  * @constant dailyLogSchema
@@ -22,12 +23,24 @@ const dailyLogSchema = new Schema(
         },
         /**
         * @property {Date} dateCreated - Represents the specific calendar day of the log.
-        * The time is normalized to 00:00:00 to make querying by day easier.
+        * The time is normalized to midnight ET to make querying by day easier.
         */
         dateCreated: {
             type: Date,
             required: true,
-            set: (date) => new Date(date.setHours(0, 0, 0, 0)),
+            set: function(date) {
+                // If it's a string, assume it's in yyyy-MM-dd format
+                if (typeof date === 'string') {
+                    return DateTime.fromFormat(date, 'yyyy-MM-dd', { zone: 'America/New_York' })
+                        .startOf('day')
+                        .toJSDate();
+                }
+                
+                // If it's already a Date, convert to Luxon DateTime in ET
+                return DateTime.fromJSDate(date, { zone: 'America/New_York' })
+                    .startOf('day')
+                    .toJSDate();
+            }
         },
         /**
          * @property {ObjectId[]} foods - Array of references to OneFood items logged on that day.
@@ -45,8 +58,7 @@ const dailyLogSchema = new Schema(
 dailyLogSchema.index({
     user_id: 1,
     dateCreated: 1
-},
-);
+});
 
 /**
  * @constant DailyLog

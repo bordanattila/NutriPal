@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { mobileAuthService as Auth } from "@/utils/authServiceMobile";
 import ky from 'ky';
@@ -32,9 +32,8 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [dashboardData, setDashboardData] = useState<DashboardData>({ foods: [] });
-  const [date, setDate] = useState(DateTime.now());
   const [calorieGoal, setCalorieGoal] = useState<number | null>(null);
-
+  
   // State for nutrient totals
   const [totals, setTotals] = useState({
     calories: 0,
@@ -74,17 +73,33 @@ export default function Dashboard() {
         return;
       }
 
-      const response = await api.get(`api/foodByDate/${userId}/date/${date.toISODate()}`, {
+      // Force current date to be actual current date, not from token
+      const currentDate = new Date();
+      const today = DateTime.fromJSDate(currentDate)
+        .setZone('America/New_York')
+        .toFormat('yyyy-MM-dd');
+      
+      
+      const response = await api.get(`api/foodByDate/${userId}/date/${today}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
       const data: any = await response.json();
-      setDashboardData({
-        foods: data.message === "No food has been logged for this day." ? [] : (data.foods || []),
-        calorieGoal: data.calorieGoal
-      });
+      
+      if (data.message === "No food has been logged for this day.") {
+        console.log('No food logged for today, setting empty foods array');
+        setDashboardData({
+          foods: [],
+          calorieGoal: data.calorieGoal
+        });
+      } else {
+        setDashboardData({
+          foods: data.foods || [],
+          calorieGoal: data.calorieGoal
+        });
+      }
       setCalorieGoal(data.calorieGoal);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -94,9 +109,18 @@ export default function Dashboard() {
     }
   };
 
+  // Remove the date dependency since we always want today's data
   useEffect(() => {
     fetchDashboardData();
-  }, [date]);
+  }, []);
+
+  // Fetch data when screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      console.log('Dashboard screen focused, refreshing data...');
+      fetchDashboardData();
+    }, [])
+  );
 
   useEffect(() => {
     const calculateTotals = () => {
@@ -118,6 +142,7 @@ export default function Dashboard() {
         saturatedFat: 0
       });
 
+      console.log('Calculated new totals:', newTotals);
       setTotals(newTotals);
     };
 
@@ -147,7 +172,7 @@ export default function Dashboard() {
           style={styles.scrollView}
           contentContainerStyle={styles.content}
         >
-          <Text style={styles.title}>Today's Nutrition</Text>
+          {/* <Text style={styles.title}>Today's Nutrition</Text> */}
           
           <View style={styles.statsCard}>
             <View style={styles.statsRow}>

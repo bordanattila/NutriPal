@@ -5,8 +5,7 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
-
-import { useColorScheme } from '@/components/useColorScheme';
+import { useColorScheme } from 'react-native';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -50,11 +49,55 @@ function RootLayoutNav() {
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="home" options={{ headerShown: false }} />
-        <Stack.Screen name="login" options={{ headerShown: false }} />
-        <Stack.Screen name="signup" options={{ headerShown: false }} />
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack
+        screenOptions={{
+          headerStyle: {
+            backgroundColor: '#00b4d8',
+          },
+          headerTintColor: '#fff',
+          headerTitleStyle: {
+            fontWeight: 'bold',
+          },
+          headerBackTitle: "Back",
+          contentStyle: {
+            backgroundColor: '#fff',
+          },
+        }}
+      >
+        <Stack.Screen
+          name="(tabs)"
+          options={{
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="searchFood"
+          options={{
+            presentation: 'modal',
+            title: "Search Food",
+            headerBackTitle: "Logs",
+          }}
+        />
+        <Stack.Screen
+          name="foodDetails/[id]"
+          options={{
+            title: "Food Details",
+            headerBackTitle: "Search",
+          }}
+        />
+        <Stack.Screen
+          name="barcodeScan"
+          options={{
+            title: "Scan Barcode",
+            headerBackTitle: "Search",
+          }}
+        />
+        <Stack.Screen
+          name="login"
+          options={{
+            headerShown: false,
+          }}
+        />
       </Stack>
     </ThemeProvider>
   );

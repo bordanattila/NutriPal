@@ -5,7 +5,7 @@ module.exports = {
     version: "1.0.0",
     orientation: "portrait",
     icon: "./assets/images/icon.png",
-    userInterfaceStyle: "light",
+    userInterfaceStyle: "automatic",
     splash: {
       image: "./assets/images/splash.png",
       resizeMode: "contain",
@@ -16,17 +16,22 @@ module.exports = {
     ],
     ios: {
       supportsTablet: true,
+      bundleIdentifier: "com.nutripal.app",
     },
     android: {
       adaptiveIcon: {
         foregroundImage: "./assets/images/adaptive-icon.png",
         backgroundColor: "#ffffff",
       },
+      package: "com.nutripal.app",
     },
     web: {
       favicon: "./assets/images/favicon.png",
     },
     scheme: "nutripal",
+    plugins: [
+      "expo-barcode-scanner"
+    ],
     extra: {
       api: {
         url: process.env.EXPO_PUBLIC_API_URL,
@@ -34,6 +39,10 @@ module.exports = {
       eas: {
         projectId: "your-project-id",
       },
+    },
+    env: {
+      EXPO_PUBLIC_CLIENT_ID: process.env.REACT_APP_CLIENT_ID,
+      EXPO_PUBLIC_CLIENT_SECRET: process.env.REACT_APP_CLIENT_SECRET,
     },
   },
 };

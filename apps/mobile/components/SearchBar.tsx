@@ -49,7 +49,6 @@ export default function SearchBar({
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    marginBottom: 16,
   },
   searchContainer: {
     flexDirection: 'row',
@@ -74,6 +73,8 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     color: '#333',
+    height: '100%',
+    padding: 0,
   },
   clearButton: {
     padding: 4,

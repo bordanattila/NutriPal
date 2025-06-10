@@ -13,9 +13,10 @@ interface DonutChartProps {
 
 const DonutChart: React.FC<DonutChartProps> = ({ stats }) => {
   const macronutrients = stats.filter(stat => stat.name !== 'Calories');
-  const calories = stats.find(stat => stat.name === 'Calories')?.value || 0;
+  const caloriesStat = stats.find(stat => stat.name === 'Calories');
+  const calories = caloriesStat?.value || 0;
   
-  const total = macronutrients.reduce((sum, stat) => sum + stat.value, 0);
+  const total = macronutrients.reduce((sum, stat) => sum + (stat.value || 0), 0);
   const radius = 70;
   const strokeWidth = 30;
   const center = radius + strokeWidth;
@@ -25,7 +26,7 @@ const DonutChart: React.FC<DonutChartProps> = ({ stats }) => {
   
   let currentAngle = 0;
   const circles = macronutrients.map((stat, index) => {
-    const percentage = total === 0 ? 0 : (stat.value / total);
+    const percentage = total === 0 ? 0 : ((stat.value || 0) / total);
     const angle = percentage * 360;
     
     // Calculate the arc path
@@ -102,7 +103,7 @@ const DonutChart: React.FC<DonutChartProps> = ({ stats }) => {
               }} 
             />
             <Text style={{ color: '#7F7F7F', fontSize: 12 }}>
-              {stat.name}: {stat.value.toFixed(1)}g
+              {stat.name}: {(stat.value || 0).toFixed(1)}g
             </Text>
           </View>
         ))}
