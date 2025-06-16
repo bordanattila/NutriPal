@@ -1,25 +1,25 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import type { AppStackNavigationProp } from '../types/navigation';
+import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as SecureStore from 'expo-secure-store';
 import Footer from '@/components/Footer';
+import { mobileAuthService as Auth } from "@/utils/authServiceMobile";
+import ky from 'ky';
 
 interface SignupResponse {
   token?: string;
   refreshToken?: string;
-  [key: string]: any; // Allow for additional properties
+  message?: string;
+  [key: string]: any;
 }
-import { mobileAuthService as Auth } from "@/utils/authServiceMobile";
-import ky from 'ky';
 
 const api = ky.create({
-  prefixUrl: process.env.EXPO_PUBLIC_API_URL,
+  prefixUrl: process.env.EXPO_PUBLIC_API_URL || 'http://192.168.1.13:4000',
 });
 
 export default function Signup() {
-  const navigation = useNavigation<AppStackNavigationProp>();
+  const router = useRouter();
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -30,40 +30,94 @@ export default function Signup() {
     setError(null);
     setLoading(true);
 
-    if (!username || !email || !password) {
+    // Trim the input values
+    const trimmedUsername = username.trim();
+    const trimmedEmail = email.trim();
+    const trimmedPassword = password.trim();
+
+    // Validate inputs
+    if (!trimmedUsername || !trimmedEmail || !trimmedPassword) {
       setError('All fields are required.');
       setLoading(false);
       return;
     }
 
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(trimmedEmail)) {
+      setError('Please enter a valid email address.');
+      setLoading(false);
+      return;
+    }
+
+    // Password validation (at least 6 characters)
+    if (trimmedPassword.length < 6) {
+      setError('Password must be at least 6 characters long.');
+      setLoading(false);
+      return;
+    }
+
     try {
+      console.log('Signing up with:', { username: trimmedUsername, email: trimmedEmail });
+      
       const response = await api.post('user/signup', {
-        json: { username, email, password },
+        json: { 
+          username: trimmedUsername, 
+          email: trimmedEmail, 
+          password: trimmedPassword 
+        },
       });
 
       const data: SignupResponse = await response.json();
+      console.log('Signup response:', data);
 
       if (data?.token) {
-        Auth.login(data.token);
+        // Store the token
+        await SecureStore.setItemAsync('userToken', data.token);
+        
+        // Initialize Auth service with the token
+        await Auth.login(data.token);
+        
         if (data?.refreshToken) {
           await SecureStore.setItemAsync('refreshToken', data.refreshToken);
         }
-        navigation.navigate('dashboard');
+
+        // Small delay to ensure token is stored
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        // Verify token is stored
+        const storedToken = await SecureStore.getItemAsync('userToken');
+        console.log('Token stored successfully:', !!storedToken);
+
+        // Navigate to dashboard
+        router.replace('/(tabs)/dashboard');
       } else {
-        setError('Login failed. Please try again.');
+        setError('Signup failed: ' + (data.message || 'Please try again.'));
       }
-    } catch (error: unknown) {
+    } catch (error: any) {
       console.error('Error signing up:', error);
-      setError(error instanceof Error ? error.message : 'An unexpected error occurred. Please try again.');
+      if (error instanceof Error) {
+        setError(error.message);
+      } else if (error instanceof Response) {
+        const text = await error.text();
+        setError(text || 'Signup failed. Please try again.');
+      } else {
+        setError('An unexpected error occurred. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
   };
 
   if (loading) return (
-    <View style={styles.container}>
-      <Text>Loading...</Text>
-    </View>
+    <LinearGradient
+      colors={['#00b4d8', '#0077b6', '#023e8a']}
+      style={styles.container}
+    >
+      <View style={styles.content}>
+        <Text style={styles.loadingText}>Creating your account...</Text>
+      </View>
+    </LinearGradient>
   );
 
   return (
@@ -77,6 +131,7 @@ export default function Signup() {
         <TextInput
           style={styles.input}
           placeholder="Username"
+          placeholderTextColor="#666"
           value={username}
           onChangeText={setUsername}
           autoCapitalize="none"
@@ -87,6 +142,7 @@ export default function Signup() {
         <TextInput
           style={styles.input}
           placeholder="Email"
+          placeholderTextColor="#666"
           value={email}
           onChangeText={setEmail}
           autoCapitalize="none"
@@ -97,6 +153,7 @@ export default function Signup() {
         <TextInput
           style={styles.input}
           placeholder="Password"
+          placeholderTextColor="#666"
           value={password}
           onChangeText={setPassword}
           secureTextEntry
@@ -116,7 +173,7 @@ export default function Signup() {
 
         <TouchableOpacity
           style={styles.loginLink}
-          onPress={() => navigation.navigate('login')}
+          onPress={() => router.push('/login')}
         >
           <Text style={styles.loginText}>Already have an account? Login</Text>
         </TouchableOpacity>
@@ -180,6 +237,10 @@ const styles = StyleSheet.create({
     color: '#ff4444',
     marginTop: 10,
     textAlign: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    padding: 10,
+    borderRadius: 5,
+    width: '100%',
   },
   loginLink: {
     marginTop: 20,
@@ -187,5 +248,9 @@ const styles = StyleSheet.create({
   loginText: {
     color: '#fff',
     textDecorationLine: 'underline',
+  },
+  loadingText: {
+    color: '#fff',
+    fontSize: 18,
   },
 });

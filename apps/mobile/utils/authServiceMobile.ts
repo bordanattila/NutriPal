@@ -1,7 +1,18 @@
 // apps/mobile/app/utils/authServiceMobile.ts
 
 import * as SecureStore from 'expo-secure-store';
-import { jwtDecode } from 'jwt-decode'; // same jwt‐decode you used on Web
+import { jwtDecode } from 'jwt-decode';
+import ky from 'ky';
+
+interface TokenResponse {
+  token?: string;
+  refreshToken?: string;
+  message?: string;
+}
+
+const api = ky.create({
+  prefixUrl: process.env.EXPO_PUBLIC_API_URL || 'http://192.168.1.13:4000',
+});
 
 /**
  * MobileAuthService
@@ -10,55 +21,52 @@ import { jwtDecode } from 'jwt-decode'; // same jwt‐decode you used on Web
  * but replaced localStorage → SecureStore and window.location → Expo Router.
  */
 class MobileAuthService {
+  private token: string | null = null;
+
   /**
    * Get decoded user profile from token.
    */
-  getProfile = async (): Promise<any | null> => {
+  async getProfile() {
     try {
-      const token = await SecureStore.getItemAsync('id_token');
-      console.log('Retrieved token from SecureStore:', !!token);
-      if (!token) {
-        console.log('No token found in SecureStore');
-        return null;
-      }
-      
-      try {
-        const decoded = jwtDecode(token);
-        console.log('Decoded token:', decoded);
-        return decoded;
-      } catch (err) {
-        console.error('Error decoding token:', err);
-        return null;
-      }
-    } catch (err) {
-      console.error('Error in getProfile:', err);
+      const token = await this.getToken();
+      console.log('getProfile - token exists:', !!token);
+      if (!token) return null;
+      const decoded = jwtDecode(token);
+      console.log('getProfile - decoded token:', decoded);
+      return decoded;
+    } catch (error) {
+      console.error('Error getting profile:', error);
       return null;
     }
-  };
+  }
 
   /**
    * Check if the user is currently logged in.
    */
- loggedIn = async (): Promise<boolean> => {
-    const token = await SecureStore.getItemAsync('id_token');
-    if (!token) return false;
+  async loggedIn() {
     try {
-      const decoded: any = jwtDecode(token);
-      return decoded.exp > Date.now() / 1000;
-    } catch {
+      const token = await this.getToken();
+      console.log('loggedIn - token exists:', !!token);
+      if (!token) return false;
+      const isExpired = await this.isTokenExpired(token);
+      console.log('loggedIn - token expired:', isExpired);
+      return !!token && !isExpired;
+    } catch (error) {
+      console.error('Error checking login status:', error);
       return false;
     }
-  };
+  }
 
   /**
    * Determine if token is expired.
    */
-  private isTokenExpired(token: string): boolean {
+  async isTokenExpired(token: string) {
     try {
       const decoded: any = jwtDecode(token);
-      // decoded.exp is in seconds, Date.now() is milliseconds:
+      console.log('isTokenExpired - token exp:', decoded.exp, 'current time:', Date.now() / 1000);
       return decoded.exp < Date.now() / 1000;
-    } catch {
+    } catch (error) {
+      console.error('Error checking token expiration:', error);
       return true;
     }
   }
@@ -66,13 +74,35 @@ class MobileAuthService {
   /**
    * Retrieve JWT from SecureStore.
    */
-  public async getToken(): Promise<string | null> {
+  async getToken() {
     try {
-      const token = await SecureStore.getItemAsync('id_token');
+      if (this.token) {
+        return this.token;
+      }
+      
+      const token = await SecureStore.getItemAsync('userToken');
       console.log('Retrieved token from SecureStore:', !!token);
-      return token;
-    } catch (err) {
-      console.error('Error getting token:', err);
+      
+      if (token) {
+        const isExpired = await this.isTokenExpired(token);
+        if (!isExpired) {
+          this.token = token;
+          return token;
+        }
+      }
+      
+      // If token is expired, try to refresh
+      const refreshToken = await SecureStore.getItemAsync('refreshToken');
+      if (refreshToken) {
+        const newToken = await this.refreshToken(refreshToken);
+        if (newToken) {
+          return newToken;
+        }
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error getting token:', error);
       return null;
     }
   }
@@ -80,43 +110,53 @@ class MobileAuthService {
   /**
    * Save JWT to SecureStore and navigate to dashboard.
    */
-login = async (idToken: string, refreshToken?: string) => {
-    await SecureStore.setItemAsync('id_token', idToken);
-    if (refreshToken) {
-      await SecureStore.setItemAsync('refreshToken', refreshToken);
+  async login(token: string) {
+    try {
+      await SecureStore.setItemAsync('userToken', token);
+      this.token = token;
+      console.log('Token stored in auth service:', !!this.token);
+      return true;
+    } catch (error) {
+      console.error('Error storing token:', error);
+      return false;
     }
-    return true;
-  };
+  }
 
   /**
    * Attempt to refresh token using stored refresh token.
    */
-  public async refreshToken(): Promise<boolean> {
+  async refreshToken(refreshToken: string) {
     try {
-      const refreshToken = await SecureStore.getItemAsync('refreshToken');
-      if (!refreshToken) return false;
-
-      // Call your existing /api/refresh endpoint via ky (you can re‐use shared/apiAuth.js if you modify it for mobile)
-      // Or use Apollo if you have a GraphQL mutation for refresh.
-      // For example (assuming you have a REST endpoint):
-      // const newToken = await fetchNewToken(refreshToken);
-      // await SecureStore.setItemAsync('id_token', newToken);
-      // return true;
-
-      return false;
-    } catch {
-      return false;
+      const response = await api.post('user/refresh', {
+        json: { refreshToken },
+      });
+      
+      const data = await response.json() as TokenResponse;
+      if (data.token) {
+        await this.login(data.token);
+        return data.token;
+      }
+      return null;
+    } catch (error) {
+      console.error('Error refreshing token:', error);
+      return null;
     }
   }
 
   /**
    * Clear tokens and navigate to login.
    */
-  logout = async () => {
-    await SecureStore.deleteItemAsync('id_token');
-    await SecureStore.deleteItemAsync('refreshToken');
-  };
-
+  async logout() {
+    try {
+      await SecureStore.deleteItemAsync('userToken');
+      await SecureStore.deleteItemAsync('refreshToken');
+      this.token = null;
+      return true;
+    } catch (error) {
+      console.error('Error during logout:', error);
+      return false;
+    }
+  }
 
   /**
    * Decode a JWT token safely.

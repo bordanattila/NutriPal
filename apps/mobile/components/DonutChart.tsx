@@ -18,7 +18,7 @@ const DonutChart: React.FC<DonutChartProps> = ({ stats }) => {
   
   const total = macronutrients.reduce((sum, stat) => sum + (stat.value || 0), 0);
   const radius = 70;
-  const strokeWidth = 30;
+  const strokeWidth = 15;
   const center = radius + strokeWidth;
   const viewBox = center * 2;
   
@@ -58,7 +58,7 @@ const DonutChart: React.FC<DonutChartProps> = ({ stats }) => {
 
   return (
     <View style={{ alignItems: 'center', marginVertical: 20 }}>
-      <Svg height={250} width={250} viewBox={`0 0 ${viewBox} ${viewBox}`}>
+      <Svg height={200} width={200} viewBox={`0 0 ${viewBox} ${viewBox}`}>
         <G>
           {circles}
           <SvgText
@@ -75,7 +75,7 @@ const DonutChart: React.FC<DonutChartProps> = ({ stats }) => {
             x={center}
             y={center + 20}
             fontSize="14"
-            fill="#666"
+            fill="#333"
             textAnchor="middle"
           >
             Calories
@@ -102,8 +102,8 @@ const DonutChart: React.FC<DonutChartProps> = ({ stats }) => {
                 borderRadius: 6 
               }} 
             />
-            <Text style={{ color: '#7F7F7F', fontSize: 12 }}>
-              {stat.name}: {(stat.value || 0).toFixed(1)}g
+            <Text style={{ color: '#000', fontSize: 16 }}>
+              {stat.name}
             </Text>
           </View>
         ))}

@@ -1,12 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { mobileAuthService as Auth } from "@/utils/authServiceMobile";
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import ky from 'ky';
 import { DateTime } from 'luxon';
 import Footer from '@/components/Footer';
 import DonutChart from '@/components/DonutChart';
+import { ApolloClient, InMemoryCache, ApolloProvider, useQuery, createHttpLink } from '@apollo/client';
+import { setContext } from '@apollo/client/link/context';
+import { GET_USER } from '@/utils/mutations';
+import { JwtPayload } from 'jwt-decode';
 
 interface FoodLog {
   calories: number;
@@ -20,19 +25,76 @@ interface FoodLog {
 
 interface DashboardData {
   foods: FoodLog[];
-  calorieGoal?: number;
+}
+
+interface CustomJwtPayload extends JwtPayload {
+  data?: {
+    _id?: string;
+    id?: string;
+  };
 }
 
 const api = ky.create({
   prefixUrl: process.env.EXPO_PUBLIC_API_URL || 'http://192.168.1.13:4000',
 });
 
-export default function Dashboard() {
+// Create the http link
+const httpLink = createHttpLink({
+  uri: `${process.env.EXPO_PUBLIC_API_URL || 'http://192.168.1.13:4000'}/graphql`,
+});
+
+// Create the auth link
+const authLink = setContext(async (_, { headers }) => {
+  try {
+    const token = await Auth.getToken();
+    return {
+      headers: {
+        ...headers,
+        authorization: token ? `Bearer ${token}` : "",
+      }
+    };
+  } catch (error) {
+    console.error('Error getting auth token:', error);
+    return {
+      headers: {
+        ...headers,
+      }
+    };
+  }
+});
+
+const client = new ApolloClient({
+  link: authLink.concat(httpLink),
+  cache: new InMemoryCache(),
+  defaultOptions: {
+    watchQuery: {
+      fetchPolicy: 'network-only',
+      errorPolicy: 'all',
+    },
+    query: {
+      fetchPolicy: 'network-only',
+      errorPolicy: 'all',
+    },
+  },
+});
+
+function DashboardContent() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [dashboardData, setDashboardData] = useState<DashboardData>({ foods: [] });
-  const [calorieGoal, setCalorieGoal] = useState<number | null>(null);
+  
+  // Get user data including calorie goal
+  const { data: userData, loading: userLoading, error: userError } = useQuery(GET_USER, {
+    onError: (error) => {
+      console.error('Error fetching user data:', error);
+      if (error.message.includes('Unauthorized')) {
+        router.replace('/login');
+      }
+    }
+  });
+  
+  const calorieGoal = userData?.user?.calorieGoal || 2000;
   
   // State for nutrient totals
   const [totals, setTotals] = useState({
@@ -51,24 +113,35 @@ export default function Dashboard() {
     try {
       const isLoggedIn = await Auth.loggedIn();
       if (!isLoggedIn) {
+        console.log('Auth.loggedIn() returned false, redirecting to login');
         router.replace('/login');
         return;
       }
 
       const token = await Auth.getToken();
+      console.log('Retrieved token:', token ? 'exists' : 'null');
+      
       if (!token) {
+        console.log('No token found, redirecting to login');
         router.replace('/login');
         return;
       }
 
-      const profile = await Auth.getProfile();
+      const profile = await Auth.getProfile() as CustomJwtPayload;
+      console.log('Decoded profile:', profile);
+      
       if (!profile) {
+        console.log('No profile decoded from token, redirecting to login');
         router.replace('/login');
         return;
       }
 
-      const userId = profile.data?._id || profile.data?.id || profile._id || profile.id;
+      // Extract userId from JWT payload - profile is the decoded token
+      const userId = profile.data?._id || profile.data?.id;
+      console.log('Extracted userId:', userId);
+      
       if (!userId) {
+        console.log('No userId found in profile, redirecting to login');
         router.replace('/login');
         return;
       }
@@ -78,7 +151,6 @@ export default function Dashboard() {
       const today = DateTime.fromJSDate(currentDate)
         .setZone('America/New_York')
         .toFormat('yyyy-MM-dd');
-      
       
       const response = await api.get(`api/foodByDate/${userId}/date/${today}`, {
         headers: {
@@ -90,17 +162,10 @@ export default function Dashboard() {
       
       if (data.message === "No food has been logged for this day.") {
         console.log('No food logged for today, setting empty foods array');
-        setDashboardData({
-          foods: [],
-          calorieGoal: data.calorieGoal
-        });
+        setDashboardData({ foods: [] });
       } else {
-        setDashboardData({
-          foods: data.foods || [],
-          calorieGoal: data.calorieGoal
-        });
+        setDashboardData({ foods: data.foods || [] });
       }
-      setCalorieGoal(data.calorieGoal);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
       setError('Failed to fetch dashboard data');
@@ -109,12 +174,10 @@ export default function Dashboard() {
     }
   };
 
-  // Remove the date dependency since we always want today's data
   useEffect(() => {
     fetchDashboardData();
   }, []);
 
-  // Fetch data when screen comes into focus
   useFocusEffect(
     React.useCallback(() => {
       console.log('Dashboard screen focused, refreshing data...');
@@ -162,18 +225,49 @@ export default function Dashboard() {
     { name: 'Saturated Fat', value: totals.saturatedFat },
   ];
 
+  if (userLoading || loading) {
+    return (
+      <View style={[styles.container, styles.centered]}>
+        <Text style={styles.loadingText}>Loading...</Text>
+      </View>
+    );
+  }
+
+  if (userError) {
+    console.error('User data error:', userError);
+    return (
+      <View style={[styles.container, styles.centered]}>
+        <Text style={styles.errorText}>Error loading user data</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <LinearGradient
         colors={['#00b4d8', '#0077b6', '#023e8a']}
         style={styles.gradient}
       >
+        <View style={styles.header}>
+          <TouchableOpacity
+            style={styles.headerIcon}
+            onPress={() => router.push('/(screens)/profile')}
+          >
+            <MaterialCommunityIcons name="account" size={28} color="white" />
+          </TouchableOpacity>
+          <View style={{ flex: 1 }} />
+          <TouchableOpacity
+            style={styles.headerIcon}
+            onPress={() => router.push('/(screens)/settings')}
+          >
+            <MaterialCommunityIcons name="cog" size={28} color="white" />
+          </TouchableOpacity>
+        </View>
+
         <ScrollView 
           style={styles.scrollView}
           contentContainerStyle={styles.content}
         >
-          {/* <Text style={styles.title}>Today's Nutrition</Text> */}
-          
           <View style={styles.statsCard}>
             <View style={styles.statsRow}>
               <View style={styles.statItem}>
@@ -196,13 +290,18 @@ export default function Dashboard() {
             
             <View style={styles.statsRow}>
               <View style={styles.statItem}>
-                <Text style={styles.statLabel}>Calories</Text>
-                <Text style={styles.statValue}>{totals.calories.toFixed(1)} kcal</Text>
+                <Text style={styles.statLabel}>Calories Remaining</Text>
+                <Text style={[
+                  styles.statValue,
+                  { color: (calorieGoal - totals.calories) < 0 ? '#ff6b6b' : '#ffffff' }
+                ]}>
+                  {(calorieGoal - totals.calories).toFixed(1)} kcal
+                </Text>
               </View>
               <View style={styles.statDivider} />
               <View style={styles.statItem}>
                 <Text style={styles.statLabel}>Goal</Text>
-                <Text style={styles.statValue}>{(calorieGoal || 0).toFixed(1)} kcal</Text>
+                <Text style={styles.statValue}>{calorieGoal.toFixed(1)} kcal</Text>
               </View>
             </View>
           </View>
@@ -226,6 +325,14 @@ export default function Dashboard() {
   );
 }
 
+export default function Dashboard() {
+  return (
+    <ApolloProvider client={client}>
+      <DashboardContent />
+    </ApolloProvider>
+  );
+}
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -233,18 +340,37 @@ const styles = StyleSheet.create({
   gradient: {
     flex: 1,
   },
+  centered: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    color: 'white',
+    fontSize: 18,
+  },
+  errorText: {
+    color: '#ff6b6b',
+    fontSize: 18,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    marginBottom: 8,
+  },
+  headerIcon: {
+    padding: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 20,
+  },
   scrollView: {
     flex: 1,
   },
   content: {
     padding: 16,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: 'white',
-    marginBottom: 20,
-    textAlign: 'center',
   },
   statsContainer: {
     flexDirection: 'row',

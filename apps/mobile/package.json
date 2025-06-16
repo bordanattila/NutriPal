@@ -14,8 +14,10 @@
     "preset": "jest-expo"
   },
   "dependencies": {
+    "@apollo/client": "^3.9.9",
     "@expo/vector-icons": "^14.1.0",
     "@react-navigation/native": "^7.1.6",
+    "@food-tracker/shared": "workspace:*",
     "expo": "~53.0.11",
     "expo-barcode-scanner": "^13.0.1",
     "expo-camera": "^16.1.7",
@@ -28,6 +30,7 @@
     "expo-status-bar": "~2.2.3",
     "expo-system-ui": "~5.0.7",
     "expo-web-browser": "~14.1.6",
+    "graphql": "^16.8.1",
     "jwt-decode": "^4.0.0",
     "ky": "^1.8.1",
     "luxon": "^3.6.1",

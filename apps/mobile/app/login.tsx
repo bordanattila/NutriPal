@@ -29,7 +29,8 @@ export default function Login() {
       const loggedIn = await Auth.loggedIn();
       const token = await Auth.getToken();
       if (loggedIn) {
-        const refreshSuccess = await Auth.refreshToken();
+        const refreshToken = await SecureStore.getItemAsync('refreshToken');
+        const refreshSuccess = await Auth.refreshToken(refreshToken || '');
         if (!refreshSuccess) {
           await Auth.logout();
         }
@@ -48,6 +49,17 @@ export default function Login() {
       
       const response = await api.post('user/login', {
         json: { username, password },
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }).catch((error: any) => {
+        console.error('Login request failed:', {
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          url: error.response?.url,
+          message: error.message
+        });
+        throw error;
       });
 
       console.log('API Response Status:', response.status);
