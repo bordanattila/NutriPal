@@ -13,7 +13,10 @@ const Recipe = require('../models/Recipe');
 const { calculateRecipeNutrition } = require('../utils/nutritionCalculation');
 const { DateTime } = require('luxon');
 const { generateFoodId, generateServingId } = require('../utils/idGenerator');
-const { convertUpcEtoUpcA } = require('../utils/barcodeConverter')
+const { convertUpcEtoUpcA } = require('../utils/barcodeConverter');
+const { ChatOpenAI } = require('@langchain/openai');
+const { HumanMessage, SystemMessage } = require('@langchain/core/messages');
+require('dotenv').config();
 
 /**
  * @route GET /api/token
@@ -420,6 +423,38 @@ router.delete('/deleteFood/:user_id/:food_id/:date', async (req, res) => {
         console.error('Error removing food item:', error);
     }
 })
+
+/**
+ * @route POST /api/ai-assist
+ * @desc Sends a prompt to the AI assistant (LangChain + OpenAI)
+ * @access Private
+ */
+router.post('/ai-assist', async (req, res) => {
+  try {
+    const { message } = req.body;
+
+    if (!message || typeof message !== 'string') {
+      return res.status(400).json({ error: 'Message is required' });
+    }
+
+    const model = new ChatOpenAI({
+      modelName: 'gpt-3.5-turbo',
+    //   modelName: 'gpt-4.1-nano', 
+    //   temperature: 0.7,
+      openAIApiKey: process.env.OPENAI_API_KEY_NP,
+    });
+
+    const response = await model.invoke([
+      new SystemMessage('You are a helpful nutrition assistant.'),
+      new HumanMessage(message),
+    ]);
+
+    res.status(200).json({ reply: response.content });
+  } catch (err) {
+    console.error('Error in AI assist:', err);
+    res.status(500).json({ error: 'AI assistant failed to respond' });
+  }
+});
 
 /**
  * @route DELETE /api/refresh

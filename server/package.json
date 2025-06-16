@@ -10,6 +10,8 @@
   "author": "Attila",
   "license": "ISC",
   "dependencies": {
+    "@langchain/core": "^0.3.58",
+    "@langchain/openai": "^0.5.13",
     "apollo-server-express": "^3.13.0",
     "axios": "^1.7.7",
     "bcrypt": "^5.1.1",
