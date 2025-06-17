@@ -25,6 +25,10 @@ const Profile = () => {
   const [password, setPassword] = useState('');
   const [profilePic, setProfilePic] = useState(null);
 
+  const [protein, setProtein] = useState('');
+  const [fat, setFat] = useState('');
+  const [carbs, setCarbs] = useState('');
+
   /**
    * @hook useQuery
    * @description Fetch user data using GET_USER query.
@@ -78,6 +82,13 @@ const Profile = () => {
       if (calorieGoal) variables.calorieGoal = parseInt(calorieGoal);
       if (password) variables.password = password;
       if (profilePic) variables.profilePic = profilePic;
+      if (protein || fat || carbs) {
+        variables.macros = {
+          ...(protein && { protein: parseInt(protein) }),
+          ...(fat && { fat: parseInt(fat) }),
+          ...(carbs && { carbs: parseInt(carbs) }),
+        };
+      }
       const { data: responseData, updateError } = await updateUserProfile({ variables });
 
       if (updateError) {
@@ -109,8 +120,7 @@ const Profile = () => {
       {loadingQuery ? (
         <div>Loading...</div>
       ) : (
-        <form onSubmit={handleUpdate} className="flex flex-col m-12 gap-8 space-y-4">
-          <h1 className="text-center">Profile </h1>
+        <form onSubmit={handleUpdate} className="flex flex-col items-center m-12 gap-4 space-y-4">
 
           <label htmlFor="calorieGoal" >Calorie Goal</label>
           <input
@@ -135,6 +145,39 @@ const Profile = () => {
             className="border p-2 rounded"
           />
 
+          <label htmlFor="protein">Protein Goal (g)</label>
+          <input
+            type="number"
+            id="protein"
+            name="protein"
+            placeholder="Protein in grams"
+            value={protein}
+            onChange={(e) => setProtein(e.target.value)}
+            className="border p-2 rounded"
+          />
+
+          <label htmlFor="fat">Fat Goal (g)</label>
+          <input
+            type="number"
+            id="fat"
+            name="fat"
+            placeholder="Fat in grams"
+            value={fat}
+            onChange={(e) => setFat(e.target.value)}
+            className="border p-2 rounded"
+          />
+
+          <label htmlFor="carbs">Carbs Goal (g)</label>
+          <input
+            type="number"
+            id="carbs"
+            name="carbs"
+            placeholder="Carbs in grams"
+            value={carbs}
+            onChange={(e) => setCarbs(e.target.value)}
+            className="border p-2 rounded"
+          />
+
           <label htmlFor="profilePic" className="sr-only">Profile Picture</label>
           <input
             type="file"
@@ -146,7 +189,7 @@ const Profile = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full sm:w-1/2 bg-gradient-to-r from-green-400 to-teal-500 hover:from-green-500 hover:to-teal-600 text-white font-bold py-3 px-6 rounded-full shadow-lg transition duration-300 ease-in-out"
+            className="w-full sm:w-1/8 bg-gradient-to-r from-green-400 to-teal-500 hover:from-green-500 hover:to-teal-600 text-white font-bold py-3 px-6 rounded-full shadow-lg transition duration-300 ease-in-out"
           >
             Update Profile
           </button>

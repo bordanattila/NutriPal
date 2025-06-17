@@ -41,6 +41,13 @@ const LogOptions = ({ userId }) => {
   };
 
   /**
+   * Navigate user to the saved recipes page to log from a recipe.
+   */
+  const handleAiAssist = async () => {    
+      navigate('/ai-assistant');   
+  };
+
+  /**
    * Fetch saved meals from the backend and navigate to the saved meals page with data.
    */
   const handleLogFromMeal = async () => {
@@ -73,6 +80,13 @@ const LogOptions = ({ userId }) => {
         className="w-full py-6 text-lg font-semibold text-white bg-purple-500 hover:bg-purple-600 rounded-2xl shadow-lg transition"
       >
         Log a Meal - coming soon
+      </button>
+
+      <button
+        onClick={handleAiAssist}
+        className="w-full py-6 text-lg font-semibold text-white bg-yellow-500 hover:bg-yellow-600 rounded-2xl shadow-lg transition"
+      >
+        AI Assistant
       </button>
     </div>
   );
