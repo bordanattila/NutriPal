@@ -88,12 +88,19 @@ export default function FoodDetailsScreen() {
         console.log('API Response:', JSON.stringify(response, null, 2));
         console.log('First serving:', response.food?.servings?.serving?.[0]);
 
+        // Normalize `servings.serving` into an array:
+        const rawServings = response.food?.servings?.serving;
+        const servingsArray: Serving[] = rawServings
+          ? (Array.isArray(rawServings) ? rawServings : [rawServings])
+          : [];
+
         setFoodDetails(response.food);
-        if (response.food?.servings?.serving?.length > 0) {
-          const firstServing = response.food.servings.serving[0];
-          console.log('Setting selected serving:', firstServing);
-          setSelectedServing(firstServing);
+
+        if (servingsArray.length > 0) {
+          setSelectedServing(servingsArray[0]);
         }
+
+        console.log('First serving:', servingsArray[0]);
       } catch (err) {
         console.error('Error fetching food details:', err);
         setError('Failed to fetch food details');
