@@ -57,6 +57,15 @@ const userSchema = new Schema(
     },
 
     /**
+    * @property {String} macros - Optional macro nutrients goal set by the user.
+    */
+    macros: {
+      protein: { type: Number, required: false },
+      fat: { type: Number, required: false },
+      carbs: { type: Number, required: false }
+    },
+
+    /**
     * @property {ObjectId[]} dailyLog - Food items logged by user for the day.
     */
     daily_log: [{

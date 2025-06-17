@@ -117,7 +117,7 @@ const resolvers = {
      * @desc Updates a user's profile details (password, calorie goal, profile pic)
      * @access Private
      */
-    updateUserProfile: async (_, { userId, calorieGoal, password, profilePic }, context) => {
+    updateUserProfile: async (_, { userId, calorieGoal, password, profilePic, macros }, context) => {
       if (!context.user) {
         throw new AuthenticationError('You need to be logged in!');
       }
@@ -131,14 +131,25 @@ const resolvers = {
       if (calorieGoal !== undefined && calorieGoal !== null) {
         user.calorieGoal = calorieGoal;
       }
-      if (password) {
-        user.password = password; // Schema will hash the password
+
+      if (macros) {
+        user.macros = {
+          ...user.macros, // preserve any existing values
+          ...(macros.protein !== undefined && { protein: macros.protein }),
+          ...(macros.fat !== undefined && { fat: macros.fat }),
+          ...(macros.carbs !== undefined && { carbs: macros.carbs }),
+        };
       }
+
+      if (password) {
+        user.password = password; // Schema will hash it via pre('save')
+      }
+
       if (profilePic) {
         user.profilePic = profilePic;
       }
 
-      await user.save(); // Trigger pre('save') middleware
+      await user.save(); // Apply updates and trigger pre-save
       return user;
     },
 

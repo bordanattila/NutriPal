@@ -430,30 +430,54 @@ router.delete('/deleteFood/:user_id/:food_id/:date', async (req, res) => {
  * @access Private
  */
 router.post('/ai-assist', async (req, res) => {
-  try {
-    const { message } = req.body;
+    try {
+        const { message, macros } = req.body;
 
-    if (!message || typeof message !== 'string') {
-      return res.status(400).json({ error: 'Message is required' });
+        if (!message || typeof message !== 'string') {
+            return res.status(400).json({ error: 'Message is required' });
+        }
+
+        const model = new ChatOpenAI({
+            //   modelName: 'gpt-3.5-turbo',git 
+            modelName: 'gpt-4.1-nano',
+            temperature: 0.7,
+            openAIApiKey: process.env.OPENAI_API_KEY_NP,
+        });
+
+        let userPrompt = message;
+
+        // If macros are included, build a dynamic AI prompt
+        if (macros && typeof macros === 'object') {
+            const protein = macros.protein ?? 0;
+            const carbs = macros.carbs ?? 0;
+            const fat = macros.fat ?? 0;
+
+            userPrompt = `
+            You are a nutrition assistant. The user has already logged food today and has the following **remaining macros**:
+            - Protein: ${protein}g
+            - Carbs: ${carbs}g
+            - Fat: ${fat}g
+
+            Suggest a meal or food combination that helps balance these macros. Be specific and realistic:
+            - Max 5 ingredients
+            - List food name + quantity (e.g. "100g chicken breast")
+            - Avoid generalities
+            - Explain briefly why it fits the macros
+
+            Respond only with a suggestion — assume macros are accurate and no dietary restrictions apply.
+            `;
+        }
+
+        const response = await model.invoke([
+            new SystemMessage('You are a helpful nutrition assistant.'),
+            new HumanMessage(message),
+        ]);
+
+        res.status(200).json({ reply: response.content });
+    } catch (err) {
+        console.error('Error in AI assist:', err);
+        res.status(500).json({ error: 'AI assistant failed to respond' });
     }
-
-    const model = new ChatOpenAI({
-      modelName: 'gpt-3.5-turbo',
-    //   modelName: 'gpt-4.1-nano', 
-    //   temperature: 0.7,
-      openAIApiKey: process.env.OPENAI_API_KEY_NP,
-    });
-
-    const response = await model.invoke([
-      new SystemMessage('You are a helpful nutrition assistant.'),
-      new HumanMessage(message),
-    ]);
-
-    res.status(200).json({ reply: response.content });
-  } catch (err) {
-    console.error('Error in AI assist:', err);
-    res.status(500).json({ error: 'AI assistant failed to respond' });
-  }
 });
 
 /**
