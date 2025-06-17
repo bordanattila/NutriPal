@@ -34,6 +34,11 @@ interface CustomJwtPayload extends JwtPayload {
   };
 }
 
+interface ApiResponse {
+  foods?: FoodLog[];
+  message?: string;
+}
+
 const api = ky.create({
   prefixUrl: process.env.EXPO_PUBLIC_API_URL || 'http://192.168.1.13:4000',
 });
@@ -136,7 +141,6 @@ function DashboardContent() {
         return;
       }
 
-      // Extract userId from JWT payload - profile is the decoded token
       const userId = profile.data?._id || profile.data?.id;
       console.log('Extracted userId:', userId);
       
@@ -146,24 +150,42 @@ function DashboardContent() {
         return;
       }
 
-      // Force current date to be actual current date, not from token
-      const currentDate = new Date();
-      const today = DateTime.fromJSDate(currentDate)
+      // Get current date in NY timezone and format it
+      async function queryDate(dateStr: string): Promise<ApiResponse> {
+        console.log('📅 Dashboard fetch for date:', dateStr);
+        const res = await api.get(`api/foodByDate/${userId}/date/${dateStr}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        return res.json();
+      }
+      
+      // "Today" in NY:
+      const todayNY = DateTime.now()
         .setZone('America/New_York')
+        .startOf('day')
         .toFormat('yyyy-MM-dd');
       
-      const response = await api.get(`api/foodByDate/${userId}/date/${today}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const data: any = await response.json();
+      let data = await queryDate(todayNY);
+      
+      // If empty, fetch "yesterday"
+      if ((!data.foods || data.foods.length === 0) && data.message) {
+        const yesterdayNY = DateTime.now()
+          .setZone('America/New_York')
+          .minus({ days: 1 })
+          .startOf('day')
+          .toFormat('yyyy-MM-dd');
+      
+        console.log('⚠️ Dashboard no data for today—retrying for yesterday:', yesterdayNY);
+        data = await queryDate(yesterdayNY);
+      }
+      
       
       if (data.message === "No food has been logged for this day.") {
         console.log('No food logged for today, setting empty foods array');
         setDashboardData({ foods: [] });
       } else {
+        console.log('Received data:', data);
+        // The backend returns the foods array directly in the response
         setDashboardData({ foods: data.foods || [] });
       }
     } catch (error) {

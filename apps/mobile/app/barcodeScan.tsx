@@ -13,7 +13,9 @@ interface FoodResponse {
     code: number;
     message: string;
   };
-  food?: any;
+  food_id?: {
+    value: string;
+  };
 }
 
 /**
@@ -160,8 +162,19 @@ export default function BarcodeScanScreen() {
             }
           ]
         );
+      } else if (response.food_id?.value) {
+        router.replace(`/foodDetails/${response.food_id.value}`);
       } else {
-        router.replace(`/foodDetails/${gtin13}`);
+        Alert.alert(
+          "Error",
+          "Invalid response from server. Please try again.",
+          [
+            {
+              text: "OK",
+              onPress: () => setScanned(false)
+            }
+          ]
+        );
       }
     } catch (error) {
       console.error('Error checking barcode:', error);

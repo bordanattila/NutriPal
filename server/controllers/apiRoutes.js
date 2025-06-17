@@ -316,42 +316,36 @@ router.post('/one-food', async (req, res) => {
  */
 router.post('/daily-log', async (req, res) => {
     try {
-        const { user_id, foods, dateCreated } = req.body;
+        const { user_id, foods } = req.body;
 
-        // Use provided date if available, otherwise use current date
-        const baseDate = dateCreated 
-            ? DateTime.fromFormat(dateCreated, 'yyyy-MM-dd', { zone: 'America/New_York' })
-            : DateTime.now().setZone('America/New_York');
+        // Get current date and compute start and end of day.
+        const startOfDay = DateTime.now()
+            .setZone('America/New_York')
+            .startOf('day')
+            .toUTC()
+            .toJSDate();
+        const endOfDay = DateTime.now()
+            .setZone('America/New_York')
+            .endOf('day')
+            .toUTC()
+            .toJSDate();
 
-        // Set to start of day in ET
-        const startOfDay = baseDate.startOf('day');
-        const endOfDay = startOfDay.plus({ days: 1 }).minus({ seconds: 1 });
-
-        console.log('Date handling debug:');
-        console.log('Input date:', dateCreated);
-        console.log('Base date in ET:', baseDate.toISO());
-        console.log('Start of day ET:', startOfDay.toISO());
-        console.log('End of day ET:', endOfDay.toISO());
-
-        // Check if a DailyLog exists for this user for this day
+        const adjustedStartOfDay = new Date(startOfDay.getTime() - 4 * 60 * 60 * 1000);
+        // Check if a DailyLog exists for this user for today.
         let dailyLog = await DailyLog.findOne({
             user_id,
-            dateCreated: {
-                $gte: startOfDay.toJSDate(),
-                $lte: endOfDay.toJSDate()
-            }
+            dateCreated: { $gte: adjustedStartOfDay, $lte: endOfDay }
         });
-
         if (dailyLog) {
-            // Update the existing DailyLog by appending new foods
+            // Update the existing DailyLog by appending new foods.
             dailyLog.foods = dailyLog.foods.concat(foods);
             await dailyLog.save();
             res.status(200).json(dailyLog);
         } else {
-            // Create a new DailyLog if none exists
+            // Create a new DailyLog if none exists for today.
             dailyLog = new DailyLog({
                 user_id,
-                dateCreated: dateCreated, // Let the schema handle the date conversion
+                dateCreated: adjustedStartOfDay,
                 foods
             });
             await dailyLog.save();

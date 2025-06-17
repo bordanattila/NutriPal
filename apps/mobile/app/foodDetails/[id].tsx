@@ -9,6 +9,16 @@ import { getAccessTokenValue } from '@/utils/apiAuth';
 import DonutChart from '@/components/DonutChart';
 import DropdownSelect from '@/components/DropdownSelect';
 import { DateTime } from 'luxon';
+import { JwtPayload } from 'jwt-decode';
+
+interface CustomJwtPayload extends JwtPayload {
+  data?: {
+    _id?: string;
+    id?: string;
+  };
+  _id?: string;
+  id?: string;
+}
 
 interface Serving {
   serving_id: string;
@@ -114,7 +124,7 @@ export default function FoodDetailsScreen() {
         return;
       }
 
-      const profile = await Auth.getProfile();
+      const profile = await Auth.getProfile() as CustomJwtPayload;
       if (!profile) {
         router.replace('/login');
         return;
@@ -174,7 +184,6 @@ export default function FoodDetailsScreen() {
         json: {
           user_id: userId,
           foods: [foodResponse._id],
-          dateCreated: today,
         },
       });
 

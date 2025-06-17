@@ -8,6 +8,16 @@ import { mobileAuthService as Auth } from "@/utils/authServiceMobile";
 import SearchBar from '@/components/SearchBar';
 import { handleSearch as handleFoodSearch } from '@/utils/searchUtils';
 import { Food } from '../types/food';
+import { JwtPayload } from 'jwt-decode';
+
+interface CustomJwtPayload extends JwtPayload {
+  data?: {
+    _id?: string;
+    id?: string;
+  };
+  _id?: string;
+  id?: string;
+}
 
 interface SearchResponse {
   foods: Food[];
@@ -54,7 +64,7 @@ export default function SearchFood() {
         return;
       }
 
-      const profile = await Auth.getProfile();
+      const profile = await Auth.getProfile() as CustomJwtPayload;
       if (!profile) {
         router.replace('/login');
         return;

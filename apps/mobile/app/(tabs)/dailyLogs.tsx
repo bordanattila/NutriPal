@@ -8,6 +8,16 @@ import ky from 'ky';
 import { mobileAuthService as Auth } from "@/utils/authServiceMobile";
 import Footer from '@/components/Footer';
 import Calendar from '@/components/Calendar';
+import { JwtPayload } from 'jwt-decode';
+
+interface CustomJwtPayload extends JwtPayload {
+  data?: {
+    _id?: string;
+    id?: string;
+  };
+  _id?: string;
+  id?: string;
+}
 
 const api = ky.create({
   prefixUrl: process.env.EXPO_PUBLIC_API_URL || 'http://192.168.1.13:4000',
@@ -46,7 +56,7 @@ export default function DailyLogs() {
         return;
       }
 
-      const profile = await Auth.getProfile();
+      const profile = await Auth.getProfile() as CustomJwtPayload;
       if (!profile) {
         router.replace('/login');
         return;
@@ -58,15 +68,43 @@ export default function DailyLogs() {
         return;
       }
 
-      const formattedDate = date.toFormat('yyyy-MM-dd');
-      const response = await api.get(`api/foodByDate/${userId}/date/${formattedDate}`).json() as ApiResponse;
+      // Format date in NY timezone
+      // Helper to actually call your GET:
+      async function fetchFor(dateStr: string) {
+        console.log('📅 fetching logs for date:', dateStr);
+        return api
+          .get(`api/foodByDate/${userId}/date/${dateStr}`)
+          .json<ApiResponse>();
+      }
 
-      if (response.foods) {
+      // 1️⃣ Compute “today” in NY (just the string)
+      const todayStr = date
+        .setZone('America/New_York')
+        .startOf('day')
+        .toFormat('yyyy-MM-dd');
+
+      // 2️⃣ Try fetching “today” first
+      let response = await fetchFor(todayStr);
+
+      // 3️⃣ If nothing, fall back to “yesterday”
+      if ((!response.foods || response.foods.length === 0) && response.message) {
+        const yesterdayStr = date
+          .setZone('America/New_York')
+          .minus({ days: 1 })
+          .startOf('day')
+          .toFormat('yyyy-MM-dd');
+
+        console.log('⚠️ no logs for today—retrying for yesterday:', yesterdayStr);
+        response = await fetchFor(yesterdayStr);
+      }
+
+      // 4️⃣ Now update your state
+      if (response.foods?.length) {
         setLogHistory(response.foods);
         setLogMessage('');
-      } else if (response.message) {
+      } else {
         setLogHistory([]);
-        setLogMessage(response.message);
+        setLogMessage(response.message || 'No food has been logged for this day.');
       }
     } catch (error) {
       console.error('Error fetching food logs:', error);
@@ -93,7 +131,7 @@ export default function DailyLogs() {
         return;
       }
 
-      const profile = await Auth.getProfile();
+      const profile = await Auth.getProfile() as CustomJwtPayload;
       if (!profile) {
         router.replace('/login');
         return;
@@ -106,7 +144,7 @@ export default function DailyLogs() {
       }
 
       const formattedDate = date.toFormat('yyyy-MM-dd');
-      
+
       Alert.alert(
         "Delete Food",
         "Are you sure you want to delete this food item?",
@@ -144,7 +182,7 @@ export default function DailyLogs() {
           {food.brand && <Text style={styles.brandName}> ({food.brand})</Text>}
         </Text>
         <Text style={styles.nutritionInfo}>
-          Calories: {food.calories.toFixed(1)} | Carb: {food.carbohydrate.toFixed(1)} | 
+          Calories: {food.calories.toFixed(1)} | Carb: {food.carbohydrate.toFixed(1)} |
           Protein: {food.protein.toFixed(1)} | Fat: {food.fat.toFixed(1)}
         </Text>
         <Text style={styles.servingInfo}>
@@ -171,7 +209,7 @@ export default function DailyLogs() {
             value={date}
             onChange={setDate}
           />
-          
+
           {logHistory.length > 0 ? (
             <>
               {groupedLogs.map(group => (
