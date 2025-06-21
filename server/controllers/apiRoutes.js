@@ -13,7 +13,10 @@ const Recipe = require('../models/Recipe');
 const { calculateRecipeNutrition } = require('../utils/nutritionCalculation');
 const { DateTime } = require('luxon');
 const { generateFoodId, generateServingId } = require('../utils/idGenerator');
-const { convertUpcEtoUpcA } = require('../utils/barcodeConverter')
+const { convertUpcEtoUpcA } = require('../utils/barcodeConverter');
+const { ChatOpenAI } = require('@langchain/openai');
+const { HumanMessage, SystemMessage } = require('@langchain/core/messages');
+require('dotenv').config();
 
 /**
  * @route GET /api/token
@@ -149,41 +152,33 @@ router.get('/recent-foods/:user_id', async (req, res) => {
  * @access Private
  */
 router.get('/foodByDate/:user_id/date/:dateCreated', async (req, res) => {
-    console.log('FoodByDate route called with params:', req.params);
     try {
         const userId = req.params.user_id;
-        const dateCreated = req.params.dateCreated;
+        const selectedDate = (req.params.dateCreated);
 
-        // Parse the date in ET timezone
-        const baseDate = DateTime.fromFormat(dateCreated, 'yyyy-MM-dd', { zone: 'America/New_York' });
-        
-        // Set to start of day in ET
-        const startOfDay = baseDate.startOf('day');
-        
-        // Convert to UTC for database queries
-        const utcStartOfDay = startOfDay.toUTC();
-        const utcEndOfDay = startOfDay.plus({ days: 1 }).toUTC().minus({ seconds: 1 });
+        // Parse the date using Luxon (assumes the format 'yyyy-MM-dd')
+        const selected = DateTime.fromFormat(selectedDate, 'yyyy-MM-dd', { zone: 'America/New_York' });
 
-        console.log('Date handling debug:');
-        console.log('Input date:', dateCreated);
-        console.log('Base date in ET:', baseDate.toISO());
-        console.log('Start of day ET:', startOfDay.toISO());
-        console.log('UTC start:', utcStartOfDay.toISO());
-        console.log('UTC end:', utcEndOfDay.toISO());
+        // Compute the start and end of the selected day
+        const startOfDay = selected
+            .startOf('day')
+            .toUTC()
+            .toJSDate();
+        const endOfDay = selected
+            .endOf('day')
+            .toUTC()
+            .toJSDate();
+
+        const adjustedStartOfDay = new Date(startOfDay.getTime() - 4 * 60 * 60 * 1000);
 
         const recentFoods = await DailyLog.findOne({
             user_id: userId,
-            dateCreated: {
-                $gte: utcStartOfDay.toJSDate(),
-                $lte: utcEndOfDay.toJSDate()
-            }
-        }).populate('foods');
-
+            dateCreated: { $gte: adjustedStartOfDay, $lte: endOfDay }
+        }).populate('foods')
         if (!recentFoods) {
             return res.json({ message: 'No food has been logged for this day.' });
         }
 
-        console.log('Found foods:', recentFoods);
         res.json(recentFoods);
     } catch (err) {
         console.error(err);
@@ -428,6 +423,62 @@ router.delete('/deleteFood/:user_id/:food_id/:date', async (req, res) => {
         console.error('Error removing food item:', error);
     }
 })
+
+/**
+ * @route POST /api/ai-assist
+ * @desc Sends a prompt to the AI assistant (LangChain + OpenAI)
+ * @access Private
+ */
+router.post('/ai-assist', async (req, res) => {
+    try {
+        const { message, macros } = req.body;
+
+        if (!message || typeof message !== 'string') {
+            return res.status(400).json({ error: 'Message is required' });
+        }
+
+        const model = new ChatOpenAI({
+            //   modelName: 'gpt-3.5-turbo',git 
+            modelName: 'gpt-4.1-nano',
+            temperature: 0.7,
+            openAIApiKey: process.env.OPENAI_API_KEY_NP,
+        });
+
+        let userPrompt = message;
+
+        // If macros are included, build a dynamic AI prompt
+        if (macros && typeof macros === 'object') {
+            const protein = macros.protein ?? 0;
+            const carbs = macros.carbs ?? 0;
+            const fat = macros.fat ?? 0;
+
+            userPrompt = `
+            You are a nutrition assistant. The user has already logged food today and has the following **remaining macros**:
+            - Protein: ${protein}g
+            - Carbs: ${carbs}g
+            - Fat: ${fat}g
+
+            Suggest a meal or food combination that helps balance these macros. Be specific and realistic:
+            - Max 5 ingredients
+            - List food name + quantity (e.g. "100g chicken breast")
+            - Avoid generalities
+            - Explain briefly why it fits the macros
+
+            Respond only with a suggestion — assume macros are accurate and no dietary restrictions apply.
+            `;
+        }
+
+        const response = await model.invoke([
+            new SystemMessage('You are a helpful nutrition assistant.'),
+            new HumanMessage(message),
+        ]);
+
+        res.status(200).json({ reply: response.content });
+    } catch (err) {
+        console.error('Error in AI assist:', err);
+        res.status(500).json({ error: 'AI assistant failed to respond' });
+    }
+});
 
 /**
  * @route DELETE /api/refresh

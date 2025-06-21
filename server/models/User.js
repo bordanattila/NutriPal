@@ -3,7 +3,7 @@
  * @description Mongoose model for application users, including authentication logic.
  */
 const { Schema, model } = require("mongoose");
-const bcrypt = require("bcryptjs");
+const bcrypt = require("bcrypt");
 const dailyLogSchema = require('./DailyLog');
 
 /**
@@ -54,6 +54,15 @@ const userSchema = new Schema(
     profilePic: {
       type: String,
       required: false
+    },
+
+    /**
+    * @property {String} macros - Optional macro nutrients goal set by the user.
+    */
+    macros: {
+      protein: { type: Number, required: false },
+      fat: { type: Number, required: false },
+      carbs: { type: Number, required: false }
     },
 
     /**

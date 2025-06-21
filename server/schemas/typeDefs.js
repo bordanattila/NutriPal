@@ -18,6 +18,7 @@ const typeDefs = gql`
         daily_log: [DailyLog]
         saved_meal: [Meal]
         saved_recipe: [Recipe]
+        macros: Macros
     }
 
   """
@@ -172,6 +173,7 @@ const typeDefs = gql`
             calorieGoal: Int
             password: String,
             profilePic: String,
+            macros: MacrosInput,
         ): User
 
          """
@@ -192,6 +194,18 @@ const typeDefs = gql`
             _id: ID!,
             food_id: ID!,
             ): User
+    }
+
+    type Macros {
+      protein: Int
+      fat: Int
+      carbs: Int
+    }
+
+    input MacrosInput {
+      protein: Int
+      fat: Int
+      carbs: Int
     }
 `;
 
