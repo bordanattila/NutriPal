@@ -3,8 +3,9 @@ import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Alert 
 import { useRouter, Stack } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useQuery } from '@apollo/client';
+import { useQuery, ApolloProvider } from '@apollo/client';
 import { GET_USER } from '@/utils/mutations';
+import { client } from '@/utils/apollo';
 import { mobileAuthService } from '@/utils/authServiceMobile';
 import { DateTime } from 'luxon';
 import ky from 'ky';
@@ -14,7 +15,7 @@ import ky from 'ky';
  * @description Preconfigured ky instance for making API requests with a set prefix URL.
  */
 const api = ky.create({
-  prefixUrl: process.env.EXPO_PUBLIC_API_URL || 'http://192.168.1.13:4000',
+  prefixUrl: process.env.EXPO_PUBLIC_API_URL || 'http://192.168.1.14:4000',
 });
 
 interface RemainingMacros {
@@ -64,6 +65,9 @@ const AiAssistant = () => {
   const userId = data?.user?._id;
   const macroGoals = data?.user?.macros;
 
+  console.log('User data from GraphQL:', data);
+  console.log('Macro goals:', macroGoals);
+
   useEffect(() => {
     const fetchTodaysLog = async () => {
       if (!userId || !macroGoals || !authToken) return;
@@ -90,10 +94,22 @@ const AiAssistant = () => {
           totals.fat += item.fat || 0;
         });
 
+        console.log('Macro goals from GraphQL:', macroGoals);
+        console.log('Food totals:', totals);
+
+        // Use default macros if not set
+        const defaultMacros = {
+          protein: 150,
+          carbs: 200,
+          fat: 65
+        };
+
+        const effectiveMacros = macroGoals || defaultMacros;
+
         setRemainingMacros({
-          protein: Math.max(macroGoals.protein - totals.protein, 0),
-          carbs: Math.max(macroGoals.carbs - totals.carbs, 0),
-          fat: Math.max(macroGoals.fat - totals.fat, 0),
+          protein: Math.max(effectiveMacros.protein - totals.protein, 0),
+          carbs: Math.max(effectiveMacros.carbs - totals.carbs, 0),
+          fat: Math.max(effectiveMacros.fat - totals.fat, 0),
         });
       } catch (err) {
         console.error('Failed to fetch food log:', err);
@@ -256,6 +272,14 @@ const AiAssistant = () => {
   );
 };
 
+export default function AiAssistantWrapper() {
+  return (
+    <ApolloProvider client={client}>
+      <AiAssistant />
+    </ApolloProvider>
+  );
+}
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -387,6 +411,4 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-});
-
-export default AiAssistant; 
+}); 

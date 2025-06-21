@@ -20,7 +20,7 @@ interface CustomJwtPayload extends JwtPayload {
 }
 
 const api = ky.create({
-  prefixUrl: process.env.EXPO_PUBLIC_API_URL || 'http://192.168.1.13:4000',
+  prefixUrl: process.env.EXPO_PUBLIC_API_URL || 'http://192.168.1.14:4000',
 });
 
 interface Food {
@@ -77,16 +77,16 @@ export default function DailyLogs() {
           .json<ApiResponse>();
       }
 
-      // 1️⃣ Compute “today” in NY (just the string)
+      // 1️⃣ Compute "today" in NY (just the string)
       const todayStr = date
         .setZone('America/New_York')
         .startOf('day')
         .toFormat('yyyy-MM-dd');
 
-      // 2️⃣ Try fetching “today” first
+      // 2️⃣ Try fetching "today" first
       let response = await fetchFor(todayStr);
 
-      // 3️⃣ If nothing, fall back to “yesterday”
+      // 3️⃣ If nothing, fall back to "yesterday"
       if ((!response.foods || response.foods.length === 0) && response.message) {
         const yesterdayStr = date
           .setZone('America/New_York')

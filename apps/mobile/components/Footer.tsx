@@ -29,7 +29,7 @@ const Footer = () => {
 
 const styles = StyleSheet.create({
   container: {
-    position: 'absolute',
+    // position: 'absolute',
     bottom: 25, // Position above the tab bar
     left: 0,
     right: 0,

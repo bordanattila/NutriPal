@@ -4,13 +4,22 @@ import { onError } from '@apollo/client/link/error';
 import Constants from 'expo-constants';
 import { mobileAuthService } from './authServiceMobile';
 
-const API_URL = Constants.expoConfig?.extra?.apiUrl;
+console.log('Constants.expoConfig?.extra?.apiUrl:', Constants.expoConfig?.extra?.apiUrl);
+console.log('process.env.EXPO_PUBLIC_API_URL:', process.env.EXPO_PUBLIC_API_URL);
 
-console.log('Initializing Apollo Client with API URL:', API_URL);
+const API_URL = Constants.expoConfig?.extra?.apiUrl || process.env.EXPO_PUBLIC_API_URL || 'http://192.168.1.14:4000';
+
+console.log('Final API_URL:', API_URL);
+
+if (!API_URL) {
+  throw new Error('API_URL is not configured. Please set EXPO_PUBLIC_API_URL environment variable.');
+}
 
 const httpLink = createHttpLink({
   uri: `${API_URL}/graphql`,
 });
+
+console.log('GraphQL endpoint:', `${API_URL}/graphql`);
 
 // Add logging link
 const loggingLink = new ApolloLink((operation, forward) => {
@@ -53,9 +62,15 @@ export const client = new ApolloClient({
   defaultOptions: {
     watchQuery: {
       fetchPolicy: 'network-only',
+      errorPolicy: 'all',
     },
     query: {
       fetchPolicy: 'network-only',
+      errorPolicy: 'all',
+    },
+    mutate: {
+      errorPolicy: 'all',
     },
   },
+  connectToDevTools: __DEV__,
 }); 

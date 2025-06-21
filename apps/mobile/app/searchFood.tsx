@@ -26,7 +26,7 @@ interface SearchResponse {
 interface RecentFoodsResponse extends Array<Food> {}
 
 const api = ky.create({
-  prefixUrl: process.env.EXPO_PUBLIC_API_URL || 'http://192.168.1.13:4000',
+  prefixUrl: process.env.EXPO_PUBLIC_API_URL || 'http://192.168.1.14:4000',
 });
 
 export default function SearchFood() {

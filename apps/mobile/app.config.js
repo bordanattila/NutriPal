@@ -34,7 +34,7 @@ module.exports = {
     ],
     extra: {
       api: {
-        url: process.env.EXPO_PUBLIC_API_URL,
+        url: process.env.EXPO_PUBLIC_API_URL || 'http://192.168.1.14:4000',
       },
       eas: {
         projectId: "your-project-id",

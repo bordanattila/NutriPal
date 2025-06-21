@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router';
 import ky from 'ky';
 
 const api = ky.create({
-  prefixUrl: process.env.EXPO_PUBLIC_API_URL || 'http://192.168.1.13:4000',
+  prefixUrl: process.env.EXPO_PUBLIC_API_URL || 'http://192.168.1.14:4000',
 });
 
 interface Serving {

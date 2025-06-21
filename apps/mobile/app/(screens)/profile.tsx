@@ -1,138 +1,81 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, ScrollView } from 'react-native';
-import { Text, Card, TextInput, Button, useTheme, Snackbar } from 'react-native-paper';
+import { StyleSheet, View, ScrollView, TextInput as RNTextInput } from 'react-native';
+import { Text, TextInput, Button, Snackbar } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { mobileAuthService as Auth } from "@/utils/authServiceMobile";
+import { mobileAuthService as Auth } from '@/utils/authServiceMobile';
+import { useMutation, useQuery, ApolloProvider } from '@apollo/client';
+import { GET_USER, UPDATE_USER_PROFILE } from '@/utils/mutations';
+import { client } from '@/utils/apollo';
 import { useRouter } from 'expo-router';
 import Footer from '@/components/Footer';
-import { ApolloClient, InMemoryCache, ApolloProvider, useMutation, createHttpLink } from '@apollo/client';
-import { setContext } from '@apollo/client/link/context';
-import { UPDATE_USER_PROFILE } from '@/utils/mutations';
-
-interface UserProfile {
-  _id: string;
-  username: string;
-  email: string;
-  calorieGoal: number;
-}
-
-// Create the http link
-const httpLink = createHttpLink({
-  uri: `${process.env.EXPO_PUBLIC_API_URL || 'http://192.168.1.13:4000'}/graphql`,
-});
-
-// Create the auth link
-const authLink = setContext(async (_, { headers }) => {
-  const token = await Auth.getToken();
-  return {
-    headers: {
-      ...headers,
-      authorization: token ? `Bearer ${token}` : "",
-    }
-  }
-});
-
-const client = new ApolloClient({
-  link: authLink.concat(httpLink),
-  cache: new InMemoryCache()
-});
-
-export default function ProfileScreenWrapper() {
-  return (
-    <ApolloProvider client={client}>
-      <ProfileScreen />
-    </ApolloProvider>
-  );
-}
 
 function ProfileScreen() {
   const router = useRouter();
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [calorieGoal, setCalorieGoal] = useState('2000');
-  const [isEditing, setIsEditing] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [profile, setProfile] = useState(null);
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [calorieGoal, setCalorieGoal] = useState('');
+  const [password, setPassword] = useState('');
+  const [protein, setProtein] = useState('');
+  const [fat, setFat] = useState('');
+  const [carbs, setCarbs] = useState('');
   const [snackbarVisible, setSnackbarVisible] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
 
-  const [updateUserProfile] = useMutation(UPDATE_USER_PROFILE, {
-    onCompleted: (data) => {
-      setProfile(data.updateUserProfile);
-      setCalorieGoal(data.updateUserProfile.calorieGoal.toString());
-      showSnackbar('Profile updated successfully');
-      setIsEditing(false);
-    },
+  const { data, loading: queryLoading, error: queryError } = useQuery(GET_USER, {
     onError: (error) => {
-      console.error('Error updating profile:', error);
-      showSnackbar('Failed to update profile');
-    },
+      console.error('GraphQL query error:', error);
+    }
+  });
+  const [updateUserProfile, { loading: mutationLoading }] = useMutation(UPDATE_USER_PROFILE, {
+    onError: (error) => {
+      console.error('GraphQL mutation error:', error);
+    }
   });
 
   useEffect(() => {
-    const loadProfile = async () => {
-      try {
-        const userData = await Auth.getProfile();
-        if (userData?.data) {
-          setProfile(userData.data as UserProfile);
-          setCalorieGoal(userData.data.calorieGoal?.toString() || '2000');
-        }
-      } catch (error) {
-        console.error('Error loading profile:', error);
-        showSnackbar('Failed to load profile');
-      }
-    };
+    if (data?.user) {
+      setProfile(data.user);
+      setUsername(data.user.username || '');
+      setEmail(data.user.email || '');
+      setCalorieGoal(data.user.calorieGoal?.toString() || '');
+      setProtein(data.user.macros?.protein?.toString() || '');
+      setFat(data.user.macros?.fat?.toString() || '');
+      setCarbs(data.user.macros?.carbs?.toString() || '');
+    }
+  }, [data]);
 
-    loadProfile();
-  }, []);
+  const handleSave = async () => {
+    try {
+      const variables: any = { userId: data.user._id };
+      if (username) variables.username = username;
+      if (email) variables.email = email;
+      if (calorieGoal) variables.calorieGoal = parseInt(calorieGoal);
+      if (password) variables.password = password;
+      if (protein || fat || carbs) {
+        variables.macros = {
+          ...(protein && { protein: parseInt(protein) }),
+          ...(fat && { fat: parseInt(fat) }),
+          ...(carbs && { carbs: parseInt(carbs) }),
+        };
+      }
+
+      const { data: result } = await updateUserProfile({ variables });
+      setProfile(result.updateUserProfile);
+      showSnackbar('Profile updated successfully');
+    } catch (err) {
+      console.error(err);
+      showSnackbar('Failed to update profile');
+    }
+  };
 
   const showSnackbar = (message: string) => {
     setSnackbarMessage(message);
     setSnackbarVisible(true);
   };
 
-  const handleSave = async () => {
-    if (!profile?._id) {
-      showSnackbar('Profile not loaded');
-      return;
-    }
-
-    const goalValue = parseInt(calorieGoal, 10);
-    if (isNaN(goalValue) || goalValue <= 0) {
-      showSnackbar('Please enter a valid calorie goal');
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      console.log('Attempting to update profile with:', {
-        userId: profile._id,
-        calorieGoal: goalValue
-      });
-      
-      await updateUserProfile({
-        variables: {
-          userId: profile._id,
-          calorieGoal: goalValue,
-        },
-      });
-      
-      console.log('Profile update successful');
-    } catch (error: any) {
-      console.error('Error updating profile:', error);
-      // Log more details about the error
-      if (error?.networkError) {
-        console.error('Network error:', error.networkError);
-      }
-      if (error?.graphQLErrors) {
-        console.error('GraphQL errors:', error.graphQLErrors);
-      }
-      showSnackbar('Failed to update profile');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  if (!profile) {
+  if (queryLoading) {
     return (
       <View style={[styles.container, styles.centered]}>
         <Text style={styles.loadingText}>Loading profile...</Text>
@@ -140,67 +83,112 @@ function ProfileScreen() {
     );
   }
 
+  if (queryError) {
+    return (
+      <View style={[styles.container, styles.centered]}>
+        <Text style={styles.errorText}>Error loading profile: {queryError.message}</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
-      <LinearGradient
-        colors={['#00b4d8', '#0077b6', '#023e8a']}
-        style={styles.gradient}
-      >
-        <SafeAreaView style={styles.safeArea} edges={['top']}>
-          <ScrollView style={styles.scrollView}>
-            <Text variant="headlineMedium" style={styles.title}>Profile</Text>
+      <LinearGradient colors={['#1f2937', '#111827']} style={styles.gradient}>
+        <SafeAreaView style={styles.safeArea}>
+          <ScrollView contentContainerStyle={styles.scrollViewContent}>
+            <Text style={styles.title}>Profile</Text>
 
-            <Card style={styles.card}>
-              <Card.Content>
-                <View style={styles.field}>
-                  <Text variant="labelLarge" style={styles.label}>Username</Text>
-                  <Text variant="bodyLarge" style={styles.value}>{profile.username}</Text>
-                </View>
+            <TextInput
+              label="Username"
+              value={username}
+              onChangeText={setUsername}
+              mode="outlined"
+              style={styles.input}
+              placeholder="Username"
+            />
 
-                <View style={styles.field}>
-                  <Text variant="labelLarge" style={styles.label}>Email</Text>
-                  <Text variant="bodyLarge" style={styles.value}>{profile.email}</Text>
-                </View>
+            <TextInput
+              label="Email"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              mode="outlined"
+              style={styles.input}
+              placeholder="Email"
+            />
 
-                <View style={styles.field}>
-                  <Text variant="labelLarge" style={styles.label}>Daily Calorie Goal</Text>
-                  {isEditing ? (
-                    <TextInput
-                      value={calorieGoal}
-                      onChangeText={setCalorieGoal}
-                      keyboardType="numeric"
-                      mode="outlined"
-                      style={styles.input}
-                      disabled={isLoading}
-                    />
-                  ) : (
-                    <Text variant="bodyLarge" style={styles.value}>{calorieGoal} calories</Text>
-                  )}
-                </View>
+            <TextInput
+              label="Daily Calorie Goal"
+              value={calorieGoal}
+              onChangeText={setCalorieGoal}
+              keyboardType="numeric"
+              mode="outlined"
+              style={styles.input}
+              placeholder="Calorie Goal"
+            />
 
-                <Button
-                  mode={isEditing ? "contained" : "outlined"}
-                  onPress={() => isEditing ? handleSave() : setIsEditing(true)}
-                  style={styles.button}
-                  loading={isLoading}
-                  disabled={isLoading}
-                >
-                  {isEditing ? "Save Changes" : "Edit Profile"}
-                </Button>
-              </Card.Content>
-            </Card>
+            <TextInput
+              label="New Password"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+              mode="outlined"
+              style={styles.input}
+              placeholder="New Password"
+            />
+
+            <TextInput
+              label="Protein (g)"
+              value={protein}
+              onChangeText={setProtein}
+              keyboardType="numeric"
+              mode="outlined"
+              style={styles.input}
+              placeholder="Protein"
+            />
+
+            <TextInput
+              label="Fat (g)"
+              value={fat}
+              onChangeText={setFat}
+              keyboardType="numeric"
+              mode="outlined"
+              style={styles.input}
+              placeholder="Fat"
+            />
+
+            <TextInput
+              label="Carbs (g)"
+              value={carbs}
+              onChangeText={setCarbs}
+              keyboardType="numeric"
+              mode="outlined"
+              style={styles.input}
+              placeholder="Carbs"
+            />
+
+            <Button
+              mode="contained"
+              onPress={handleSave}
+              loading={mutationLoading}
+              disabled={mutationLoading}
+              style={styles.button}
+            >
+              Update Profile
+            </Button>
+
+            <Snackbar
+              visible={snackbarVisible}
+              onDismiss={() => setSnackbarVisible(false)}
+              duration={3000}
+              style={styles.snackbar}
+            >
+              {snackbarMessage}
+            </Snackbar>
           </ScrollView>
-        </SafeAreaView>
-        <Footer />
 
-        <Snackbar
-          visible={snackbarVisible}
-          onDismiss={() => setSnackbarVisible(false)}
-          duration={3000}
-          style={styles.snackbar}
-        >
-          {snackbarMessage}
-        </Snackbar>
+          <Footer />
+        </SafeAreaView>
       </LinearGradient>
     </View>
   );
@@ -215,50 +203,51 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
+    paddingHorizontal: 16,
   },
-  centered: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  scrollView: {
-    flex: 1,
+  scrollViewContent: {
+    paddingVertical: 24,
   },
   title: {
-    textAlign: 'center',
-    marginVertical: 16,
-    color: 'white',
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
-  },
-  loadingText: {
-    color: 'white',
-    fontSize: 16,
-  },
-  card: {
-    margin: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-  },
-  field: {
-    marginBottom: 16,
-  },
-  label: {
-    color: 'rgba(255, 255, 255, 0.7)',
-    marginBottom: 4,
-  },
-  value: {
-    color: 'white',
+    textAlign: 'center',
+    marginBottom: 24,
+    color: '#ffffff',
   },
   input: {
-    marginTop: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    marginBottom: 16,
+    backgroundColor: '#1f2937',
   },
   button: {
     marginTop: 16,
+    borderRadius: 9999,
+    paddingVertical: 8,
   },
   snackbar: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
+    backgroundColor: '#10b981',
   },
-}); 
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#ffffff',
+  },
+  errorText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#ff0000',
+  },
+});
+
+export default function ProfileScreenWrapper() {
+  return (
+    <ApolloProvider client={client}>
+      <ProfileScreen />
+    </ApolloProvider>
+  );
+}

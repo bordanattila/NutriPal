@@ -2,16 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { mobileAuthService as Auth } from "@/utils/authServiceMobile";
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import ky from 'ky';
 import { DateTime } from 'luxon';
+import { JwtPayload } from 'jwt-decode';
+import { useQuery } from '@apollo/client';
+import { GET_USER } from '@/utils/mutations';
+import { client } from '@/utils/apollo';
+import { ApolloProvider } from '@apollo/client';
 import Footer from '@/components/Footer';
 import DonutChart from '@/components/DonutChart';
-import { ApolloClient, InMemoryCache, ApolloProvider, useQuery, createHttpLink } from '@apollo/client';
-import { setContext } from '@apollo/client/link/context';
-import { GET_USER } from '@/utils/mutations';
-import { JwtPayload } from 'jwt-decode';
+import { mobileAuthService as Auth } from '@/utils/authServiceMobile';
+import ky from 'ky';
 
 interface FoodLog {
   calories: number;
@@ -40,47 +41,7 @@ interface ApiResponse {
 }
 
 const api = ky.create({
-  prefixUrl: process.env.EXPO_PUBLIC_API_URL || 'http://192.168.1.13:4000',
-});
-
-// Create the http link
-const httpLink = createHttpLink({
-  uri: `${process.env.EXPO_PUBLIC_API_URL || 'http://192.168.1.13:4000'}/graphql`,
-});
-
-// Create the auth link
-const authLink = setContext(async (_, { headers }) => {
-  try {
-    const token = await Auth.getToken();
-    return {
-      headers: {
-        ...headers,
-        authorization: token ? `Bearer ${token}` : "",
-      }
-    };
-  } catch (error) {
-    console.error('Error getting auth token:', error);
-    return {
-      headers: {
-        ...headers,
-      }
-    };
-  }
-});
-
-const client = new ApolloClient({
-  link: authLink.concat(httpLink),
-  cache: new InMemoryCache(),
-  defaultOptions: {
-    watchQuery: {
-      fetchPolicy: 'network-only',
-      errorPolicy: 'all',
-    },
-    query: {
-      fetchPolicy: 'network-only',
-      errorPolicy: 'all',
-    },
-  },
+  prefixUrl: process.env.EXPO_PUBLIC_API_URL || 'http://192.168.1.14:4000',
 });
 
 function DashboardContent() {
