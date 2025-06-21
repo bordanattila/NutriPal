@@ -50,7 +50,7 @@ class MobileAuthService {
       if (!token) return false;
       const isExpired = await this.isTokenExpired(token);
       console.log('loggedIn - token expired:', isExpired);
-      return !!token && !isExpired;
+      return !isExpired;
     } catch (error) {
       console.error('Error checking login status:', error);
       return false;
@@ -88,15 +88,12 @@ class MobileAuthService {
         if (!isExpired) {
           this.token = token;
           return token;
-        }
-      }
-      
-      // If token is expired, try to refresh
-      const refreshToken = await SecureStore.getItemAsync('refreshToken');
-      if (refreshToken) {
-        const newToken = await this.refreshToken(refreshToken);
-        if (newToken) {
-          return newToken;
+        } else {
+          console.log('Token is expired, clearing stored tokens');
+          // Clear expired tokens
+          await SecureStore.deleteItemAsync('userToken');
+          await SecureStore.deleteItemAsync('refreshToken');
+          this.token = null;
         }
       }
       
@@ -119,27 +116,6 @@ class MobileAuthService {
     } catch (error) {
       console.error('Error storing token:', error);
       return false;
-    }
-  }
-
-  /**
-   * Attempt to refresh token using stored refresh token.
-   */
-  async refreshToken(refreshToken: string) {
-    try {
-      const response = await api.post('user/refresh', {
-        json: { refreshToken },
-      });
-      
-      const data = await response.json() as TokenResponse;
-      if (data.token) {
-        await this.login(data.token);
-        return data.token;
-      }
-      return null;
-    } catch (error) {
-      console.error('Error refreshing token:', error);
-      return null;
     }
   }
 

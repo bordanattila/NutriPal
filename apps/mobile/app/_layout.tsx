@@ -98,6 +98,36 @@ function RootLayoutNav() {
             headerShown: false,
           }}
         />
+        <Stack.Screen
+          name="signup"
+          options={{
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="aiAssistant"
+          options={{
+            presentation: 'modal',
+            title: "AI Assistant",
+            headerBackTitle: "Logs",
+          }}
+        />
+        <Stack.Screen
+          name="logFromRecipe"
+          options={{
+            presentation: 'modal',
+            title: "Log From Recipe",
+            headerBackTitle: "Logs",
+          }}
+        />
+        <Stack.Screen
+          name="logFromMeal"
+          options={{
+            presentation: 'modal',
+            title: "Log From Meal",
+            headerBackTitle: "Logs",
+          }}
+        />
       </Stack>
     </ThemeProvider>
   );

@@ -22,6 +22,11 @@ export default function LogOptions() {
       icon: 'food-variant' as const,
       onPress: () => router.push('/logFromMeal'),
     },
+    {
+      title: 'AI Assistant',
+      icon: 'robot' as const,
+      onPress: () => router.push('/aiAssistant'),
+    },
   ];
 
   return (
