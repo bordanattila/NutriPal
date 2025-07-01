@@ -93,7 +93,7 @@ function ProfileScreen() {
 
   return (
     <View style={styles.container}>
-      <LinearGradient colors={['#1f2937', '#111827']} style={styles.gradient}>
+      <LinearGradient colors={['#00B4D8', '#0077B6', '#023E8A']} style={styles.gradient}>
         <SafeAreaView style={styles.safeArea}>
           <ScrollView contentContainerStyle={styles.scrollViewContent}>
             <Text style={styles.title}>Profile</Text>
@@ -118,16 +118,6 @@ function ProfileScreen() {
             />
 
             <TextInput
-              label="Daily Calorie Goal"
-              value={calorieGoal}
-              onChangeText={setCalorieGoal}
-              keyboardType="numeric"
-              mode="outlined"
-              style={styles.input}
-              placeholder="Calorie Goal"
-            />
-
-            <TextInput
               label="New Password"
               value={password}
               onChangeText={setPassword}
@@ -135,6 +125,16 @@ function ProfileScreen() {
               mode="outlined"
               style={styles.input}
               placeholder="New Password"
+            />
+
+            <TextInput
+              label="Daily Calorie Goal"
+              value={calorieGoal}
+              onChangeText={setCalorieGoal}
+              keyboardType="numeric"
+              mode="outlined"
+              style={styles.input}
+              placeholder="Calorie Goal"
             />
 
             <TextInput
@@ -217,7 +217,7 @@ const styles = StyleSheet.create({
   },
   input: {
     marginBottom: 16,
-    backgroundColor: '#1f2937',
+    backgroundColor: '#fff',
   },
   button: {
     marginTop: 16,

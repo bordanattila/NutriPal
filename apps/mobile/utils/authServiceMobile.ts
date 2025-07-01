@@ -135,6 +135,33 @@ class MobileAuthService {
   }
 
   /**
+   * Refresh the JWT token using a refresh token.
+   */
+  async refreshToken(refreshToken: string) {
+    try {
+      const response = await api.post('user/refresh', {
+        json: { refreshToken },
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }).json<TokenResponse>();
+
+      if (response?.token) {
+        await SecureStore.setItemAsync('userToken', response.token);
+        this.token = response.token;
+        if (response?.refreshToken) {
+          await SecureStore.setItemAsync('refreshToken', response.refreshToken);
+        }
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Error refreshing token:', error);
+      return false;
+    }
+  }
+
+  /**
    * Decode a JWT token safely.
    */
   private decodeToken(token: string): any | null {

@@ -50,7 +50,8 @@ app.use(cors({
   origin: [
     process.env.CLIENT_URL,
     'https://nutripal-hbcff5htezbqdwe9.canadacentral-01.azurewebsites.net',
-    'http://192.168.1.13:4000' // Mobile app expo dev server
+    'http://192.168.1.14:4000', // Mobile app expo dev server
+    'http://192.168.1.13:4000' // Keep old IP for backward compatibility
   ],
   methods: ['GET', 'POST', 'DELETE', 'PUT'],
   credentials: true
@@ -116,8 +117,11 @@ const startApolloServer = async (typeDefs, resolvers) => {
   server.applyMiddleware({ app });
 
   db.once('open', () => {
-    app.listen(PORT, () => {
+    app.listen(PORT, '0.0.0.0', () => {
       console.log(`API server running on port ${PORT}!`);
+      console.log(`Server accessible at:`);
+      console.log(`  - Local: http://localhost:${PORT}`);
+      console.log(`  - Network: http://192.168.1.14:${PORT}`);
     })
   })
 };

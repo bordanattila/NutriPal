@@ -228,7 +228,7 @@ function DashboardContent() {
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={['#00b4d8', '#0077b6', '#023e8a']}
+        colors={['#00B4D8', '#0077B6', '#023E8A']}
         style={styles.gradient}
       >
         <View style={styles.header}>
@@ -367,7 +367,7 @@ const styles = StyleSheet.create({
   },
   statsCard: {
     flexDirection: 'column',
-    backgroundColor: '#00b4d8',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 8,
     marginBottom: 20,
     marginHorizontal: 4,

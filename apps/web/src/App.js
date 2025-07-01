@@ -22,6 +22,7 @@ import LogOptions from './components/LogOptions';
 import Meals from './pages/Meals';
 import SavedRecipes from './components/SavedRecipes';
 import LogRecipe from './components/LogRecipe';
+import AiAssist from './pages/AiAssist';
 
 /**
  * @constant routes
@@ -84,6 +85,10 @@ const routes = [
     path: '/logOptions',
     element: <LogOptions />,
   },
+  {
+    path: '/ai-assistant',
+    element: <AiAssist />,
+  }
 ];
 
 /**

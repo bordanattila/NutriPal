@@ -226,16 +226,17 @@ router.get('/log-recipe/:recipeID', async (req, res) => {
         const nutrition = calculateRecipeNutrition(selectedRecipe.ingredients, servings);
         res.json({
             recipeName: selectedRecipe.recipeName,
-            nutrition,
             selectedServing: {
-                calories: nutrition.calories,
-                carbohydrate: nutrition.carbohydrate,
-                protein: nutrition.protein,
-                fat: nutrition.fat,
-                saturated_fat: nutrition.saturated_fat,
-                sodium: nutrition.sodium,
-                fiber: nutrition.fiber,
                 serving_description: selectedRecipe.servingSize
+            },
+            nutrition: {
+                caloriesPerServing: nutrition.calories,
+                carbohydratePerServing: nutrition.carbohydrate,
+                proteinPerServing: nutrition.protein,
+                fatPerServing: nutrition.fat,
+                saturatedFatPerServing: nutrition.saturated_fat,
+                sodiumPerServing: nutrition.sodium,
+                fiberPerServing: nutrition.fiber
             }
         });
     } catch (err) {

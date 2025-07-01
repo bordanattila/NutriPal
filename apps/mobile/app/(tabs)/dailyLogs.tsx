@@ -77,34 +77,22 @@ export default function DailyLogs() {
           .json<ApiResponse>();
       }
 
-      // 1️⃣ Compute "today" in NY (just the string)
-      const todayStr = date
+      // Compute the selected date in NY timezone
+      const selectedDateStr = date
         .setZone('America/New_York')
         .startOf('day')
         .toFormat('yyyy-MM-dd');
 
-      // 2️⃣ Try fetching "today" first
-      let response = await fetchFor(todayStr);
+      // Fetch data for the selected date
+      const response = await fetchFor(selectedDateStr);
 
-      // 3️⃣ If nothing, fall back to "yesterday"
-      if ((!response.foods || response.foods.length === 0) && response.message) {
-        const yesterdayStr = date
-          .setZone('America/New_York')
-          .minus({ days: 1 })
-          .startOf('day')
-          .toFormat('yyyy-MM-dd');
-
-        console.log('⚠️ no logs for today—retrying for yesterday:', yesterdayStr);
-        response = await fetchFor(yesterdayStr);
-      }
-
-      // 4️⃣ Now update your state
+      // Update state based on response
       if (response.foods?.length) {
         setLogHistory(response.foods);
         setLogMessage('');
       } else {
         setLogHistory([]);
-        setLogMessage(response.message || 'No food has been logged for this day.');
+        setLogMessage('No food has been logged for this day.');
       }
     } catch (error) {
       console.error('Error fetching food logs:', error);

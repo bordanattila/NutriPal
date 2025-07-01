@@ -14,6 +14,11 @@ export const GET_USER = gql`
       _id
       username
       calorieGoal
+      macros {
+        protein
+        fat
+        carbs
+      }
     }
   }
   `;
@@ -48,17 +53,24 @@ mutation updateUserProfile(
   $calorieGoal: Int
   $password: String
   $profilePic: String
+  $macros: MacrosInput
 ) {
   updateUserProfile(
     userId: $userId
     calorieGoal: $calorieGoal
     password: $password
     profilePic: $profilePic
+    macros: $macros
   ) {
     _id
     username
     email
     calorieGoal
+    macros {
+      protein
+      fat
+      carbs
+    }
     profilePic
   }
 }
