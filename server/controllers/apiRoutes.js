@@ -384,6 +384,38 @@ router.post('/recipe', async (req, res) => {
     }
 });
 
+/**
+ * @route POST /api/meal
+ * @desc Create a new meal
+ * @access Private
+ */
+router.post('/meal', async (req, res) => {
+
+    try {
+        const { user_id, mealName, servings, servingSize, ingredients } = req.body;
+        // Retrieve OneFood entry by its _id
+        const ingredient = await OneFood.find({ _id: { $in: ingredients } });
+        // Calculate the nutrition per serving
+        const nutrition = calculateRecipeNutrition(ingredient, servings);
+        // Create a new Meal entry
+        const newMeal = new Meal({
+            user_id,
+            mealName,
+            servings,
+            servingSize,
+            // Directly use the ingredients from the request body
+            ingredients,
+            nutrition,
+        });
+
+        await newMeal.save();
+        res.status(201).json(newMeal);
+    } catch (error) {
+        console.error('Error creating meal:', error);
+        res.status(500).json({ message: 'Error creating meal', error: error.message });
+    }
+});
+
 
 /**
  * @route DELETE /api/deleteFood/:user_id/:food_id/:date

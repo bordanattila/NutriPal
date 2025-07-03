@@ -19,7 +19,7 @@ import DailyLogs from './pages/DailyLogs';
 import Profile from './pages/Profile';
 import Recipe from './pages/Recipe';
 import LogOptions from './components/LogOptions';
-import Meals from './pages/Meals';
+import Meal from './pages/Meal';
 import SavedRecipes from './components/SavedRecipes';
 import LogRecipe from './components/LogRecipe';
 import AiAssist from './pages/AiAssist';
@@ -78,8 +78,8 @@ const routes = [
     element: <LogRecipe />,
   },
   {
-    path: '/meals',
-    element: <Meals />,
+    path: '/meal',
+    element: <Meal />,
   },
   {
     path: '/logOptions',

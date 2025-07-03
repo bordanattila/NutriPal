@@ -46,6 +46,7 @@ const Recipe = () => {
   const [userID, setUserID] = useState(null);
   // Destructure values from navigation state (ingredient data passed from FoodDetails)
   const { ingredientID, addedIngredient, ingredientServingCount, IngredientServingSize } = location.state || {};
+  const { items: ingredients, addItem, removeItem, clearItems } = useItemCollector('recipeIngredients');
 
   /**
    * @hook useQuery
@@ -136,69 +137,9 @@ const Recipe = () => {
   }, [addedIngredient, ingredientID, ingredientServingCount, IngredientServingSize]);
 
 
-  /**
-   * @hook useEffect
-   * @description Update stored ingredient ID list in localStorage
-   */
-  useEffect(() => {
-    if (addedIngredient && ingredientID) {
-      const storedIDs = localStorage.getItem('ingredientsID');
-      const currentIDs = storedIDs ? JSON.parse(storedIDs) : [];
-      const updatedIDs = [...currentIDs, ingredientID];
-      localStorage.setItem('ingredientsID', JSON.stringify(updatedIDs));
-      setIngredientsID(updatedIDs);
-    }
-  }, [addedIngredient, ingredientID]);
-
-
-  /**
-   * @hook useEffect
-   * @description Load ingredients and IDs from localStorage
-   */
-  useEffect(() => {
-    const storedIngredientsList = localStorage.getItem('ingredientsList');
-    const storedIngredientsID = localStorage.getItem('ingredientsID');
-    if (storedIngredientsList) {
-      setIngredientsList(JSON.parse(storedIngredientsList));
-    }
-    if (storedIngredientsID) {
-      setIngredientsID(JSON.parse(storedIngredientsID));
-    }
-  }, []);
-
-
-  /**
-   * @function clearIngredients
-   * @description Clears all ingredient and recipe form data + localStorage
-   */
-  const clearIngredients = () => {
-    setIngredientsList([]);
-    setIngredientsID([]);
-    setRecipeName('');
-    setNumberOfServings('');
-    setServingSize('');
-    localStorage.removeItem('ingredientsList');
-    localStorage.removeItem('ingredientsID');
-    localStorage.removeItem('recipeName');
-    localStorage.removeItem('numOfServings');
-    localStorage.removeItem('servingSize');
+  onDetectedIngredient = ({ id, name, servingCount, servingSize }) => {
+    addItem({ id, name, servingCount, servingSize });
   };
-
-  /**
-   * @function handleRemoveIngredient
-   * @description Removes an ingredient from the list by index
-   * @param {number} index - Index of the ingredient to remove
-   */
-  const handleRemoveIngredient = (index) => {
-    const updatedIngredients = ingredientsList.filter((_, i) => i !== index);
-    const updatedIDs = ingredientsID.filter((_, i) => i !== index); // keep IDs in sync 
-
-    setIngredientsList(updatedIngredients);
-    setIngredientsID(updatedIDs);
-
-    localStorage.setItem('ingredientsList', JSON.stringify(updatedIngredients));
-    localStorage.setItem('ingredientsID', JSON.stringify(updatedIDs));
-  }
 
   /**
    * @function handleAddRecipe

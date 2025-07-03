@@ -92,6 +92,7 @@ const AiAssist = () => {
         setLoading(false);
     };
 
+    if (userLoading) return <div>Loading...</div>;
 
     return (
         <div className="flex flex-col items-center justify-center min-h-max p-6">
