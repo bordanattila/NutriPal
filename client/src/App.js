@@ -22,6 +22,8 @@ import LogOptions from './components/LogOptions';
 import Meal from './pages/Meal';
 import SavedRecipes from './components/SavedRecipes';
 import LogRecipe from './components/LogRecipe';
+import SavedMeals from './components/SavedMeals';
+import LogMeal from './components/LogMeal';
 import AiAssist from './pages/AiAssist';
 
 /**
@@ -80,6 +82,14 @@ const routes = [
   {
     path: '/meal',
     element: <Meal />,
+  },
+  {
+    path: '/saved-meals',
+    element: <SavedMeals />,
+  },
+  {
+    path: '/log-meal/:mealName/:mealID',
+    element: <LogMeal />,
   },
   {
     path: '/logOptions',

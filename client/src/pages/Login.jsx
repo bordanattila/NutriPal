@@ -66,11 +66,16 @@ const Login = () => {
     setLoading(true);
 
     try {
+      console.log('Attempting login for username:', username);
       // Make a POST request to the login endpoint
       const response = await api.post('user/login', {
         json: { username, password },
       });
+      
+      console.log('Login response status:', response.status);
       const data = await response.json();
+      console.log('Login response data:', data);
+      
       if (data?.token) {
         Auth.login(data.token);
         
@@ -80,13 +85,21 @@ const Login = () => {
         }
         navigate('/dashboard');
       } else {
-        const errorData = await response.json();
-        console.error('Login error response:', errorData);
-        setError(errorData.message || 'Login failed. Please try again.');
+        console.error('Login error response:', data);
+        setError(data.message || 'Login failed. Please try again.');
       }
     } catch (err) {
       console.error('Error logging in:', err);
-      setError('Login failed. Please check your credentials and try again.');
+      if (err.response) {
+        try {
+          const errorData = await err.response.json();
+          setError(errorData.message || 'Login failed. Please try again.');
+        } catch (parseError) {
+          setError('Login failed. Please check your credentials and try again.');
+        }
+      } else {
+        setError('Login failed. Please check your credentials and try again.');
+      }
     } finally {
       setLoading(false);
     }

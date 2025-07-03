@@ -14,7 +14,7 @@ export default function FoodSearchList({ onPick }) {
         name: query,
         setArray: setResults,
         setError,
-        setBarcode: () => {},
+        setBarcode: () => { },
       });
     } catch (err) {
       setError(err.message);
@@ -27,7 +27,7 @@ export default function FoodSearchList({ onPick }) {
   };
 
   return (
-    <div>
+    <div className="w-full max-w-lg mx-auto">
       <SearchBar
         nameOfFood={query}
         setNameOfFood={setQuery}
@@ -35,17 +35,22 @@ export default function FoodSearchList({ onPick }) {
         clearSearch={clearResults}
         error={error}
       />
-      <ul className="list-none mt-4 w-full max-w-lg">
+      <ul className="list-none mt-4 w-full mx-auto">
         {results.map((food) => (
           <li key={food.food_id} className="py-2">
             <button
               onClick={() => onPick(food)}
-              className="w-full text-left rounded-md p-2 bg-teal-100 hover:bg-teal-200 transition"
+              className="block w-full text-left rounded-md p-2 m-2 bg-teal-100 hover:bg-teal-200 transition"
             >
-              <strong>{food.food_name}</strong>{' '}
-              <span className="brandVisibility">({food.brand_name})</span>
-              <br />
-              <span className="text-sm">{food.food_description}</span>
+              <strong className="text-blue-700">{food.food_name}</strong>{' '}
+              <span className={food.brand_name ? 'text-sm text-gray-600' : 'invisible'}>
+                ({food.brand_name})
+              </span>
+              {food.food_description && (
+                <p className="text-sm text-gray-700 mt-1">
+                  {food.food_description}
+                </p>
+              )}
             </button>
           </li>
         ))}

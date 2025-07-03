@@ -9,18 +9,22 @@ export default function useItemCollector(key) {
     if (stored) setItems(JSON.parse(stored));
   }, [key]);
 
-  // Add a new item
-  const add = item => {
-    const next = [...items, item];
-    setItems(next);
-    localStorage.setItem(key, JSON.stringify(next));
+  // Add a new item 
+  const add = (item) => {
+    setItems(prev => {
+      const next = [...prev, item];
+      localStorage.setItem(key, JSON.stringify(next));
+      return next;
+    });
   };
 
   // Remove by index
-  const remove = idx => {
-    const next = items.filter((_, i) => i !== idx);
-    setItems(next);
-    localStorage.setItem(key, JSON.stringify(next));
+  const remove = (idx) => {
+    setItems(prev => {
+      const next = prev.filter((_, i) => i !== idx);
+      localStorage.setItem(key, JSON.stringify(next));
+      return next;
+    });
   };
 
   // Clear all
