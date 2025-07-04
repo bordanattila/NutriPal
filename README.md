@@ -17,6 +17,7 @@
 - 📊 **Dashboard** with calorie/macro charts
 - 🧮 **Custom Recipes** builder and logger
 - 🔍 **Barcode Scanner** using `Quagga2`
+- 🤖 **AI-Powered Suggestions**: Ask NutriPal AI what to eat to hit your macros (powered by LangChain.js)  
 - 🌮 **One-click logging** from saved meals or recipes
 - 📅 **Calendar-based log navigation**
 - ⚙️ Profile management with calorie goals and image uploads
@@ -24,16 +25,24 @@
 
 ## 🧰 Tech Stack
 
-| Frontend               | Backend              | Tools / APIs               |
-|------------------------|----------------------|----------------------------|
-| React + Tailwind CSS   | Node.js + Express    | FatSecret API              |
-| Apollo Client (GraphQL)| Apollo Server        | JWT + Refresh Token Auth   |
-| Luxon (Date Handling)  | MongoDB (Mongoose)   | Chart.js + React-Toastify  |
-| React Router           | GraphQL + Ky.js      | Quagga2 (Barcode Scanner)  |
+| Frontend                   | Backend                | Tools / APIs                       |
+|----------------------------|------------------------|------------------------------------|
+| React + Tailwind CSS       | Node.js + Express      | FatSecret API                      |
+| Apollo Client (GraphQL)    | Apollo Server          | JWT + Refresh Token Auth           |
+| Luxon (Date Handling)      | MongoDB (Mongoose)     | Chart.js + React-Toastify          |
+| React Router               | GraphQL + Ky.js        | Quagga2 (Barcode Scanner)          |
+| **LangChain.js** (AI)      |                        | NutriPal AI endpoint (OpenAI API)  |
+
+## 🎯 AI Assist
+
+NutriPal now includes an **AI-Assist** feature built with [LangChain.js](https://js.langchain.com/) and your own NutriPal AI endpoint.  
+- Ask “What should I eat for dinner?” along with your remaining macros  
+- AI responds with personalized meal suggestions  
+- Built on top of your daily log and macro goals 
 
 ## :trophy: Badges
 
-![NutriPal](https://img.shields.io/github/languages/top/bordanattila/NutriPal)  
+![Top Language](https://img.shields.io/github/languages/top/bordanattila/NutriPal)  
 
 ## 🧑‍💻 Getting Started
 
@@ -51,6 +60,9 @@ cd nutripal
 `REACT_APP_API_URL=http://localhost:3001`
 `REACT_APP_CLIENT_ID=your-fatsecret-client-id`
 `REACT_APP_CLIENT_SECRET=your-fatsecret-client-secret`
+`MONGODB_URI=your-mongo-uri`
+`SECRET_KEY=your-jwt-secret`
+`OPENAI_API_KEY=your-openai-api-key`
 
 Note: Ensure your FatSecret API credentials are valid and whitelisted by IP.
 
@@ -105,11 +117,11 @@ Logout clears tokens and redirects to home
 
 `POST /api/daily-log (adds food to DailyLog)`
 
+`POST /api/ai-assist`
+
 ...and more
 
 ### 🧪 Future Improvements
-Meal logging from saved meals (WIP)
-
 Nutrition goal tracking + alerts
 
 Improved mobile UX & offline support
@@ -124,6 +136,8 @@ Data powered by FatSecret Platform API
 Barcode scanning via @ericblade/quagga2
 
 Icons via FontAwesome + Heroicons
+
+AI integrated with LangChain.js + OpenAI API
 
 ### 📬 Contact
 Built with passion by [Attila Bordan](https://bordanattila.github.io/Portfolio/)  
