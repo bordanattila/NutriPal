@@ -5,19 +5,13 @@
  */
 
 import React, { useEffect, useState } from "react";
-import ky from 'ky';
+import api from '../utils/api';
 import Auth from '../utils/auth';
 import { useQuery } from '@apollo/client';
 import { GET_USER } from '../utils/mutations';
 import useAuth from '../hooks/RefreshToken';
 import { useNavigate } from 'react-router-dom';
 import { PlusIcon } from '@heroicons/react/20/solid';
-
-// Create a pre-configured Ky instance with API prefix and credentials
-const api = ky.create({
-    prefixUrl: process.env.REACT_APP_API_URL,
-    credentials: 'include',
-});
 
 /**
  * SavedMeals component displays saved user meals and allows logging them.

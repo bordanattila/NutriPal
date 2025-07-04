@@ -10,16 +10,8 @@ import { useQuery } from '@apollo/client';
 import { GET_USER } from '../utils/mutations';
 import DonutChart from '../components/Donut';
 import useAuth from '../hooks/RefreshToken';
-import ky from 'ky';
+import api from '../utils/api';
 import { DateTime } from "luxon";
-
-/**
- * @constant api
- * @description Pre-configured ky instance for sending API requests with base URL.
- */
-const api = ky.create({
-  prefixUrl: process.env.REACT_APP_API_URL,
-});
 
 /**
  * @component Dashboard

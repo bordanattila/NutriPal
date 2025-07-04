@@ -1,130 +1,147 @@
+/**
+ * @file AiAssist.jsx
+ * @module AiAssist
+ * @description
+ *   A React component that allows users to interact with a NutriPal AI endpoint. It fetches
+ *   the user's daily log to calculate remaining macronutrients, then sends a prompt along
+ *   with those macros to the AI, displaying the AI's recommendation.
+ */
+
 import React, { useEffect, useState } from "react";
 import { useQuery } from '@apollo/client';
-import { GET_USER } from '../utils/mutations'; // or queries
+import { GET_USER } from '../utils/mutations';
 import Auth from '../utils/auth';
 import { DateTime } from 'luxon';
-import ky from 'ky';
-
+import api from '../utils/api';
 
 /**
- * @constant api
- * @description Preconfigured ky instance for making API requests with a set prefix URL.
+ * @component
+ * @description Main component for AI-based meal suggestions.
+ * @returns {JSX.Element}
  */
-const api = ky.create({
-    prefixUrl: process.env.REACT_APP_API_URL,
-});
-
 const AiAssist = () => {
-    const [userMessage, setUserMessage] = useState('');
-    const [aiResponse, setAiResponse] = useState('');
-    const [loading, setLoading] = useState(false);
-    const [remainingMacros, setRemainingMacros] = useState(null);
+  // Controlled input for the user's question to the AI
+  const [userMessage, setUserMessage] = useState('');
+  // Stores the AI's reply
+  const [aiResponse, setAiResponse] = useState('');
+  // Loading state for the AI request
+  const [loading, setLoading] = useState(false);
+  // Remaining macros (protein, carbs, fat) for today
+  const [remainingMacros, setRemainingMacros] = useState(null);
 
-    const { data, loading: userLoading } = useQuery(GET_USER, {
-        context: {
-            headers: {
-                Authorization: `Bearer ${Auth.getToken()}`,
-            },
-        },
-    });
+  // Fetch authenticated user data (including macro goals)
+  const { data, loading: userLoading } = useQuery(GET_USER, {
+    context: {
+      headers: { Authorization: `Bearer ${Auth.getToken()}` }
+    },
+  });
 
-    const userId = data?.user?._id;
-    const macroGoals = data?.user?.macros;
+  // Extract user ID and macro goals from GraphQL response
+  const userId = data?.user?._id;
+  const macroGoals = data?.user?.macros;
 
-    useEffect(() => {
-        const fetchTodaysLog = async () => {
-            if (!userId || !macroGoals) return;
+  /**
+   * Side effect: fetch today's logged foods and compute remaining macros.
+   */
+  useEffect(() => {
+    const fetchTodaysLog = async () => {
+      if (!userId || !macroGoals) return;
 
-            const today = DateTime.now().toFormat('yyyy-MM-dd');
-            try {
-                const res = await api.get(`api/foodByDate/${userId}/date/${today}`);
-                const json = await res.json();
-                const foods = json?.foods || [];
+      // Format current date as YYYY-MM-DD
+      const today = DateTime.now().toFormat('yyyy-MM-dd');
+      try {
+        // GET foods logged today for this user
+        const res = await api.get(`api/foodByDate/${userId}/date/${today}`);
+        const json = await res.json();
+        const foods = json?.foods || [];
 
-                const totals = {
-                    protein: 0,
-                    carbs: 0,
-                    fat: 0,
-                };
+        // Sum up macros consumed so far
+        const totals = { protein: 0, carbs: 0, fat: 0 };
+        foods.forEach(item => {
+          totals.protein += item.protein || 0;
+          totals.carbs   += item.carbohydrate || 0;
+          totals.fat     += item.fat || 0;
+        });
 
-                foods.forEach((item) => {
-                    totals.protein += item.protein || 0;
-                    totals.carbs += item.carbohydrate || 0;
-                    totals.fat += item.fat || 0;
-                });
-
-                setRemainingMacros({
-                    protein: Math.max(macroGoals.protein - totals.protein, 0),
-                    carbs: Math.max(macroGoals.carbs - totals.carbs, 0),
-                    fat: Math.max(macroGoals.fat - totals.fat, 0),
-                });
-            } catch (err) {
-                console.error('Failed to fetch food log:', err);
-            }
-        };
-
-        fetchTodaysLog();
-    }, [userId, macroGoals]);
-
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-
-        try {
-            console.log("Sending macros:", remainingMacros); 
-            console.log("macroGoals from user:", macroGoals);
-            const response = await api.post('api/ai-assist', {
-                json: {
-                    message: userMessage,
-                    macros: remainingMacros,
-                },
-            });
-
-            const data = await response.json();
-            setAiResponse(data.reply);
-            setUserMessage('');
-        } catch (err) {
-            console.error('Error calling AI endpoint:', err);
-            setAiResponse('Sorry, something went wrong.');
-        }
-
-        setLoading(false);
+        // Compute remaining macros (never negative)
+        setRemainingMacros({
+          protein: Math.max(macroGoals.protein - totals.protein, 0),
+          carbs:   Math.max(macroGoals.carbs   - totals.carbs,   0),
+          fat:     Math.max(macroGoals.fat     - totals.fat,     0),
+        });
+      } catch (err) {
+        console.error('Failed to fetch food log:', err);
+      }
     };
 
-    if (userLoading) return <div>Loading...</div>;
+    fetchTodaysLog();
+  }, [userId, macroGoals]);
 
-    return (
-        <div className="flex flex-col items-center justify-center min-h-max p-6">
-            <form onSubmit={handleSubmit} className="flex flex-col bg-teal-100 p-4 rounded-md w-full max-w-lg shadow">
-                <label htmlFor="ai-prompt" className="text-teal-800 font-semibold mb-2">
-                    Ask NutriPal AI
-                </label>
-                <textarea
-                    id="ai-prompt"
-                    rows="3"
-                    value={userMessage}
-                    onChange={(e) => setUserMessage(e.target.value)}
-                    placeholder="What should I eat for lunch to reach my protein goal?"
-                    className="p-2 border rounded mb-4 w-full resize-none"
-                />
-                <button
-                    type="submit"
-                    disabled={loading}
-                    className="mt-4 bg-gradient-to-r from-green-400 to-teal-500 rounded-full shadow-lg hover:from-green-400 hover:to-blue-600 transition duration-300 text-white font-bold py-2 px-6"
-                >
-                    {loading ? 'Thinking...' : 'Ask AI'}
-                </button>
-            </form>
+  /**
+   * Handle form submission: send user message and macros to AI endpoint.
+   * @param {React.FormEvent} e - form event
+   */
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
 
-            {aiResponse && (
-                <div className="mt-6 w-full max-w-lg bg-teal-100 rounded-md p-4 shadow">
-                    <h2 className="text-xl font-bold text-teal-700 mb-2 border-b pb-1">AI Response</h2>
-                    <p className="text-gray-800 whitespace-pre-line">{aiResponse}</p>
-                </div>
-            )}
+    try {
+      console.log('Sending macros:', remainingMacros);
+      console.log('User macro goals:', macroGoals);
+
+      // POST to AI assist endpoint with user prompt and macros
+      const response = await api.post('api/ai-assist', {
+        json: { message: userMessage, macros: remainingMacros }
+      });
+
+      // Extract AI reply from response
+      const data = await response.json();
+      setAiResponse(data.reply);
+      setUserMessage(''); // clear input
+    } catch (err) {
+      console.error('Error calling AI endpoint:', err);
+      setAiResponse('Sorry, something went wrong.');
+    }
+
+    setLoading(false);
+  };
+
+  // Show loading indicator while user data is being fetched
+  if (userLoading) return <div>Loading user data...</div>;
+
+  return (
+    <div className="flex flex-col items-center justify-center min-h-max p-6">
+      {/* AI prompt form */}
+      <form onSubmit={handleSubmit} className="flex flex-col bg-teal-100 p-4 rounded-md w-full max-w-lg shadow">
+        <label htmlFor="ai-prompt" className="text-teal-800 font-semibold mb-2">
+          Ask NutriPal AI
+        </label>
+        <textarea
+          id="ai-prompt"
+          rows={3}
+          value={userMessage}
+          onChange={e => setUserMessage(e.target.value)}
+          placeholder="What should I eat for lunch to reach my protein goal?"
+          className="p-2 border rounded mb-4 w-full resize-none"
+        />
+        <button
+          type="submit"
+          disabled={loading}
+          className="mt-4 bg-gradient-to-r from-green-400 to-teal-500 rounded-full shadow-lg hover:from-green-400 hover:to-blue-600 transition duration-300 text-white font-bold py-2 px-6"
+        >
+          {loading ? 'Thinking...' : 'Ask AI'}
+        </button>
+      </form>
+
+      {/* Display AI response */}
+      {aiResponse && (
+        <div className="mt-6 w-full max-w-lg bg-teal-100 rounded-md p-4 shadow">
+          <h2 className="text-xl font-bold text-teal-700 mb-2 border-b pb-1">AI Response</h2>
+          <p className="text-gray-800 whitespace-pre-line">{aiResponse}</p>
         </div>
-    )
-}
+      )}
+    </div>
+  );
+};
 
 export default AiAssist;

@@ -5,16 +5,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Auth from "../utils/auth";
-import ky from 'ky';
-
-/**
- * @constant api
- * @description Ky instance pre-configured with base API URL and cookie credentials
- */
-const api = ky.create({
-  prefixUrl: process.env.REACT_APP_API_URL,
-  credentials: 'include',
-});
+import api from '../utils/api';
 
 /**
  * @component Login

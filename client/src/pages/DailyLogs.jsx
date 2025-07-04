@@ -4,7 +4,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import ky from 'ky';
+import api from '../utils/api';
 import { useNavigate, Link } from "react-router-dom";
 import Auth from '../utils/auth';
 import { useQuery } from '@apollo/client';
@@ -12,14 +12,6 @@ import { GET_USER } from '../utils/mutations';
 import useAuth from '../hooks/RefreshToken';
 import Calendar from '../components/Calendar';
 import { DateTime } from 'luxon';
-
-/**
- * @constant api
- * @description Pre-configured ky instance for making API requests with a base prefix URL.
- */
-const api = ky.create({
-  prefixUrl: process.env.REACT_APP_API_URL,
-});
 
 /**
  * @component DailyLogs
