@@ -3,18 +3,10 @@
  * @description Signup page that allows new users to register and log in immediately upon successful registration.
  */
 import React, { useState } from 'react';
-import ky from 'ky';
+import api from '../utils/api';
 import { useNavigate } from 'react-router-dom';
 import Auth from "@nutripal/shared/src/utils/auth";
 
-
-/**
- * @constant api
- * @description Pre-configured ky instance for making API requests to the backend.
- */
-const api = ky.create({
-  prefixUrl: process.env.REACT_APP_API_URL,
-});
 
 /**
  * @component Signup

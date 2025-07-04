@@ -16,17 +16,24 @@ const refreshTokens = [];
  * @returns {Object} JWT token, refresh token, and username if successful
  */
 router.post('/login', async (req, res) => {
+    console.log('Login request received:', req.method, req.url);
+    console.log('Request headers:', req.headers);
+    console.log('Request body:', req.body);
+    
     const { username, password } = req.body;
     console.log('Session data size:', JSON.stringify(req.session).length);
+    
     try {
         const user = await User.findOne({ username });
         if (!user) {
+            console.log('User not found:', username);
             return res.status(401).json({ message: 'Invalid username or password' });
         }
         // Check if the password is correct
         const isValidPassword = await user.isCorrectPassword(password);
         if (!isValidPassword) {
-            return res.status(401).send('Invalid password');
+            console.log('Invalid password for user:', username);
+            return res.status(401).json({ message: 'Invalid username or password' });
         }
 
         // Sign a token for the user
@@ -34,6 +41,7 @@ router.post('/login', async (req, res) => {
         const refreshToken = signInToken({ username: user.username, email: user.email, _id: user._id });
         refreshTokens.push(refreshToken)
 
+        console.log('Login successful for user:', username);
         // Respond with the token and user information        
         res.status(200).json({ token, refreshToken, username: user.username });
     } catch (error) {

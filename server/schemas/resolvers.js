@@ -170,6 +170,22 @@ const resolvers = {
     },
 
     /**
+     * @route POST /graphql -> createMeal
+     * @desc Saves a custom meal based on OneFood entries
+     * @access Private
+     */
+    createMeal: async (_, { user_id, mealName, ingredients, servingSize, nutrition }) => {
+      const meal = new Meal({
+        user_id,
+        mealName,
+        ingredients,
+        servingSize,
+        nutrition,
+      });
+      return await meal.save();
+    },
+
+    /**
      * @route DELETE /graphql -> deleteOneFood
      * @desc Deletes a food entry from a user's daily log
      * @access Private

@@ -47,6 +47,7 @@ app.use(
  * Allows credentials (cookies) to be sent with requests.
  */
 app.use(cors({
+<<<<<<< HEAD
   origin: [
     process.env.CLIENT_URL,
     'https://nutripal-hbcff5htezbqdwe9.canadacentral-01.azurewebsites.net',
@@ -54,6 +55,11 @@ app.use(cors({
     'http://192.168.1.13:4000' // Keep old IP for backward compatibility
   ],
   methods: ['GET', 'POST', 'DELETE', 'PUT'],
+=======
+  origin: [process.env.CLIENT_URL, 'https://nutripal-hbcff5htezbqdwe9.canadacentral-01.azurewebsites.net', 'http://localhost:3000'],
+  methods: ['GET', 'POST', 'DELETE', 'PUT', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+>>>>>>> select_food
   credentials: true
 }));
 

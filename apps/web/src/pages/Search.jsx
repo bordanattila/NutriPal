@@ -4,7 +4,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import ky from 'ky';
+import api from '../utils/api';
 import { useNavigate, Link } from 'react-router-dom';
 import Auth from '@nutripal/shared/src/utils/auth';
 import { useQuery } from '@apollo/client';
@@ -12,14 +12,6 @@ import { GET_USER } from '@nutripal/shared/src/utils/mutations';
 import useAuth from '@nutripal/shared/src/hooks/RefreshToken';
 import SearchBar from '../components/SearchBar';
 import { handleSearch } from '../components/SearchComponent';
-
-/**
- * @constant api
- * @description Preconfigured ky instance for making API requests with a set prefix URL.
- */
-const api = ky.create({
-  prefixUrl: process.env.REACT_APP_API_URL,
-});
 
 /**
  * @component Search

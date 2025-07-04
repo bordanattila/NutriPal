@@ -3,12 +3,7 @@
  * @module SearchComponent
  * @description Provides logic for handling food searches, including barcode detection and search term queries.
  */
-import ky from 'ky';
-
-
-const api = ky.create({
-  prefixUrl: process.env.REACT_APP_API_URL,
-});
+import api from '../utils/api';
 
 /**
  * Handles food search by either barcode or search string.

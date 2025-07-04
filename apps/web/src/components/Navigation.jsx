@@ -13,7 +13,7 @@ import { faClipboard as faRegularClipboard } from '@fortawesome/free-regular-svg
  * Array of navigation items with route paths, FontAwesome icons, and labels
  */
 const navigationItems = [
-  { to: '/meals', icon: faUtensils, label: 'Meals' },
+  { to: '/meal', icon: faUtensils, label: 'Meals' },
   { to: '/recipe', icon: faBook, label: 'Recipes' },
   { to: '/dashboard', icon: faHouse, label: 'Dashboard' },
   { to: '/logOptions', icon: faPlus, label: 'Log Food' },

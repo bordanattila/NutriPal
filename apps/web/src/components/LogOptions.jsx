@@ -3,17 +3,7 @@
  * @module LogOptions
  * @description Provides options to log food from different sources such as search, recipes, or meals.
  */
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import ky from 'ky';
-
-/**
- * Configure the API client with base URL and credentials.
- */
-const api = ky.create({
-  prefixUrl: process.env.REACT_APP_API_URL,
-  credentials: 'include',
-});
 
 /**
  * Component that renders three buttons to allow users to log food from search, recipes, or meals.
@@ -40,6 +30,7 @@ const LogOptions = ({ userId }) => {
       navigate('/saved-recipes');   
   };
 
+<<<<<<< HEAD:apps/web/src/components/LogOptions.jsx
   /**
    * Navigate user to the saved recipes page to log from a recipe.
    */
@@ -49,16 +40,23 @@ const LogOptions = ({ userId }) => {
 
   /**
    * Fetch saved meals from the backend and navigate to the saved meals page with data.
+=======
+    /**
+   * Navigate user to the saved meals page to log from a meal.
+>>>>>>> select_food:client/src/components/LogOptions.jsx
    */
-  const handleLogFromMeal = async () => {
-    try {
-      const response = await api.get(`api/saved-meals/${userId}`).json();
-      navigate('/saved-meals', { state: { meals: response } });
-    } catch (error) {
-      console.error('Failed to fetch saved meals:', error);
-    }
+    const handleLogFromMeal = async () => {    
+      navigate('/saved-meals');   
   };
 
+  /**
+   * Navigate user to the saved recipes page to log from a recipe.
+   */
+  const handleAiAssist = async () => {    
+      navigate('/ai-assistant');   
+  };
+
+ 
   return (
     <div className="flex flex-col gap-6 items-center justify-center p-6 max-w-md mx-auto">
       <button
@@ -79,7 +77,14 @@ const LogOptions = ({ userId }) => {
         onClick={handleLogFromMeal}
         className="w-full py-6 text-lg font-semibold text-white bg-purple-500 hover:bg-purple-600 rounded-2xl shadow-lg transition"
       >
-        Log a Meal - coming soon
+        Log a Meal 
+      </button>
+
+      <button
+        onClick={handleAiAssist}
+        className="w-full py-6 text-lg font-semibold text-white bg-yellow-500 hover:bg-yellow-600 rounded-2xl shadow-lg transition"
+      >
+        AI Assistant
       </button>
 
       <button

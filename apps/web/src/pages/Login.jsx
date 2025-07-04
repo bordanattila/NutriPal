@@ -4,6 +4,7 @@
  */
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+<<<<<<< HEAD:apps/web/src/pages/Login.jsx
 import Auth from "@nutripal/shared/src/utils/auth";
 import ky from 'ky';
 
@@ -15,6 +16,10 @@ const api = ky.create({
   prefixUrl: process.env.REACT_APP_API_URL,
   credentials: 'include',
 });
+=======
+import Auth from "../utils/auth";
+import api from '../utils/api';
+>>>>>>> select_food:client/src/pages/Login.jsx
 
 /**
  * @component Login
@@ -66,11 +71,16 @@ const Login = () => {
     setLoading(true);
 
     try {
+      console.log('Attempting login for username:', username);
       // Make a POST request to the login endpoint
       const response = await api.post('user/login', {
         json: { username, password },
       });
+      
+      console.log('Login response status:', response.status);
       const data = await response.json();
+      console.log('Login response data:', data);
+      
       if (data?.token) {
         Auth.login(data.token);
         
@@ -80,13 +90,21 @@ const Login = () => {
         }
         navigate('/dashboard');
       } else {
-        const errorData = await response.json();
-        console.error('Login error response:', errorData);
-        setError(errorData.message || 'Login failed. Please try again.');
+        console.error('Login error response:', data);
+        setError(data.message || 'Login failed. Please try again.');
       }
     } catch (err) {
       console.error('Error logging in:', err);
-      setError('Login failed. Please check your credentials and try again.');
+      if (err.response) {
+        try {
+          const errorData = await err.response.json();
+          setError(errorData.message || 'Login failed. Please try again.');
+        } catch (parseError) {
+          setError('Login failed. Please check your credentials and try again.');
+        }
+      } else {
+        setError('Login failed. Please check your credentials and try again.');
+      }
     } finally {
       setLoading(false);
     }

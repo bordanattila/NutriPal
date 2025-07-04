@@ -10,6 +10,7 @@ const qs = require('qs');
 const DailyLog = require('../models/DailyLog');
 const OneFood = require('../models/OneFood');
 const Recipe = require('../models/Recipe');
+const Meal = require('../models/Meal');
 const { calculateRecipeNutrition } = require('../utils/nutritionCalculation');
 const { DateTime } = require('luxon');
 const { generateFoodId, generateServingId } = require('../utils/idGenerator');
@@ -246,6 +247,63 @@ router.get('/log-recipe/:recipeID', async (req, res) => {
 });
 
 /**
+ * @route GET /api/saved-meals/:user_id
+ * @desc Get saved meals for a user
+ * @access Private
+ */
+router.get('/saved-meals/:user_id', async (req, res) => {
+    try {
+        const userId = req.params.user_id;
+        const recentMeals = await Meal.find({ user_id: userId })
+        // // Sort by 'created' field in descending order
+        // .sort({ created: -1 })
+        // // Limit to 5 items
+        // .limit(5);
+        res.json(recentMeals);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+/**
+ * @route POST /api/log-meal/:mealID
+ * @desc Log a single meal to the database
+ * @access Private
+ */
+router.get('/log-meal/:mealID', async (req, res) => {
+    try {
+        const { mealID } = req.params;
+        const servings = parseFloat(req.query.servings);
+
+        const selectedMeal = await Meal.findById(mealID).populate('ingredients');
+        if (!selectedMeal) {
+            return res.status(404).json({ message: 'Meal not found' });
+        }
+
+        // Use your nutrition calculator
+        const nutrition = calculateRecipeNutrition(selectedMeal.ingredients, servings);
+        res.json({
+            mealName: selectedMeal.mealName,
+            nutrition,
+            selectedServing: {
+                calories: nutrition.calories,
+                carbohydrate: nutrition.carbohydrate,
+                protein: nutrition.protein,
+                fat: nutrition.fat,
+                saturated_fat: nutrition.saturated_fat,
+                sodium: nutrition.sodium,
+                fiber: nutrition.fiber,
+                serving_description: selectedMeal.servingSize
+            }
+        });
+    } catch (err) {
+        console.error('Error fetching meal details:', err);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
+
+/**
  * @route POST /api/one-food
  * @desc Log a single food item to the database
  * @access Private
@@ -382,6 +440,38 @@ router.post('/recipe', async (req, res) => {
     } catch (error) {
         console.error('Error creating recipe:', error);
         res.status(500).json({ message: 'Error creating recipe', error: error.message });
+    }
+});
+
+/**
+ * @route POST /api/meal
+ * @desc Create a new meal
+ * @access Private
+ */
+router.post('/meal', async (req, res) => {
+
+    try {
+        const { user_id, mealName, servings, servingSize, ingredients } = req.body;
+        // Retrieve OneFood entry by its _id
+        const ingredient = await OneFood.find({ _id: { $in: ingredients } });
+        // Calculate the nutrition per serving
+        const nutrition = calculateRecipeNutrition(ingredient, servings);
+        // Create a new Meal entry
+        const newMeal = new Meal({
+            user_id,
+            mealName,
+            servings,
+            servingSize,
+            // Directly use the ingredients from the request body
+            ingredients,
+            nutrition,
+        });
+
+        await newMeal.save();
+        res.status(201).json(newMeal);
+    } catch (error) {
+        console.error('Error creating meal:', error);
+        res.status(500).json({ message: 'Error creating meal', error: error.message });
     }
 });
 
