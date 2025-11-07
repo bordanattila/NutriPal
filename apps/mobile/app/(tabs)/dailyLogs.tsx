@@ -68,27 +68,100 @@ export default function DailyLogs() {
         return;
       }
 
-      // Format date in NY timezone
-      // Helper to actually call your GET:
-      async function fetchFor(dateStr: string) {
+      // Helper to query a date
+      async function fetchFor(dateStr: string): Promise<ApiResponse> {
         console.log('📅 fetching logs for date:', dateStr);
-        return api
-          .get(`api/foodByDate/${userId}/date/${dateStr}`)
-          .json<ApiResponse>();
+        try {
+          return await api
+            .get(`api/foodByDate/${userId}/date/${dateStr}`)
+            .json<ApiResponse>();
+        } catch (error) {
+          return { message: "No food has been logged for this day." };
+        }
       }
 
-      // Compute the selected date in NY timezone
-      const selectedDateStr = date
-        .setZone('America/New_York')
-        .startOf('day')
-        .toFormat('yyyy-MM-dd');
+      // Compute the selected date - match AI assistant's approach (uses system timezone)
+      const selectedDateStr = date.toFormat('yyyy-MM-dd');
+      
+      // Get the start and end of the selected date in the system timezone
+      const selectedDateStart = date.startOf('day');
+      const selectedDateEnd = date.endOf('day');
+      
+      // Only check yesterday if the selected date is "today" (to catch foods server stored under yesterday)
+      const today = DateTime.now().toFormat('yyyy-MM-dd');
+      const yesterday = date.minus({ days: 1 }).toFormat('yyyy-MM-dd');
+      const shouldCheckYesterday = selectedDateStr === today;
 
-      // Fetch data for the selected date
-      const response = await fetchFor(selectedDateStr);
+      // Query the selected date and yesterday (if needed)
+      const queries = [fetchFor(selectedDateStr)];
+      if (shouldCheckYesterday) {
+        queries.push(fetchFor(yesterday));
+      }
+      const results = await Promise.all(queries);
+      const selectedData = results[0];
+      const yesterdayData = shouldCheckYesterday ? results[1] : { foods: [] };
 
-      // Update state based on response
-      if (response.foods?.length) {
-        setLogHistory(response.foods);
+      // Get cached foods only for the selected date
+      const { getCachedFoods } = require('@/utils/foodCache');
+      const cachedFoodsSelected = getCachedFoods(selectedDateStr);
+
+      // Helper to check if a food was created on the selected date
+      const isFoodForSelectedDate = (food: any): boolean => {
+        if (!food.created) return false;
+        const foodCreated = DateTime.fromISO(food.created);
+        return foodCreated >= selectedDateStart && foodCreated <= selectedDateEnd;
+      };
+
+      // Helper to filter foods with valid nutrition data
+      const hasValidNutrition = (food: any): boolean => {
+        return food.calories !== null && food.calories !== undefined &&
+               (food.carbohydrate !== null || food.protein !== null || food.fat !== null);
+      };
+
+      // Collect foods that belong to the selected date
+      const allFoods: any[] = [];
+      
+      // Add foods from selected date's daily log
+      if (selectedData.foods) {
+        const validFoods = selectedData.foods.filter((f: any) => 
+          hasValidNutrition(f) && isFoodForSelectedDate(f)
+        );
+        allFoods.push(...validFoods);
+      }
+      
+      // If checking yesterday (for today), only include foods created today
+      if (shouldCheckYesterday && yesterdayData.foods) {
+        const existingIds = new Set(allFoods.map(f => f._id));
+        const validFoods = yesterdayData.foods.filter((f: any) => 
+          hasValidNutrition(f) && 
+          isFoodForSelectedDate(f) && 
+          !existingIds.has(f._id)
+        );
+        allFoods.push(...validFoods);
+      }
+
+      // Add cached foods that match the selected date
+      // Check both the selected date's cache and yesterday's cache (if we checked yesterday)
+      const cachedDatesToCheck = [selectedDateStr];
+      if (shouldCheckYesterday) {
+        cachedDatesToCheck.push(yesterday);
+      }
+      
+      cachedDatesToCheck.forEach(cacheDate => {
+        const cachedFoods = getCachedFoods(cacheDate);
+        if (cachedFoods.length > 0) {
+          const existingIds = new Set(allFoods.map(f => f._id));
+          cachedFoods.forEach((cachedFood: any) => {
+            if (!existingIds.has(cachedFood._id) && isFoodForSelectedDate(cachedFood)) {
+              allFoods.push(cachedFood);
+            }
+          });
+        }
+      });
+
+      // Update state based on merged results
+      if (allFoods.length > 0) {
+        setLogHistory(allFoods);
         setLogMessage('');
       } else {
         setLogHistory([]);
@@ -145,15 +218,53 @@ export default function DailyLogs() {
             text: "Delete",
             style: "destructive",
             onPress: async () => {
-              await api.delete(`api/deleteFood/${userId}/${foodId}/${formattedDate}`);
-              const newLogHistory = logHistory.filter(food => food._id !== foodId);
-              setLogHistory(newLogHistory);
+              try {
+                // Try deleting with the selected date first
+                let deleted = false;
+                try {
+                  await api.delete(`api/deleteFood/${userId}/${foodId}/${formattedDate}`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                  });
+                  deleted = true;
+                } catch (error: any) {
+                  // If that fails, try with yesterday's date (server might have stored it there)
+                  // due to timezone adjustments
+                  if (error.response?.status === 404 || error.response?.status === 400) {
+                    try {
+                      const yesterday = date.minus({ days: 1 }).toFormat('yyyy-MM-dd');
+                      await api.delete(`api/deleteFood/${userId}/${foodId}/${yesterday}`, {
+                        headers: { Authorization: `Bearer ${token}` },
+                      });
+                      deleted = true;
+                    } catch (yesterdayError) {
+                      console.error('Delete failed for both dates:', yesterdayError);
+                      throw yesterdayError;
+                    }
+                  } else {
+                    throw error;
+                  }
+                }
+
+                if (deleted) {
+                  // Clear the food from cache
+                  const { clearCache } = require('@/utils/foodCache');
+                  clearCache(formattedDate);
+                  const yesterday = date.minus({ days: 1 }).toFormat('yyyy-MM-dd');
+                  clearCache(yesterday);
+
+                  // Refresh the log history from the server
+                  await fetchLogHistory();
+                }
+              } catch (error) {
+                console.error('Error deleting food:', error);
+                Alert.alert("Error", "Failed to delete food item. Please try again.");
+              }
             }
           }
         ]
       );
     } catch (error) {
-      console.error('Error deleting food:', error);
+      console.error('Error in handleDelete:', error);
       Alert.alert("Error", "Failed to delete food item");
     }
   };
@@ -170,8 +281,8 @@ export default function DailyLogs() {
           {food.brand && <Text style={styles.brandName}> ({food.brand})</Text>}
         </Text>
         <Text style={styles.nutritionInfo}>
-          Calories: {food.calories.toFixed(1)} | Carb: {food.carbohydrate.toFixed(1)} |
-          Protein: {food.protein.toFixed(1)} | Fat: {food.fat.toFixed(1)}
+          Calories: {(food.calories ?? 0).toFixed(1)} | Carb: {(food.carbohydrate ?? 0).toFixed(1)} |
+          Protein: {(food.protein ?? 0).toFixed(1)} | Fat: {(food.fat ?? 0).toFixed(1)}
         </Text>
         <Text style={styles.servingInfo}>
           Servings: {food.number_of_servings} | Size: {food.serving_size}

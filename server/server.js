@@ -11,6 +11,7 @@ const session = require('express-session');
 const path = require('path');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const os = require('os');
 require('dotenv').config();
 const MongoStore = require('connect-mongo');
 const helmet = require('helmet');
@@ -22,7 +23,11 @@ const db = require('./config/connection');
 
 // Set up Express
 const app = express();
+
+// Environment-driven configuration with safe defaults
 const PORT = process.env.PORT || 4000;
+const HOST = process.env.HOST || '0.0.0.0';
+const NODE_ENV = process.env.NODE_ENV || 'development';
 
 /**
  * @desc Sets secure headers using Helmet including custom content security policy
@@ -47,19 +52,32 @@ app.use(
  * Allows credentials (cookies) to be sent with requests.
  */
 app.use(cors({
-<<<<<<< HEAD
-  origin: [
-    process.env.CLIENT_URL,
-    'https://nutripal-hbcff5htezbqdwe9.canadacentral-01.azurewebsites.net',
-    'http://192.168.1.14:4000', // Mobile app expo dev server
-    'http://192.168.1.13:4000' // Keep old IP for backward compatibility
-  ],
-  methods: ['GET', 'POST', 'DELETE', 'PUT'],
-=======
-  origin: [process.env.CLIENT_URL, 'https://nutripal-hbcff5htezbqdwe9.canadacentral-01.azurewebsites.net', 'http://localhost:3000'],
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps, Postman, etc.)
+    if (!origin) return callback(null, true);
+    
+    const allowedOrigins = [
+      process.env.CLIENT_URL,
+      'https://nutripal-hbcff5htezbqdwe9.canadacentral-01.azurewebsites.net',
+      'http://localhost:3000',
+      'http://localhost:8081',
+      'exp://localhost',
+      'exp://192.168.1.16',
+    ];
+    
+    // In development, allow all origins for easier mobile testing
+    if (NODE_ENV !== 'production') {
+      return callback(null, true);
+    }
+    
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   methods: ['GET', 'POST', 'DELETE', 'PUT', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
->>>>>>> select_food
   credentials: true
 }));
 
@@ -85,7 +103,7 @@ app.use(
       ttl: 14 * 24 * 60 * 60
     }),
     cookie: {
-      secure: process.env.NODE_ENV === 'production',
+      secure: NODE_ENV === 'production',
       // Session cookie max age in milliseconds (1 day)
       maxAge: 1000 * 60 * 60 * 24, 
       httpOnly: true,
@@ -114,20 +132,54 @@ const server = new ApolloServer({
 });
 
 /**
+ * @function getLocalNetworkIP
+ * @description Detects the first non-internal IPv4 address for development logging
+ * @returns {string|null} LAN IP address or null if not found
+ */
+const getLocalNetworkIP = () => {
+  try {
+    const interfaces = os.networkInterfaces();
+    for (const name of Object.keys(interfaces)) {
+      for (const iface of interfaces[name]) {
+        if (iface.family === 'IPv4' && !iface.internal) {
+          return iface.address;
+        }
+      }
+    }
+  } catch (error) {
+    // Fail silently
+  }
+  return null;
+};
+
+/**
  * @function startApolloServer
  * @description Starts Apollo Server and connects to MongoDB
  * Once the database connection is open, starts listening on the defined port.
  */
 const startApolloServer = async (typeDefs, resolvers) => {
   await server.start();
-  server.applyMiddleware({ app });
+  server.applyMiddleware({ app, path: '/graphql' });
 
   db.once('open', () => {
-    app.listen(PORT, '0.0.0.0', () => {
-      console.log(`API server running on port ${PORT}!`);
-      console.log(`Server accessible at:`);
-      console.log(`  - Local: http://localhost:${PORT}`);
-      console.log(`  - Network: http://192.168.1.14:${PORT}`);
+    app.listen(PORT, HOST, () => {
+      if (NODE_ENV === 'production') {
+        // Minimal production logs
+        console.log(`Server running on ${HOST}:${PORT}`);
+        console.log(`GraphQL endpoint: /graphql`);
+      } else {
+        // Development-friendly logs
+        console.log(`API server running on port ${PORT}!`);
+        console.log(`Server accessible at:`);
+        console.log(`  - Local: http://localhost:${PORT}`);
+        
+        const networkIP = getLocalNetworkIP();
+        if (networkIP) {
+          console.log(`  - Network: http://${networkIP}:${PORT}`);
+        }
+        
+        console.log(`GraphQL endpoint: http://localhost:${PORT}/graphql`);
+      }
     })
   })
 };
@@ -140,13 +192,12 @@ startApolloServer(typeDefs, resolvers);
  * - In production: serves from React build folder
  * - In development: serves from /public folder
  */
-if (process.env.NODE_ENV === 'production') {
-  console.log('Serving static files from:', path.join(__dirname, '../apps/web/build'));
+if (NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, '../apps/web/build')));
   
   // Create a route that will serve up the `../apps/web/build/index.html` page
   app.get('*', (req, res) => {    
-    res.sendFile(path.join(__dirname, '../apps.web/build', 'index.html'));
+    res.sendFile(path.join(__dirname, '../apps/web/build', 'index.html'));
   });
 } else {
   app.use(express.static(path.join(__dirname, 'public')));

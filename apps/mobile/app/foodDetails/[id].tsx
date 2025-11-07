@@ -176,25 +176,32 @@ export default function FoodDetailsScreen() {
 
       console.log('Food entry created:', foodResponse);
 
-      // Add to daily log with actual current date in NY timezone
-      const currentDate = new Date();
-      const today = DateTime.fromJSDate(currentDate)
-        .setZone('America/New_York')
-        .toFormat('yyyy-MM-dd');
-
-      console.log('Current JS Date:', currentDate);
-      console.log('Local time:', DateTime.fromJSDate(currentDate).toISO());
-      console.log('NY time:', DateTime.fromJSDate(currentDate).setZone('America/New_York').toISO());
-      console.log('Adding to daily log for date:', today);
-
-      await api.post('api/daily-log', {
+      // Add to daily log - server will calculate the date using its own DateTime.now()
+      // This matches how the web app works - no date parameter sent
+      const dailyLogResponse = await api.post('api/daily-log', {
         json: {
           user_id: userId,
           foods: [foodResponse._id],
         },
-      });
-
+      }).json() as any;
+      
       console.log('Successfully added food to daily log');
+      console.log('Daily log response:', dailyLogResponse);
+      
+      // Log the date the server stored it under
+      let storedDateStr = '';
+      if (dailyLogResponse.dateCreated) {
+        const storedDate = new Date(dailyLogResponse.dateCreated);
+        storedDateStr = DateTime.fromJSDate(storedDate).toFormat('yyyy-MM-dd');
+        console.log('📅 Server stored food under date:', storedDateStr);
+      }
+      
+      // Cache the food data so dashboard can find it immediately
+      // This works around the server issue where .findOne() only returns the oldest daily log
+      const { cacheFood } = require('@/utils/foodCache');
+      cacheFood(foodResponse as any, storedDateStr);
+      console.log('✅ Cached food for dashboard:', (foodResponse as any).food_name);
+      
       router.back();
     } catch (err) {
       console.error('Error adding food:', err);

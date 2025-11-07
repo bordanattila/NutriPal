@@ -5,6 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as SecureStore from 'expo-secure-store';
 import Footer from '@/components/Footer';
 import { mobileAuthService as Auth } from "@/utils/authServiceMobile";
+import { getApiUrl } from '@/utils/apiConfig';
 import ky from 'ky';
 
 interface SignupResponse {
@@ -15,7 +16,7 @@ interface SignupResponse {
 }
 
 const api = ky.create({
-  prefixUrl: process.env.EXPO_PUBLIC_API_URL || 'http://192.168.1.14:4000',
+  prefixUrl: getApiUrl(),
 });
 
 export default function Signup() {

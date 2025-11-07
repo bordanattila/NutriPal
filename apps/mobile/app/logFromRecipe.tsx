@@ -144,27 +144,85 @@ export default function LogFromRecipe() {
       }
 
       try {
-        console.log('Making API call to:', `api/log-recipe/${recipeID}?servings=${servingCount + fractionValue}`);
-        const response = await api.get(`api/log-recipe/${recipeID}?servings=${servingCount + fractionValue}`);
-        
-        if (!response.ok) {
-          throw new Error(`API returned ${response.status}: ${response.statusText}`);
+        // First try to get the recipe from saved-recipes to use stored nutrition data
+        // This works around the server bug in /log-recipe endpoint
+        let recipeData: any = null;
+        if (userId) {
+          try {
+            const recipesResponse = await api.get(`api/saved-recipes/${userId}`);
+            if (recipesResponse.ok) {
+              const recipes = await recipesResponse.json() as any[];
+              recipeData = recipes.find((r: any) => r._id === recipeID);
+              if (recipeData) {
+                console.log('Recipe data from saved-recipes:', recipeData);
+              }
+            }
+          } catch (err) {
+            console.log('Saved-recipes fetch failed, trying log-recipe endpoint:', err);
+          }
         }
+
+        // If we have recipe data with nutrition, use it
+        // Otherwise fall back to the log-recipe endpoint (which has a bug)
+        let responseData: RecipeDetails;
         
-        const responseData: RecipeDetails = await response.json();
-        console.log('API response:', responseData);
+        if (recipeData && recipeData.nutrition) {
+          // Use stored nutrition data from recipe
+          const totalServings = servingCount + fractionValue;
+          const nutrition = recipeData.nutrition;
+          
+          responseData = {
+            recipeName: recipeData.recipeName,
+            selectedServing: {
+              serving_description: recipeData.servingSize || '1 serving'
+            },
+            nutrition: {
+              caloriesPerServing: (nutrition.caloriesPerServing || 0) * totalServings,
+              carbohydratePerServing: (nutrition.carbohydratePerServing || 0) * totalServings,
+              proteinPerServing: (nutrition.proteinPerServing || 0) * totalServings,
+              fatPerServing: (nutrition.fatPerServing || 0) * totalServings,
+              saturatedFatPerServing: (nutrition.saturatedFatPerServing || 0) * totalServings,
+              sodiumPerServing: (nutrition.sodiumPerServing || 0) * totalServings,
+              fiberPerServing: (nutrition.fiberPerServing || 0) * totalServings,
+            }
+          };
+          console.log('Using stored recipe nutrition data:', responseData);
+          setError(null);
+        } else {
+          // Fall back to log-recipe endpoint
+          console.log('Making API call to:', `api/log-recipe/${recipeID}?servings=${servingCount + fractionValue}`);
+          const response = await api.get(`api/log-recipe/${recipeID}?servings=${servingCount + fractionValue}`);
+          
+          if (!response.ok) {
+            throw new Error(`API returned ${response.status}: ${response.statusText}`);
+          }
+          
+          responseData = await response.json();
+          console.log('API response from log-recipe:', responseData);
+
+          // Check if nutrition data exists - if not, use default values and show a warning
+          const hasNutritionData = responseData.nutrition && Object.keys(responseData.nutrition).length > 0;
+          
+          if (!hasNutritionData) {
+            console.warn('⚠️ Recipe nutrition data is missing from server. Using default values of 0.');
+            setError('Warning: Nutrition data is not available for this recipe. Values will show as 0.');
+          } else {
+            setError(null);
+          }
+        }
 
         setFoodDetails(responseData);
 
+        // Use nullish coalescing to provide default values of 0 if nutrition data is missing
         const serving: Serving = {
-          serving_description: responseData.selectedServing.serving_description,
-          calories: responseData.nutrition.caloriesPerServing,
-          carbohydrate: responseData.nutrition.carbohydratePerServing,
-          protein: responseData.nutrition.proteinPerServing,
-          fat: responseData.nutrition.fatPerServing,
-          saturated_fat: responseData.nutrition.saturatedFatPerServing,
-          sodium: responseData.nutrition.sodiumPerServing,
-          fiber: responseData.nutrition.fiberPerServing,
+          serving_description: responseData.selectedServing?.serving_description || '1 serving',
+          calories: responseData.nutrition?.caloriesPerServing ?? 0,
+          carbohydrate: responseData.nutrition?.carbohydratePerServing ?? 0,
+          protein: responseData.nutrition?.proteinPerServing ?? 0,
+          fat: responseData.nutrition?.fatPerServing ?? 0,
+          saturated_fat: responseData.nutrition?.saturatedFatPerServing ?? 0,
+          sodium: responseData.nutrition?.sodiumPerServing ?? 0,
+          fiber: responseData.nutrition?.fiberPerServing ?? 0,
           serving_id: 'S-custom'
         };
 
@@ -177,10 +235,10 @@ export default function LogFromRecipe() {
       }
     };
 
-    if (recipeID) {
+    if (recipeID && userId) {
       fetchRecipeDetails();
     }
-  }, [recipeID, servingCount, fractionValue]);
+  }, [recipeID, servingCount, fractionValue, userId]);
 
   const fractionToFloat = (fractionStr: string) => {
     if (fractionStr === '0') return 0;
@@ -206,7 +264,15 @@ export default function LogFromRecipe() {
 
     try {
       const totalServings = servingCount + fractionValue;
-      const currentDate = DateTime.now().toFormat('yyyy-MM-dd');
+
+      // Ensure all nutrition values are numbers (not NaN) before calculating totals
+      const safeCalories = (selectedServing.calories || 0) * totalServings;
+      const safeCarbohydrate = (selectedServing.carbohydrate || 0) * totalServings;
+      const safeProtein = (selectedServing.protein || 0) * totalServings;
+      const safeFat = (selectedServing.fat || 0) * totalServings;
+      const safeSaturatedFat = (selectedServing.saturated_fat || 0) * totalServings;
+      const safeSodium = (selectedServing.sodium || 0) * totalServings;
+      const safeFiber = (selectedServing.fiber || 0) * totalServings;
 
       const foodEntry = {
         user_id: userId,
@@ -214,13 +280,13 @@ export default function LogFromRecipe() {
         serving_size: selectedServing.serving_description,
         number_of_servings: servingCount,
         fraction_of_serving: fractionValue,
-        calories: selectedServing.calories * totalServings,
-        carbohydrate: selectedServing.carbohydrate * totalServings,
-        protein: selectedServing.protein * totalServings,
-        fat: selectedServing.fat * totalServings,
-        saturated_fat: selectedServing.saturated_fat * totalServings,
-        sodium: selectedServing.sodium * totalServings,
-        fiber: selectedServing.fiber * totalServings,
+        calories: safeCalories,
+        carbohydrate: safeCarbohydrate,
+        protein: safeProtein,
+        fat: safeFat,
+        saturated_fat: safeSaturatedFat,
+        sodium: safeSodium,
+        fiber: safeFiber,
         meal_type: meal.toLowerCase(),
         food_type: 'recipe'
       };
@@ -229,22 +295,36 @@ export default function LogFromRecipe() {
       const foodResponse = await api.post('api/one-food', {
         json: foodEntry,
       });
-      const foodData = await foodResponse.json() as { _id: string };
+      const foodData = await foodResponse.json() as any;
 
       if (!foodResponse.ok) {
         throw new Error('Failed to create food entry.');
       }
 
-      // Add the food entry to the DailyLog
+      // Add the food entry to the DailyLog - server will calculate the date
+      // This matches how the web app works - no date parameter sent
       const dailyLogResponse = await api.post('api/daily-log', {
         json: {
           user_id: userId,
           foods: [foodData._id],
-          dateCreated: currentDate,
         },
       });
 
       if (dailyLogResponse.ok) {
+        const dailyLogData = await dailyLogResponse.json() as any;
+        
+        // Cache the food data so dashboard can find it immediately
+        // This works around the server issue where .findOne() only returns the oldest daily log
+        const { cacheFood } = require('@/utils/foodCache');
+        let storedDateStr = '';
+        if (dailyLogData.dateCreated) {
+          const storedDate = new Date(dailyLogData.dateCreated);
+          const DateTime = require('luxon').DateTime;
+          storedDateStr = DateTime.fromJSDate(storedDate).toFormat('yyyy-MM-dd');
+        }
+        cacheFood(foodData as any, storedDateStr);
+        console.log('✅ Cached recipe food for dashboard');
+        
         Alert.alert('Success', 'Recipe logged successfully!', [
           { text: 'OK', onPress: () => router.back() }
         ]);
@@ -323,7 +403,9 @@ export default function LogFromRecipe() {
     );
   }
 
-  if (error || !foodDetails) {
+  // Only show error screen if there's a critical error (not just a warning)
+  // If error is a warning about missing nutrition data, still show the recipe
+  if (!foodDetails && error && !error.includes('Warning:')) {
     return (
       <View style={styles.container}>
         <LinearGradient colors={['#00b4d8', '#0077b6', '#023e8a']} style={styles.gradient}>
@@ -340,10 +422,10 @@ export default function LogFromRecipe() {
 
   const totalServings = servingCount + fractionValue;
   const stats = selectedServing ? [
-    { name: 'Carbs', value: selectedServing.carbohydrate * totalServings },
-    { name: 'Protein', value: selectedServing.protein * totalServings },
-    { name: 'Fat', value: selectedServing.fat * totalServings },
-    { name: 'Calories', value: selectedServing.calories * totalServings }
+    { name: 'Carbs', value: (selectedServing.carbohydrate || 0) * totalServings },
+    { name: 'Protein', value: (selectedServing.protein || 0) * totalServings },
+    { name: 'Fat', value: (selectedServing.fat || 0) * totalServings },
+    { name: 'Calories', value: (selectedServing.calories || 0) * totalServings }
   ] : [];
 
   return (
@@ -360,19 +442,25 @@ export default function LogFromRecipe() {
       />
       <LinearGradient colors={['#00b4d8', '#0077b6', '#023e8a']} style={styles.gradient}>
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
+          {error && error.includes('Warning:') && (
+            <View style={styles.warningBanner}>
+              <MaterialCommunityIcons name="alert" size={20} color="#FFA500" />
+              <Text style={styles.warningText}>{error}</Text>
+            </View>
+          )}
           {selectedServing && (
             <View style={styles.nutritionCard}>
               <View style={styles.nutritionRow}>
                 <View style={styles.nutritionColumn}>
                   <View style={styles.inlineRow}>
                     <Text style={styles.label}>Calories: </Text>
-                    <Text style={styles.value}>{((selectedServing.calories * totalServings).toFixed(1))}</Text>
+                    <Text style={styles.value}>{((selectedServing.calories || 0) * totalServings).toFixed(1)}</Text>
                   </View>
                 </View>
                 <View style={styles.nutritionColumn}>
                   <View style={styles.inlineRow}>
                     <Text style={styles.label}>Carbs: </Text>
-                    <Text style={styles.value}>{((selectedServing.carbohydrate * totalServings).toFixed(1))}g</Text>
+                    <Text style={styles.value}>{((selectedServing.carbohydrate || 0) * totalServings).toFixed(1)}g</Text>
                   </View>
                 </View>
               </View>
@@ -380,13 +468,13 @@ export default function LogFromRecipe() {
                 <View style={styles.nutritionColumn}>
                   <View style={styles.inlineRow}>
                     <Text style={styles.label}>Protein: </Text>
-                    <Text style={styles.value}>{((selectedServing.protein * totalServings).toFixed(1))}g</Text>
+                    <Text style={styles.value}>{((selectedServing.protein || 0) * totalServings).toFixed(1)}g</Text>
                   </View>
                 </View>
                 <View style={styles.nutritionColumn}>
                   <View style={styles.inlineRow}>
                     <Text style={styles.label}>Fat: </Text>
-                    <Text style={styles.value}>{((selectedServing.fat * totalServings).toFixed(1))}g</Text>
+                    <Text style={styles.value}>{((selectedServing.fat || 0) * totalServings).toFixed(1)}g</Text>
                   </View>
                 </View>
               </View>
@@ -394,13 +482,13 @@ export default function LogFromRecipe() {
                 <View style={styles.nutritionColumn}>
                   <View style={styles.inlineRow}>
                     <Text style={styles.label}>Saturated Fat: </Text>
-                    <Text style={styles.value}>{((selectedServing.saturated_fat * totalServings).toFixed(1))}g</Text>
+                    <Text style={styles.value}>{((selectedServing.saturated_fat || 0) * totalServings).toFixed(1)}g</Text>
                   </View>
                 </View>
                 <View style={styles.nutritionColumn}>
                   <View style={styles.inlineRow}>
                     <Text style={styles.label}>Sodium: </Text>
-                    <Text style={styles.value}>{((selectedServing.sodium * totalServings).toFixed(1))}mg</Text>
+                    <Text style={styles.value}>{((selectedServing.sodium || 0) * totalServings).toFixed(1)}mg</Text>
                   </View>
                 </View>
               </View>
@@ -408,7 +496,7 @@ export default function LogFromRecipe() {
                 <View style={styles.nutritionColumn}>
                   <View style={styles.inlineRow}>
                     <Text style={styles.label}>Fiber: </Text>
-                    <Text style={styles.value}>{((selectedServing.fiber * totalServings).toFixed(1))}g</Text>
+                    <Text style={styles.value}>{((selectedServing.fiber || 0) * totalServings).toFixed(1)}g</Text>
                   </View>
                 </View>
               </View>
@@ -585,5 +673,21 @@ const styles = StyleSheet.create({
     color: '#B0BEC5',
     textAlign: 'center',
     marginBottom: 20,
+  },
+  warningBanner: {
+    backgroundColor: 'rgba(255, 165, 0, 0.2)',
+    borderRadius: 8,
+    padding: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#FFA500',
+  },
+  warningText: {
+    color: '#FFA500',
+    fontSize: 14,
+    flex: 1,
   },
 }); 

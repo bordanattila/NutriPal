@@ -33,7 +33,9 @@
     "constants/**/*",
     "utils/**/*",
     "types/**/*",
-    "index.ts"
+    "index.ts",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts"
   ],
   "exclude": [
     "components/__tests__/**/*",

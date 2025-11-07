@@ -99,29 +99,6 @@ export default function SearchFood() {
     setError(null);
   };
 
-  const renderFoodItem = (food: Food) => (
-    <TouchableOpacity
-      key={food.food_id}
-      style={styles.foodItem}
-      onPress={() => router.push(`/foodDetails/${food.food_id}`)}
-    >
-      <Text style={styles.foodName}>
-        {food.food_name}
-        {food.brand_name && <Text style={styles.brandName}> ({food.brand_name})</Text>}
-      </Text>
-      {food.food_description && (
-        <Text style={styles.description}>{food.food_description}</Text>
-      )}
-      {logHistory.includes(food) && (
-        <Text style={styles.nutritionInfo}>
-          Calories: {food.calories.toFixed(1)} | Carb: {food.carbohydrate.toFixed(1)} | 
-          Protein: {food.protein.toFixed(1)} | Fat: {food.fat.toFixed(1)} | 
-          Servings: {food.number_of_servings} | Size: {food.serving_size}
-        </Text>
-      )}
-    </TouchableOpacity>
-  );
-
   const handleBarcodeScan = () => {
     router.push('/barcodeScan');
   };
@@ -170,12 +147,54 @@ export default function SearchFood() {
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
           {searchResults.length > 0 ? (
             <View style={styles.resultsContainer}>
-              {searchResults.map(renderFoodItem)}
+              {searchResults.map((food, index) => (
+                <TouchableOpacity
+                  key={`${food.food_id}-${index}`}
+                  style={styles.foodItem}
+                  onPress={() => router.push(`/foodDetails/${food.food_id}`)}
+                >
+                  <Text style={styles.foodName}>
+                    {food.food_name}
+                    {food.brand_name && <Text style={styles.brandName}> ({food.brand_name})</Text>}
+                  </Text>
+                  {food.food_description && (
+                    <Text style={styles.description}>{food.food_description}</Text>
+                  )}
+                  {logHistory.includes(food) && (
+                    <Text style={styles.nutritionInfo}>
+                      Calories: {(food.calories ?? 0).toFixed(1)} | Carb: {(food.carbohydrate ?? 0).toFixed(1)} | 
+                      Protein: {(food.protein ?? 0).toFixed(1)} | Fat: {(food.fat ?? 0).toFixed(1)} | 
+                      Servings: {food.number_of_servings} | Size: {food.serving_size}
+                    </Text>
+                  )}
+                </TouchableOpacity>
+              ))}
             </View>
           ) : (
             <View style={styles.historyContainer}>
               <Text style={styles.historyTitle}>Recent History</Text>
-              {logHistory.map(renderFoodItem)}
+              {logHistory.map((food, index) => (
+                <TouchableOpacity
+                  key={`${food.food_id}-${index}-history`}
+                  style={styles.foodItem}
+                  onPress={() => router.push(`/foodDetails/${food.food_id}`)}
+                >
+                  <Text style={styles.foodName}>
+                    {food.food_name}
+                    {food.brand_name && <Text style={styles.brandName}> ({food.brand_name})</Text>}
+                  </Text>
+                  {food.food_description && (
+                    <Text style={styles.description}>{food.food_description}</Text>
+                  )}
+                  {logHistory.includes(food) && (
+                    <Text style={styles.nutritionInfo}>
+                      Calories: {(food.calories ?? 0).toFixed(1)} | Carb: {(food.carbohydrate ?? 0).toFixed(1)} | 
+                      Protein: {(food.protein ?? 0).toFixed(1)} | Fat: {(food.fat ?? 0).toFixed(1)} | 
+                      Servings: {food.number_of_servings} | Size: {food.serving_size}
+                    </Text>
+                  )}
+                </TouchableOpacity>
+              ))}
             </View>
           )}
 

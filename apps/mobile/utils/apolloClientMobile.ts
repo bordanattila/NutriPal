@@ -9,9 +9,10 @@
 import { setContext } from '@apollo/client/link/context';
 import { createHttpLink, InMemoryCache, ApolloClient } from '@apollo/client';
 import * as SecureStore from 'expo-secure-store';
+import { getApiUrl } from './apiConfig';
 
 const mobileHttpLink = createHttpLink({
-  uri: (process.env.EXPO_PUBLIC_API_URL || 'http://192.168.1.14:4000') + '/graphql',
+  uri: getApiUrl() + '/graphql',
 });
 
 const mobileAuthLink = setContext(async (_, { headers }) => {

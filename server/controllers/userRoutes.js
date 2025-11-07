@@ -38,8 +38,8 @@ router.post('/login', async (req, res) => {
 
         // Sign a token for the user
         const token = signInToken({ username: user.username, email: user.email, _id: user._id });
-        const refreshToken = signInToken({ username: user.username, email: user.email, _id: user._id });
-        refreshTokens.push(refreshToken)
+        const { refreshToken: createRefreshToken } = require('../utils/auth');
+        const refreshToken = createRefreshToken(user);
 
         console.log('Login successful for user:', username);
         // Respond with the token and user information        

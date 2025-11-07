@@ -1,13 +1,10 @@
 import { ApolloClient, InMemoryCache, createHttpLink, ApolloLink } from '@apollo/client';
 import { setContext } from '@apollo/client/link/context';
 import { onError } from '@apollo/client/link/error';
-import Constants from 'expo-constants';
 import { mobileAuthService } from './authServiceMobile';
+import { getApiUrl } from './apiConfig';
 
-console.log('Constants.expoConfig?.extra?.apiUrl:', Constants.expoConfig?.extra?.apiUrl);
-console.log('process.env.EXPO_PUBLIC_API_URL:', process.env.EXPO_PUBLIC_API_URL);
-
-const API_URL = Constants.expoConfig?.extra?.apiUrl || process.env.EXPO_PUBLIC_API_URL || 'http://192.168.1.14:4000';
+const API_URL = getApiUrl();
 
 console.log('Final API_URL:', API_URL);
 

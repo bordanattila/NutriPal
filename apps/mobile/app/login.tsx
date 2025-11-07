@@ -5,6 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Footer from '@/components/Footer';
 import * as SecureStore from 'expo-secure-store';
 import { mobileAuthService as Auth } from "@/utils/authServiceMobile";
+import { getApiUrl } from '@/utils/apiConfig';
 import ky from 'ky';
 
 interface LoginResponse {
@@ -14,7 +15,7 @@ interface LoginResponse {
 }
 
 const api = ky.create({
-  prefixUrl: process.env.EXPO_PUBLIC_API_URL || 'http://192.168.1.14:4000',
+  prefixUrl: getApiUrl(),
 });
 
 export default function Login() {
@@ -44,7 +45,7 @@ export default function Login() {
     setLoading(true);
 
     try {
-      console.log('Attempting login with API URL:', process.env.EXPO_PUBLIC_API_URL);
+      console.log('Attempting login with API URL:', getApiUrl());
       console.log('Login credentials:', { username }); // Only log username for security
       
       const response = await api.post('user/login', {

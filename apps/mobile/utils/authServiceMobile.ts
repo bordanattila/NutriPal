@@ -3,6 +3,7 @@
 import * as SecureStore from 'expo-secure-store';
 import { jwtDecode } from 'jwt-decode';
 import ky from 'ky';
+import { getApiUrl } from './apiConfig';
 
 interface TokenResponse {
   token?: string;
@@ -11,7 +12,7 @@ interface TokenResponse {
 }
 
 const api = ky.create({
-  prefixUrl: process.env.EXPO_PUBLIC_API_URL || 'http://192.168.1.14:4000',
+  prefixUrl: getApiUrl(),
 });
 
 /**
@@ -73,11 +74,18 @@ class MobileAuthService {
 
   /**
    * Retrieve JWT from SecureStore.
+   * Automatically refreshes the token if it's expired and a refresh token is available.
    */
   async getToken() {
     try {
       if (this.token) {
-        return this.token;
+        const isExpired = await this.isTokenExpired(this.token);
+        if (!isExpired) {
+          return this.token;
+        } else {
+          // Token in memory is expired, clear it
+          this.token = null;
+        }
       }
       
       const token = await SecureStore.getItemAsync('userToken');
@@ -89,11 +97,43 @@ class MobileAuthService {
           this.token = token;
           return token;
         } else {
-          console.log('Token is expired, clearing stored tokens');
-          // Clear expired tokens
-          await SecureStore.deleteItemAsync('userToken');
-          await SecureStore.deleteItemAsync('refreshToken');
-          this.token = null;
+          console.log('Token is expired, attempting to refresh...');
+          // Try to refresh the token
+          const refreshToken = await SecureStore.getItemAsync('refreshToken');
+          if (refreshToken) {
+            // Check if refresh token is also expired
+            const isRefreshExpired = await this.isTokenExpired(refreshToken);
+            if (isRefreshExpired) {
+              console.log('Refresh token is also expired, clearing stored tokens');
+              await SecureStore.deleteItemAsync('userToken');
+              await SecureStore.deleteItemAsync('refreshToken');
+              this.token = null;
+              return null;
+            }
+            
+            // Refresh token is still valid, try to use it
+            const refreshSuccess = await this.refreshToken(refreshToken);
+            if (refreshSuccess) {
+              // Get the new token
+              const newToken = await SecureStore.getItemAsync('userToken');
+              if (newToken) {
+                this.token = newToken;
+                console.log('Token refreshed successfully');
+                return newToken;
+              }
+            } else {
+              console.log('Token refresh failed, clearing stored tokens');
+              // Refresh failed, clear all tokens
+              await SecureStore.deleteItemAsync('userToken');
+              await SecureStore.deleteItemAsync('refreshToken');
+              this.token = null;
+            }
+          } else {
+            console.log('No refresh token available, clearing stored tokens');
+            // No refresh token available, clear tokens
+            await SecureStore.deleteItemAsync('userToken');
+            this.token = null;
+          }
         }
       }
       
@@ -139,21 +179,47 @@ class MobileAuthService {
    */
   async refreshToken(refreshToken: string) {
     try {
-      const response = await api.post('user/refresh', {
-        json: { refreshToken },
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }).json<TokenResponse>();
-
-      if (response?.token) {
-        await SecureStore.setItemAsync('userToken', response.token);
-        this.token = response.token;
-        if (response?.refreshToken) {
-          await SecureStore.setItemAsync('refreshToken', response.refreshToken);
+      // Try the api/refresh endpoint first
+      let response: TokenResponse;
+      try {
+        response = await api.post('api/refresh', {
+          json: { token: refreshToken },
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }).json<TokenResponse>();
+        
+        // The server returns accessToken, not token
+        if ((response as any)?.accessToken) {
+          await SecureStore.setItemAsync('userToken', (response as any).accessToken);
+          this.token = (response as any).accessToken;
+          return true;
         }
-        return true;
+      } catch (apiError) {
+        console.log('api/refresh failed, trying user/refresh:', apiError);
+        // Fallback to user/refresh endpoint
+        try {
+          response = await api.post('user/refresh', {
+            json: { refreshToken },
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          }).json<TokenResponse>();
+
+          if (response?.token) {
+            await SecureStore.setItemAsync('userToken', response.token);
+            this.token = response.token;
+            if (response?.refreshToken) {
+              await SecureStore.setItemAsync('refreshToken', response.refreshToken);
+            }
+            return true;
+          }
+        } catch (userError) {
+          console.error('Both refresh endpoints failed:', userError);
+          return false;
+        }
       }
+      
       return false;
     } catch (error) {
       console.error('Error refreshing token:', error);

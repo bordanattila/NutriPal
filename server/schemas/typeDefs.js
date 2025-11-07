@@ -19,18 +19,6 @@ const typeDefs = gql`
         saved_meal: [Meal]
         saved_recipe: [Recipe]
         macros: Macros
-<<<<<<< HEAD
-    }
-
-  """
-  Represents a meal saved by the user
-  """
-    type Meal {
-        _id: ID!
-        name: String!
-        calorieCount: Int!
-=======
->>>>>>> select_food
     }
 
   """
