@@ -29,6 +29,19 @@ const PORT = process.env.PORT || 4000;
 const HOST = process.env.HOST || '0.0.0.0';
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
+// Validate required environment variables
+if (!process.env.SECRET_KEY) {
+  console.error('ERROR: SECRET_KEY environment variable is not set. Session management will not work.');
+  if (NODE_ENV === 'production') {
+    throw new Error('SECRET_KEY environment variable is required in production');
+  }
+}
+
+if (!process.env.MONGODB_URI && NODE_ENV === 'production') {
+  console.error('ERROR: MONGODB_URI environment variable is not set.');
+  throw new Error('MONGODB_URI environment variable is required in production');
+}
+
 /**
  * @desc Sets secure headers using Helmet including custom content security policy
  * Applies strict Content Security Policy (CSP) headers to limit sources for scripts, styles, etc.

@@ -6,6 +6,9 @@ const { AuthenticationError } = require("apollo-server-express");
 const User = require("../models/User");
 const { signInToken } = require("../utils/auth");
 const DailyLog = require("../models/DailyLog");
+const OneFood = require("../models/OneFood");
+const Recipe = require("../models/Recipe");
+const Meal = require("../models/Meal");
 
 const resolvers = {
   /**
@@ -43,8 +46,12 @@ const resolvers = {
      * @desc Fetches a single logged food item by user_id and food_id
      * @access Private
      */
-    getOneFood: async (_, { user_id, food_id }) => {
-      return OneFood.findOne({ _id: food_id, user_id, created });
+    getOneFood: async (_, { user_id, food_id, created }) => {
+      const query = { _id: food_id, user_id };
+      if (created) {
+        query.created = created;
+      }
+      return OneFood.findOne(query);
     }
   },
 

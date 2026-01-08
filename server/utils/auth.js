@@ -8,6 +8,11 @@ require('dotenv').config();
 // Set token expiration date
 const secret = process.env.TOKEN_SECRET;
 
+if (!secret) {
+  console.error('ERROR: TOKEN_SECRET environment variable is not set. JWT authentication will not work.');
+  throw new Error('TOKEN_SECRET environment variable is required');
+}
+
 module.exports = {
 /**
  * @function authMiddleware
@@ -33,7 +38,7 @@ module.exports = {
     try {
       const { data } = jwt.verify(token, secret, { algorithm: 'HS256', expiresIn: '15m' });
       req.user = data;
-    } catch {
+    } catch (err) {
       console.log('Invalid token', err);
     }
     return req;

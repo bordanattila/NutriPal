@@ -17,6 +17,8 @@ const { generateFoodId, generateServingId } = require('../utils/idGenerator');
 const { convertUpcEtoUpcA } = require('../utils/barcodeConverter');
 const { ChatOpenAI } = require('@langchain/openai');
 const { HumanMessage, SystemMessage } = require('@langchain/core/messages');
+const { verifyRefreshToken, signInToken } = require('../utils/auth');
+const User = require('../models/User');
 require('dotenv').config();
 
 /**
@@ -209,7 +211,7 @@ router.get('/saved-recipes/:user_id', async (req, res) => {
 });
 
 /**
- * @route POST /api/log-recipe/:recipeID
+ * @route GET /api/log-recipe/:recipeID
  * @desc Log a single recipe to the database
  * @access Private
  */
@@ -267,7 +269,7 @@ router.get('/saved-meals/:user_id', async (req, res) => {
 });
 
 /**
- * @route POST /api/log-meal/:mealID
+ * @route GET /api/log-meal/:mealID
  * @desc Log a single meal to the database
  * @access Private
  */
@@ -529,7 +531,7 @@ router.post('/ai-assist', async (req, res) => {
         }
 
         const model = new ChatOpenAI({
-            //   modelName: 'gpt-3.5-turbo',git 
+            //   modelName: 'gpt-3.5-turbo',
             modelName: 'gpt-4.1-nano',
             temperature: 0.7,
             openAIApiKey: process.env.OPENAI_API_KEY_NP,
@@ -572,8 +574,8 @@ router.post('/ai-assist', async (req, res) => {
 });
 
 /**
- * @route DELETE /api/refresh
- * @desc Handles access token refreshing. (WIP – check refreshToken reference).
+ * @route POST /api/refresh
+ * @desc Handles access token refreshing using refresh token.
  * @access Private
  */
 router.post('/refresh', async (req, res) => {
@@ -582,15 +584,25 @@ router.post('/refresh', async (req, res) => {
     if (!token)
         return res.status(401).json({ message: 'No token provided' });
 
-    if (!refreshToken.include(token)) {
-        return res.status(400).json({ message: 'Refresh token is required' });
-    }
-
-    jwt.verify(token, refreshTokenSecret, (err, user) => {
-        if (err) return res.sendStatus(403);
-        const accessToken = jwt.sign({ username: user.username }, accessTokenSecret, { expiresIn: '15m' });
+    try {
+        // Verify the refresh token
+        const decoded = await verifyRefreshToken(token);
+        
+        // Get user from database
+        const user = await User.findById(decoded.userId);
+        
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        
+        // Generate new access token
+        const accessToken = signInToken({ username: user.username, email: user.email, _id: user._id });
+        
         res.json({ accessToken });
-    });
+    } catch (error) {
+        console.error('Error refreshing token:', error);
+        return res.status(403).json({ message: 'Invalid or expired refresh token' });
+    }
 });
 
 module.exports = router;
