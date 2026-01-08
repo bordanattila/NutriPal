@@ -1,0 +1,10 @@
+
+> mobile@1.0.0 dev D:\Web_Development\food_tracker\apps\mobile
+> expo start -c
+
+Starting project at D:\Web_Development\food_tracker\apps\mobile
+› Port 8081 is being used by another process
+Input is required, but 'npx expo' is in non-interactive mode.
+Required input:
+› Skipping dev server
+> Use port 8082 instead?

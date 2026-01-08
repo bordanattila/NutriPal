@@ -5,21 +5,18 @@
 
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from "react-router-dom";
-import Auth from '../utils/auth';
+import Auth from '@nutripal/shared/src/utils/auth';
 import { useQuery } from '@apollo/client';
-import { GET_USER } from '../utils/mutations';
+import { GET_USER } from '@nutripal/shared/src/utils/mutations';
 import DonutChart from '../components/Donut';
-import useAuth from '../hooks/RefreshToken';
+<<<<<<< HEAD:apps/web/src/pages/Dashboard.jsx
+import useAuth from '@nutripal/shared/src/hooks/RefreshToken';
 import ky from 'ky';
+=======
+import useAuth from '../hooks/RefreshToken';
+import api from '../utils/api';
+>>>>>>> select_food:client/src/pages/Dashboard.jsx
 import { DateTime } from "luxon";
-
-/**
- * @constant api
- * @description Pre-configured ky instance for sending API requests with base URL.
- */
-const api = ky.create({
-  prefixUrl: process.env.REACT_APP_API_URL,
-});
 
 /**
  * @component Dashboard

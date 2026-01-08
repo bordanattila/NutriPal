@@ -19,9 +19,15 @@ import DailyLogs from './pages/DailyLogs';
 import Profile from './pages/Profile';
 import Recipe from './pages/Recipe';
 import LogOptions from './components/LogOptions';
-import Meals from './pages/Meals';
+import Meal from './pages/Meal';
 import SavedRecipes from './components/SavedRecipes';
 import LogRecipe from './components/LogRecipe';
+<<<<<<< HEAD:apps/web/src/App.js
+=======
+import SavedMeals from './components/SavedMeals';
+import LogMeal from './components/LogMeal';
+>>>>>>> select_food:client/src/App.js
+import AiAssist from './pages/AiAssist';
 
 /**
  * @constant routes
@@ -77,13 +83,25 @@ const routes = [
     element: <LogRecipe />,
   },
   {
-    path: '/meals',
-    element: <Meals />,
+    path: '/meal',
+    element: <Meal />,
+  },
+  {
+    path: '/saved-meals',
+    element: <SavedMeals />,
+  },
+  {
+    path: '/log-meal/:mealName/:mealID',
+    element: <LogMeal />,
   },
   {
     path: '/logOptions',
     element: <LogOptions />,
   },
+  {
+    path: '/ai-assistant',
+    element: <AiAssist />,
+  }
 ];
 
 /**

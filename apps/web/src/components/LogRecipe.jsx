@@ -5,11 +5,11 @@
  */
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import ky from 'ky';
+import api from '../utils/api';
 import DropdownMenu from './Dropdown';
-import Auth from '../utils/auth';
+import Auth from '@nutripal/shared/src/utils/auth';
 import { useQuery } from '@apollo/client';
-import { GET_USER } from '../utils/mutations';
+import { GET_USER } from '@nutripal/shared/src/utils/mutations';
 import { useNavigate } from "react-router-dom";
 import DonutChart from './Donut';
 import { ArrowLeftIcon, PlusIcon } from '@heroicons/react/20/solid';
@@ -17,10 +17,6 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { DateTime } from 'luxon';
 
-/** API instance with environment prefix */
-const api = ky.create({
-  prefixUrl: process.env.REACT_APP_API_URL,
-});
 
 /** Meal types available for logging */
 const mealTypes = ['Breakfast', 'Lunch', 'Dinner', 'Snack'];

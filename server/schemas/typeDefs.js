@@ -18,15 +18,7 @@ const typeDefs = gql`
         daily_log: [DailyLog]
         saved_meal: [Meal]
         saved_recipe: [Recipe]
-    }
-
-  """
-  Represents a meal saved by the user
-  """
-    type Meal {
-        _id: ID!
-        name: String!
-        calorieCount: Int!
+        macros: Macros
     }
 
   """
@@ -93,6 +85,17 @@ const typeDefs = gql`
     }
 
   """
+  Represents a meal saved by the user
+  """
+    type Meal {
+        _id: ID!
+        mealName: String!
+        user_id: User!
+        ingredients: [OneFood]!
+        nutrition: Nutrition!
+    }
+
+  """
   Input type for nutrition details (used in recipe creation)
   """
     input NutritionInput {
@@ -138,6 +141,16 @@ const typeDefs = gql`
             ingredients: [ID]!
             nutrition: NutritionInput
         ): Recipe
+
+        """
+        Query for a Meal
+        """
+        getMeal(
+            user_id: ID!
+            mealName: String!
+            ingredients: [ID]!
+            nutrition: NutritionInput
+        ): Meal
     }
 
     type Mutation {
@@ -172,9 +185,10 @@ const typeDefs = gql`
             calorieGoal: Int
             password: String,
             profilePic: String,
+            macros: MacrosInput,
         ): User
 
-         """
+        """
         Mutation to create a new Recipe
         """
         createRecipe(
@@ -186,12 +200,35 @@ const typeDefs = gql`
         ): Recipe
 
         """
+        Mutation to create a new Meal
+        """
+        createMeal(
+            mealName: String!,
+            user_id: ID!,
+            ingredients: [String!]!,
+            servingSize: String,
+            nutrition: NutritionInput!
+        ): Meal
+
+        """
         Mutation to delete a OneFood
         """
         deleteOneFood(
             _id: ID!,
             food_id: ID!,
             ): User
+    }
+
+    type Macros {
+      protein: Int
+      fat: Int
+      carbs: Int
+    }
+
+    input MacrosInput {
+      protein: Int
+      fat: Int
+      carbs: Int
     }
 `;
 

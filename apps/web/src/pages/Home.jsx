@@ -5,7 +5,7 @@
 
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Auth from "../utils/auth";
+import Auth from "@nutripal/shared/src/utils/auth";
 
 /**
  * @component Home

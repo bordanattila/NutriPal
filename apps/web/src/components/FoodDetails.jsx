@@ -5,25 +5,17 @@
  */
 import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import ky from 'ky';
+import api from '../utils/api';
 import DropdownMenu from './Dropdown';
-import Auth from '../utils/auth';
+import Auth from '@nutripal/shared/src/utils/auth';
 import { useQuery } from '@apollo/client';
-import { GET_USER } from '../utils/mutations';
+import { GET_USER } from '@nutripal/shared/src/utils/mutations';
 import { useNavigate } from "react-router-dom";
 import DonutChart from './Donut';
 import { ArrowLeftIcon, PlusIcon } from '@heroicons/react/20/solid';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { DateTime } from 'luxon';
-
-/**
- * @constant api
- * @description Pre-configured ky instance for sending API requests with base URL.
- */
-const api = ky.create({
-  prefixUrl: process.env.REACT_APP_API_URL,
-});
 
 /** Available meal types */
 const mealTypes = ['Breakfast', 'Lunch', 'Dinner', 'Snack'];

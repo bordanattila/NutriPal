@@ -1,0 +1,44 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "composite": true,
+    "allowJs": true,
+    "checkJs": false,
+    "jsx": "react-jsx",
+    "outDir": "build",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "app/*"
+      ],
+      "@/components/*": [
+        "components/*"
+      ],
+      "@/constants/*": [
+        "constants/*"
+      ],
+      "@/utils/*": [
+        "utils/*"
+      ]
+    }
+  },
+  "references": [
+    {
+      "path": "../../packages/shared"
+    }
+  ],
+  "include": [
+    "app/**/*",
+    "components/**/*",
+    "constants/**/*",
+    "utils/**/*",
+    "types/**/*",
+    "index.ts",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts"
+  ],
+  "exclude": [
+    "components/__tests__/**/*",
+    "node_modules"
+  ]
+}

@@ -1,0 +1,67 @@
+# Dependencies
+node_modules
+**/node_modules
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build outputs (will be built in container)
+apps/web/build
+apps/web/.cache
+server/build
+**/dist
+**/.next
+
+# Development files
+.env.local
+.env.development
+.env.test
+*.log
+.DS_Store
+
+# IDE files
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+docs
+*.md
+!README.md
+
+# Testing
+coverage
+.nyc_output
+**/__tests__
+**/*.test.js
+**/*.test.ts
+**/*.spec.js
+**/*.spec.ts
+
+# Mobile app (not needed for server container)
+apps/mobile
+**/expo
+**/.expo
+
+# Temporary files
+tmp
+temp
+*.tmp
+.turbo
+
+# Other
+ngrok*
+*.ps1
+*.sh
+!server/start-with-ngrok.sh
+
+
+

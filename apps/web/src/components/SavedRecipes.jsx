@@ -5,19 +5,18 @@
  */
 
 import React, { useEffect, useState } from "react";
+<<<<<<< HEAD:apps/web/src/components/SavedRecipes.jsx
 import ky from 'ky';
+import Auth from '@nutripal/shared/src/utils/auth';
+=======
+import api from '../utils/api';
 import Auth from '../utils/auth';
+>>>>>>> select_food:client/src/components/SavedRecipes.jsx
 import { useQuery } from '@apollo/client';
-import { GET_USER } from '../utils/mutations';
-import useAuth from '../hooks/RefreshToken';
+import { GET_USER } from '@nutripal/shared/src/utils/mutations';
+import useAuth from '@nutripal/shared/src/hooks/RefreshToken';
 import { useNavigate } from 'react-router-dom';
 import { PlusIcon } from '@heroicons/react/20/solid';
-
-// Create a pre-configured Ky instance with API prefix and credentials
-const api = ky.create({
-    prefixUrl: process.env.REACT_APP_API_URL,
-    credentials: 'include',
-});
 
 /**
  * SavedRecipes component displays saved user recipes and allows logging them.

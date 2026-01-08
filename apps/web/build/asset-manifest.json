@@ -1,0 +1,14 @@
+{
+  "files": {
+    "main.css": "/static/css/main.aad172c4.css",
+    "main.js": "/static/js/main.9a8f072a.js",
+    "static/media/NutripalLogo.png": "/static/media/NutripalLogo.0f66f928e7bcf42a53ca.png",
+    "index.html": "/index.html",
+    "main.aad172c4.css.map": "/static/css/main.aad172c4.css.map",
+    "main.9a8f072a.js.map": "/static/js/main.9a8f072a.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.aad172c4.css",
+    "static/js/main.9a8f072a.js"
+  ]
+}

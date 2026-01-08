@@ -10,10 +10,16 @@ const qs = require('qs');
 const DailyLog = require('../models/DailyLog');
 const OneFood = require('../models/OneFood');
 const Recipe = require('../models/Recipe');
+const Meal = require('../models/Meal');
 const { calculateRecipeNutrition } = require('../utils/nutritionCalculation');
 const { DateTime } = require('luxon');
 const { generateFoodId, generateServingId } = require('../utils/idGenerator');
-const { convertUpcEtoUpcA } = require('../utils/barcodeConverter')
+const { convertUpcEtoUpcA } = require('../utils/barcodeConverter');
+const { ChatOpenAI } = require('@langchain/openai');
+const { HumanMessage, SystemMessage } = require('@langchain/core/messages');
+const { verifyRefreshToken, signInToken } = require('../utils/auth');
+const User = require('../models/User');
+require('dotenv').config();
 
 /**
  * @route GET /api/token
@@ -205,7 +211,7 @@ router.get('/saved-recipes/:user_id', async (req, res) => {
 });
 
 /**
- * @route POST /api/log-recipe/:recipeID
+ * @route GET /api/log-recipe/:recipeID
  * @desc Log a single recipe to the database
  * @access Private
  */
@@ -223,6 +229,64 @@ router.get('/log-recipe/:recipeID', async (req, res) => {
         const nutrition = calculateRecipeNutrition(selectedRecipe.ingredients, servings);
         res.json({
             recipeName: selectedRecipe.recipeName,
+            selectedServing: {
+                serving_description: selectedRecipe.servingSize
+            },
+            nutrition: {
+                caloriesPerServing: nutrition.calories,
+                carbohydratePerServing: nutrition.carbohydrate,
+                proteinPerServing: nutrition.protein,
+                fatPerServing: nutrition.fat,
+                saturatedFatPerServing: nutrition.saturated_fat,
+                sodiumPerServing: nutrition.sodium,
+                fiberPerServing: nutrition.fiber
+            }
+        });
+    } catch (err) {
+        console.error('Error fetching recipe details:', err);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
+
+/**
+ * @route GET /api/saved-meals/:user_id
+ * @desc Get saved meals for a user
+ * @access Private
+ */
+router.get('/saved-meals/:user_id', async (req, res) => {
+    try {
+        const userId = req.params.user_id;
+        const recentMeals = await Meal.find({ user_id: userId })
+        // // Sort by 'created' field in descending order
+        // .sort({ created: -1 })
+        // // Limit to 5 items
+        // .limit(5);
+        res.json(recentMeals);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+/**
+ * @route GET /api/log-meal/:mealID
+ * @desc Log a single meal to the database
+ * @access Private
+ */
+router.get('/log-meal/:mealID', async (req, res) => {
+    try {
+        const { mealID } = req.params;
+        const servings = parseFloat(req.query.servings);
+
+        const selectedMeal = await Meal.findById(mealID).populate('ingredients');
+        if (!selectedMeal) {
+            return res.status(404).json({ message: 'Meal not found' });
+        }
+
+        // Use your nutrition calculator
+        const nutrition = calculateRecipeNutrition(selectedMeal.ingredients, servings);
+        res.json({
+            mealName: selectedMeal.mealName,
             nutrition,
             selectedServing: {
                 calories: nutrition.calories,
@@ -232,11 +296,11 @@ router.get('/log-recipe/:recipeID', async (req, res) => {
                 saturated_fat: nutrition.saturated_fat,
                 sodium: nutrition.sodium,
                 fiber: nutrition.fiber,
-                serving_description: selectedRecipe.servingSize
+                serving_description: selectedMeal.servingSize
             }
         });
     } catch (err) {
-        console.error('Error fetching recipe details:', err);
+        console.error('Error fetching meal details:', err);
         res.status(500).json({ message: 'Internal server error' });
     }
 });
@@ -381,6 +445,38 @@ router.post('/recipe', async (req, res) => {
     }
 });
 
+/**
+ * @route POST /api/meal
+ * @desc Create a new meal
+ * @access Private
+ */
+router.post('/meal', async (req, res) => {
+
+    try {
+        const { user_id, mealName, servings, servingSize, ingredients } = req.body;
+        // Retrieve OneFood entry by its _id
+        const ingredient = await OneFood.find({ _id: { $in: ingredients } });
+        // Calculate the nutrition per serving
+        const nutrition = calculateRecipeNutrition(ingredient, servings);
+        // Create a new Meal entry
+        const newMeal = new Meal({
+            user_id,
+            mealName,
+            servings,
+            servingSize,
+            // Directly use the ingredients from the request body
+            ingredients,
+            nutrition,
+        });
+
+        await newMeal.save();
+        res.status(201).json(newMeal);
+    } catch (error) {
+        console.error('Error creating meal:', error);
+        res.status(500).json({ message: 'Error creating meal', error: error.message });
+    }
+});
+
 
 /**
  * @route DELETE /api/deleteFood/:user_id/:food_id/:date
@@ -422,8 +518,64 @@ router.delete('/deleteFood/:user_id/:food_id/:date', async (req, res) => {
 })
 
 /**
- * @route DELETE /api/refresh
- * @desc Handles access token refreshing. (WIP – check refreshToken reference).
+ * @route POST /api/ai-assist
+ * @desc Sends a prompt to the AI assistant (LangChain + OpenAI)
+ * @access Private
+ */
+router.post('/ai-assist', async (req, res) => {
+    try {
+        const { message, macros } = req.body;
+
+        if (!message || typeof message !== 'string') {
+            return res.status(400).json({ error: 'Message is required' });
+        }
+
+        const model = new ChatOpenAI({
+            //   modelName: 'gpt-3.5-turbo',
+            modelName: 'gpt-4.1-nano',
+            temperature: 0.7,
+            openAIApiKey: process.env.OPENAI_API_KEY_NP,
+        });
+
+        let userPrompt = message;
+
+        // If macros are included, build a dynamic AI prompt
+        if (macros && typeof macros === 'object') {
+            const protein = macros.protein ?? 0;
+            const carbs = macros.carbs ?? 0;
+            const fat = macros.fat ?? 0;
+
+            userPrompt = `
+            You are a nutrition assistant. The user has already logged food today and has the following **remaining macros**:
+            - Protein: ${protein}g
+            - Carbs: ${carbs}g
+            - Fat: ${fat}g
+
+            Suggest a meal or food combination that helps balance these macros. Be specific and realistic:
+            - Max 5 ingredients
+            - List food name + quantity (e.g. "100g chicken breast")
+            - Avoid generalities
+            - Explain briefly why it fits the macros
+
+            Respond only with a suggestion — assume macros are accurate and no dietary restrictions apply.
+            `;
+        }
+
+        const response = await model.invoke([
+            new SystemMessage('You are a helpful nutrition assistant.'),
+            new HumanMessage(message),
+        ]);
+
+        res.status(200).json({ reply: response.content });
+    } catch (err) {
+        console.error('Error in AI assist:', err);
+        res.status(500).json({ error: 'AI assistant failed to respond' });
+    }
+});
+
+/**
+ * @route POST /api/refresh
+ * @desc Handles access token refreshing using refresh token.
  * @access Private
  */
 router.post('/refresh', async (req, res) => {
@@ -432,15 +584,25 @@ router.post('/refresh', async (req, res) => {
     if (!token)
         return res.status(401).json({ message: 'No token provided' });
 
-    if (!refreshToken.include(token)) {
-        return res.status(400).json({ message: 'Refresh token is required' });
-    }
-
-    jwt.verify(token, refreshTokenSecret, (err, user) => {
-        if (err) return res.sendStatus(403);
-        const accessToken = jwt.sign({ username: user.username }, accessTokenSecret, { expiresIn: '15m' });
+    try {
+        // Verify the refresh token
+        const decoded = await verifyRefreshToken(token);
+        
+        // Get user from database
+        const user = await User.findById(decoded.userId);
+        
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        
+        // Generate new access token
+        const accessToken = signInToken({ username: user.username, email: user.email, _id: user._id });
+        
         res.json({ accessToken });
-    });
+    } catch (error) {
+        console.error('Error refreshing token:', error);
+        return res.status(403).json({ message: 'Invalid or expired refresh token' });
+    }
 });
 
 module.exports = router;

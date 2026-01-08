@@ -6,6 +6,9 @@ const { AuthenticationError } = require("apollo-server-express");
 const User = require("../models/User");
 const { signInToken } = require("../utils/auth");
 const DailyLog = require("../models/DailyLog");
+const OneFood = require("../models/OneFood");
+const Recipe = require("../models/Recipe");
+const Meal = require("../models/Meal");
 
 const resolvers = {
   /**
@@ -43,8 +46,12 @@ const resolvers = {
      * @desc Fetches a single logged food item by user_id and food_id
      * @access Private
      */
-    getOneFood: async (_, { user_id, food_id }) => {
-      return OneFood.findOne({ _id: food_id, user_id, created });
+    getOneFood: async (_, { user_id, food_id, created }) => {
+      const query = { _id: food_id, user_id };
+      if (created) {
+        query.created = created;
+      }
+      return OneFood.findOne(query);
     }
   },
 
@@ -117,7 +124,7 @@ const resolvers = {
      * @desc Updates a user's profile details (password, calorie goal, profile pic)
      * @access Private
      */
-    updateUserProfile: async (_, { userId, calorieGoal, password, profilePic }, context) => {
+    updateUserProfile: async (_, { userId, calorieGoal, password, profilePic, macros }, context) => {
       if (!context.user) {
         throw new AuthenticationError('You need to be logged in!');
       }
@@ -131,14 +138,25 @@ const resolvers = {
       if (calorieGoal !== undefined && calorieGoal !== null) {
         user.calorieGoal = calorieGoal;
       }
-      if (password) {
-        user.password = password; // Schema will hash the password
+
+      if (macros) {
+        user.macros = {
+          ...user.macros, // preserve any existing values
+          ...(macros.protein !== undefined && { protein: macros.protein }),
+          ...(macros.fat !== undefined && { fat: macros.fat }),
+          ...(macros.carbs !== undefined && { carbs: macros.carbs }),
+        };
       }
+
+      if (password) {
+        user.password = password; // Schema will hash it via pre('save')
+      }
+
       if (profilePic) {
         user.profilePic = profilePic;
       }
 
-      await user.save(); // Trigger pre('save') middleware
+      await user.save(); // Apply updates and trigger pre-save
       return user;
     },
 
@@ -156,6 +174,22 @@ const resolvers = {
         nutrition,
       });
       return await recipe.save();
+    },
+
+    /**
+     * @route POST /graphql -> createMeal
+     * @desc Saves a custom meal based on OneFood entries
+     * @access Private
+     */
+    createMeal: async (_, { user_id, mealName, ingredients, servingSize, nutrition }) => {
+      const meal = new Meal({
+        user_id,
+        mealName,
+        ingredients,
+        servingSize,
+        nutrition,
+      });
+      return await meal.save();
     },
 
     /**

@@ -12,6 +12,7 @@
     "@fortawesome/react-fontawesome": "^0.2.2",
     "@headlessui/react": "^2.1.9",
     "@heroicons/react": "^2.1.5",
+    "@langchain/openai": "^0.5.13",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
@@ -31,17 +32,12 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "dev": "npm start",
     "build": "react-scripts build",
+    "start": "react-scripts start",
     "test": "react-scripts test",
-    "eject": "react-scripts eject",
-    "watch": "nodemon --watch src --exec \"npm run build\""
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
+    "lint": "eslint \"src/**/*.{js,jsx,ts,tsx}\"",
+    "eject": "react-scripts eject"
   },
   "browserslist": {
     "production": [
@@ -54,8 +50,5 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "devDependencies": {
-    "nodemon": "^3.1.7"
   }
 }
