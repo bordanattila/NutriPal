@@ -22,11 +22,8 @@ import LogOptions from './components/LogOptions';
 import Meal from './pages/Meal';
 import SavedRecipes from './components/SavedRecipes';
 import LogRecipe from './components/LogRecipe';
-<<<<<<< HEAD:apps/web/src/App.js
-=======
 import SavedMeals from './components/SavedMeals';
 import LogMeal from './components/LogMeal';
->>>>>>> select_food:client/src/App.js
 import AiAssist from './pages/AiAssist';
 
 /**

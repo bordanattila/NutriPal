@@ -314,13 +314,16 @@ export default function LogFromRecipe() {
         const dailyLogData = await dailyLogResponse.json() as any;
         
         // Cache the food data so dashboard can find it immediately
-        // This works around the server issue where .findOne() only returns the oldest daily log
+        // Use America/New_York timezone to match dashboard queries
         const { cacheFood } = require('@/utils/foodCache');
+        const { DateTime } = require('luxon');
         let storedDateStr = '';
         if (dailyLogData.dateCreated) {
           const storedDate = new Date(dailyLogData.dateCreated);
-          const DateTime = require('luxon').DateTime;
-          storedDateStr = DateTime.fromJSDate(storedDate).toFormat('yyyy-MM-dd');
+          storedDateStr = DateTime.fromJSDate(storedDate).setZone('America/New_York').toFormat('yyyy-MM-dd');
+        } else {
+          // Fallback to today in NY timezone if dateCreated is missing
+          storedDateStr = DateTime.now().setZone('America/New_York').toFormat('yyyy-MM-dd');
         }
         cacheFood(foodData as any, storedDateStr);
         console.log('✅ Cached recipe food for dashboard');

@@ -3,7 +3,7 @@
  * @module SearchComponent
  * @description Provides logic for handling food searches, including barcode detection and search term queries.
  */
-import api from '../utils/api';
+import api from '@nutripal/shared/src/utils/api';
 
 /**
  * Handles food search by either barcode or search string.
@@ -39,19 +39,43 @@ export const handleSearch = async ({ name, setArray, setError, setBarcode }) => 
 
     // Otherwise, treat it as a normal text search.
     try {
-      const response = await api.get(`api/foodByName?searchExpression=${name}`);
+      const response = await api.get(`api/foodByName?searchExpression=${encodeURIComponent(name)}`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      
       const data = await response.json();
+      console.log('Search response data:', data); // Debug log
+      
+      // Handle different possible response structures from FatSecret API
+      let foods = [];
+      if (data?.foods?.food) {
+        // Structure: { foods: { food: [...] } }
+        foods = Array.isArray(data.foods.food) ? data.foods.food : [data.foods.food];
+      } else if (data?.foods) {
+        // Structure: { foods: [...] }
+        foods = Array.isArray(data.foods) ? data.foods : [];
+      } else if (Array.isArray(data)) {
+        // Structure: [...]
+        foods = data;
+      } else if (data?.error) {
+        // Error response from API
+        throw new Error(data.error.message || 'Search failed');
+      }
       
       // Update UI with search results or empty if not found
-      setArray(data?.foods?.food || []);
+      setArray(foods);
       setError(null);
     } catch (error) {
-      setError(error.message);
-      console.error(`Error: ${error.message}`);
+      console.error('Search error:', error);
+      const errorMessage = error.message || 'Failed to search for food. Please try again.';
+      setError(errorMessage);
       
-      // Fallback alert and optional error reporting
-      alert(`Entry failed: ${error.message}`);
-      fetch('/error-report', { method: 'POST', body: JSON.stringify(error) });
+      // Only show alert if it's a real error (not just empty results)
+      if (error.message && !error.message.includes('HTTP error! Status: 200')) {
+        console.error(`Search failed: ${errorMessage}`);
+      }
     }
   }
 };

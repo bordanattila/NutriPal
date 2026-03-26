@@ -3,7 +3,7 @@
  * @module useAuth
  * @description React hook to check and refresh JWT token on component mount. If the token is expired and cannot be refreshed, user is redirected to login.
  */
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AuthService from '../utils/auth';
 /**

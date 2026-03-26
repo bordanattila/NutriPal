@@ -3,19 +3,14 @@
  * @description Displays a dashboard with daily nutrition statistics using charts and summaries. Fetches today's food logs from the backend API.
  */
 
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState, useCallback } from 'react';
+import { useNavigate, useLocation } from "react-router-dom";
 import Auth from '@nutripal/shared/src/utils/auth';
 import { useQuery } from '@apollo/client';
 import { GET_USER } from '@nutripal/shared/src/utils/mutations';
 import DonutChart from '../components/Donut';
-<<<<<<< HEAD:apps/web/src/pages/Dashboard.jsx
 import useAuth from '@nutripal/shared/src/hooks/RefreshToken';
-import ky from 'ky';
-=======
-import useAuth from '../hooks/RefreshToken';
-import api from '../utils/api';
->>>>>>> select_food:client/src/pages/Dashboard.jsx
+import api from '@nutripal/shared/src/utils/api';
 import { DateTime } from "luxon";
 
 /**
@@ -25,6 +20,7 @@ import { DateTime } from "luxon";
  */
 const Dashboard = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   // Validate token and refresh if needed
   useAuth();
   // State: raw log data and totals
@@ -37,11 +33,7 @@ const Dashboard = () => {
   const [sodiumTotal, setSodiumTotal] = useState(0);
   const [saturatedFatTotal, setSaturatedFatTotal] = useState(0);
   const [goal, setGoal] = useState(0);
-  /** @state {DateTime} date - Current selected day (default: today) */
-  const [date, setDate] = useState(DateTime.now());
-
-  const luxonDate = DateTime.isDateTime(date) ? date : DateTime.fromJSDate(date);
-  const todaysDate = luxonDate.toFormat('yyyy-MM-dd');
+  const [refreshKey, setRefreshKey] = useState(0);
 
   /**
    * @description Query current user using JWT in headers
@@ -53,7 +45,6 @@ const Dashboard = () => {
       },
     },
     onError: (err) => {
-      setDate(DateTime.now())
       console.error(err);
       // Check if the error is due to an expired token
       if (err.message.includes("Unauthorized")) {
@@ -74,26 +65,74 @@ const Dashboard = () => {
   const calgoal = data?.user?.calorieGoal;
 
   /**
-   * @function useEffect
-   * @description Fetches today's food log for the user and sets the daily goal.
+   * @function fetchTodaysLog
+   * @description Fetches today's food log for the user.
    */
-  useEffect(() => {
-    const fetchTodaysLog = async () => {
+  const fetchTodaysLog = useCallback(async () => {
       if (!userId) return;
+    // Calculate today's date fresh each time to ensure it's current
+    const todaysDate = DateTime.now().setZone('America/New_York').toFormat('yyyy-MM-dd');
+    console.log('🔄 Dashboard: Fetching food for date:', todaysDate);
       try {
         const response = await api.get(`api/foodByDate/${userId}/date/${todaysDate}`);
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
         const data = await response.json();
-        setTodaysLog(data.foods);
+      console.log('📊 Dashboard: Received foods:', data.foods?.length || 0);
+      setTodaysLog(data.foods || []);
       } catch (error) {
         console.error('Error fetching todays foods:', error);
+      setTodaysLog([]);
+      }
+  }, [userId]);
+
+  /**
+   * @function useEffect
+   * @description Fetches today's food log and sets the daily goal.
+   * Refreshes when navigating to the dashboard, when userId/calgoal changes, or on manual refresh.
+   */
+  useEffect(() => {
+    setGoal(calgoal);
+    fetchTodaysLog();
+  }, [userId, calgoal, location.pathname, refreshKey, fetchTodaysLog]);
+
+  /**
+   * @function useEffect
+   * @description Refresh data when the window regains focus or becomes visible.
+   * Also sets up a periodic refresh every 30 seconds when on the dashboard.
+   */
+  useEffect(() => {
+    const handleFocus = () => {
+      // Only refresh if we're on the dashboard
+      if (location.pathname === '/dashboard') {
+        setRefreshKey(prev => prev + 1);
       }
     };
-    setGoal(calgoal)
-    fetchTodaysLog();
-  }, [userId, calgoal, todaysDate, todaysLog]);
+
+    const handleVisibilityChange = () => {
+      // Refresh when tab becomes visible
+      if (document.visibilityState === 'visible' && location.pathname === '/dashboard') {
+        setRefreshKey(prev => prev + 1);
+      }
+    };
+
+    // Set up periodic refresh every 30 seconds when on dashboard
+    const interval = setInterval(() => {
+      if (location.pathname === '/dashboard' && document.visibilityState === 'visible') {
+        setRefreshKey(prev => prev + 1);
+      }
+    }, 30000); // 30 seconds
+
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      clearInterval(interval);
+    };
+  }, [location.pathname]);
 
   /**
    * @function useEffect

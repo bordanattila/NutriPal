@@ -1,4 +1,3 @@
-<<<<<<< HEAD:apps/web/src/pages/Recipe.jsx
 /**
  * @file Recipe.jsx
  * @description Allows users to create custom recipes by adding ingredients from the food search.
@@ -7,24 +6,16 @@
 
 import React, { useEffect, useState } from 'react';
 import SearchBar from '../components/SearchBar';
+import FoodSearchList from '../components/FoodSearchList';
+import ItemList from '../components/ItemList';
 import ky from 'ky';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import Auth from '@nutripal/shared/src/utils/auth';
+import api from '@nutripal/shared/src/utils/api';
 import { useQuery } from '@apollo/client';
 import { GET_USER } from '@nutripal/shared/src/utils/mutations';
 import useAuth from '@nutripal/shared/src/hooks/RefreshToken';
-=======
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import Auth from '../utils/auth';
-import { useQuery } from '@apollo/client';
-import { GET_USER } from '../utils/mutations';
-import useAuth from '../hooks/RefreshToken';
-import useItemCollector from '../hooks/ingredientCollector';
-import FoodSearchList from '../components/FoodSearchList';
-import ItemList from '../components/ItemList';
-import api from '../utils/api';
->>>>>>> select_food:client/src/pages/Recipe.jsx
+import useItemCollector from '@nutripal/shared/src/hooks/ingredientCollector';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 

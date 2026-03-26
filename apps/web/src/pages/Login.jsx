@@ -4,7 +4,6 @@
  */
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-<<<<<<< HEAD:apps/web/src/pages/Login.jsx
 import Auth from "@nutripal/shared/src/utils/auth";
 import ky from 'ky';
 
@@ -16,10 +15,6 @@ const api = ky.create({
   prefixUrl: process.env.REACT_APP_API_URL,
   credentials: 'include',
 });
-=======
-import Auth from "../utils/auth";
-import api from '../utils/api';
->>>>>>> select_food:client/src/pages/Login.jsx
 
 /**
  * @component Login

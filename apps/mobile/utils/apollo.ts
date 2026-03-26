@@ -7,16 +7,32 @@ import { getApiUrl } from './apiConfig';
 const API_URL = getApiUrl();
 
 console.log('Final API_URL:', API_URL);
+console.log('GraphQL endpoint will be:', `${API_URL}/graphql`);
 
 if (!API_URL) {
+  console.error('ERROR: API_URL is not configured. Please set EXPO_PUBLIC_API_URL environment variable.');
   throw new Error('API_URL is not configured. Please set EXPO_PUBLIC_API_URL environment variable.');
 }
 
+// Custom fetch to handle ngrok headers
+const customFetch = (uri: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+  const headers = new Headers(init?.headers);
+  
+  // Add ngrok-skip-browser-warning header for ngrok free tier
+  if (typeof uri === 'string' && uri.includes('ngrok')) {
+    headers.set('ngrok-skip-browser-warning', 'true');
+  }
+  
+  return fetch(uri, {
+    ...init,
+    headers,
+  });
+};
+
 const httpLink = createHttpLink({
   uri: `${API_URL}/graphql`,
+  fetch: customFetch,
 });
-
-console.log('GraphQL endpoint:', `${API_URL}/graphql`);
 
 // Add logging link
 const loggingLink = new ApolloLink((operation, forward) => {
@@ -39,17 +55,32 @@ const errorLink = onError(({ graphQLErrors, networkError, operation }) => {
   }
   if (networkError) {
     console.error(`[Network error for ${operation.operationName}]:`, networkError);
+    if ('statusCode' in networkError) {
+      console.error(`Status code: ${networkError.statusCode}`);
+    }
+    if ('result' in networkError) {
+      console.error(`Response:`, networkError.result);
+    }
+    console.error(`Full error:`, JSON.stringify(networkError, null, 2));
   }
 });
 
 const authLink = setContext(async (_, { headers }) => {
   const token = await mobileAuthService.getToken();
   console.log('Auth token available:', !!token);
+  
+  const newHeaders: Record<string, string> = {
+    ...headers,
+    authorization: token ? `Bearer ${token}` : '',
+  };
+  
+  // Add ngrok header if using ngrok
+  if (API_URL.includes('ngrok')) {
+    newHeaders['ngrok-skip-browser-warning'] = 'true';
+  }
+  
   return {
-    headers: {
-      ...headers,
-      authorization: token ? `Bearer ${token}` : '',
-    },
+    headers: newHeaders,
   };
 });
 

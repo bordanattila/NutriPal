@@ -17,10 +17,19 @@ const refreshTokens = [];
  */
 router.post('/login', async (req, res) => {
     console.log('Login request received:', req.method, req.url);
-    console.log('Request headers:', req.headers);
-    console.log('Request body:', req.body);
+    console.log('Request headers:', JSON.stringify(req.headers, null, 2));
+    console.log('Request body keys:', Object.keys(req.body || {}));
+    console.log('Username provided:', req.body?.username ? 'Yes' : 'No');
+    console.log('Password provided:', req.body?.password ? 'Yes' : 'No');
     
     const { username, password } = req.body;
+    
+    // Validate input
+    if (!username || !password) {
+        console.log('Missing credentials - username:', !!username, 'password:', !!password);
+        return res.status(400).json({ message: 'Username and password are required' });
+    }
+    
     console.log('Session data size:', JSON.stringify(req.session).length);
     
     try {
@@ -29,12 +38,15 @@ router.post('/login', async (req, res) => {
             console.log('User not found:', username);
             return res.status(401).json({ message: 'Invalid username or password' });
         }
+        console.log('User found, checking password...');
+        
         // Check if the password is correct
         const isValidPassword = await user.isCorrectPassword(password);
         if (!isValidPassword) {
             console.log('Invalid password for user:', username);
             return res.status(401).json({ message: 'Invalid username or password' });
         }
+        console.log('Password validated successfully');
 
         // Sign a token for the user
         const token = signInToken({ username: user.username, email: user.email, _id: user._id });
@@ -101,7 +113,7 @@ router.post('/signup', async (req, res) => {
 //         let updatedFields = { calorieGoal: user_calorieGoal, profilePic };
 //         if (password) {
 //             const saltRounds = 10;
-//             updatedFields.password = await bcrypt.hash(password, saltRounds);
+//             updatedFields.password = await bcrypt.hash(password, saltRounds); // Note: uses bcryptjs
 //         }
 
 //         // Update the user with the new information

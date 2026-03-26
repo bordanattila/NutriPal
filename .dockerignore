@@ -17,6 +17,9 @@ server/build
 .env.local
 .env.development
 .env.test
+server/.env
+.env
+**/.env
 *.log
 .DS_Store
 

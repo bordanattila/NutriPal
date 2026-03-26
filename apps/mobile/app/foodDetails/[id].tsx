@@ -189,15 +189,18 @@ export default function FoodDetailsScreen() {
       console.log('Daily log response:', dailyLogResponse);
       
       // Log the date the server stored it under
+      // Use America/New_York timezone to match dashboard queries
       let storedDateStr = '';
       if (dailyLogResponse.dateCreated) {
         const storedDate = new Date(dailyLogResponse.dateCreated);
-        storedDateStr = DateTime.fromJSDate(storedDate).toFormat('yyyy-MM-dd');
+        storedDateStr = DateTime.fromJSDate(storedDate).setZone('America/New_York').toFormat('yyyy-MM-dd');
         console.log('📅 Server stored food under date:', storedDateStr);
+      } else {
+        // Fallback to today in NY timezone if dateCreated is missing
+        storedDateStr = DateTime.now().setZone('America/New_York').toFormat('yyyy-MM-dd');
       }
       
       // Cache the food data so dashboard can find it immediately
-      // This works around the server issue where .findOne() only returns the oldest daily log
       const { cacheFood } = require('@/utils/foodCache');
       cacheFood(foodResponse as any, storedDateStr);
       console.log('✅ Cached food for dashboard:', (foodResponse as any).food_name);

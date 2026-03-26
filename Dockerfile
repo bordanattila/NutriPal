@@ -1,4 +1,44 @@
-# Use Node.js 20 (as specified in package.json engines)
+# Frontend build stage
+FROM node:20-alpine AS frontend-build
+
+# Install pnpm (the package manager used by this project)
+RUN npm install -g pnpm@10.11.0
+
+# Set the working directory in the container
+WORKDIR /app
+
+# Copy root package files for workspace setup
+COPY package.json pnpm-workspace.yaml ./
+
+# Copy package.json files for all workspaces (needed for pnpm workspace resolution)
+COPY server/package.json ./server/
+COPY apps/web/package.json ./apps/web/
+COPY packages/shared/package.json ./packages/shared/
+
+# Copy lockfile if it exists (will be updated if needed)
+COPY pnpm-lock.yaml* ./
+
+# Copy the rest of the application code (including shared package source)
+COPY . .
+
+# Install dependencies using pnpm (respects workspace structure)
+# Update lockfile if needed (handles case where package.json changed but lockfile wasn't updated)
+RUN pnpm install --no-frozen-lockfile --prod=false
+
+# Build the shared package if it has a build script
+WORKDIR /app/packages/shared
+RUN if [ -f package.json ] && grep -q '"build"' package.json; then pnpm run build; fi
+
+# Accept build argument and set as environment variable for React build
+ARG REACT_APP_API_URL
+ENV REACT_APP_API_URL=$REACT_APP_API_URL
+
+# Build the web app for production (server serves static files in production)
+# react-scripts should be able to resolve @nutripal/shared via workspace symlinks
+WORKDIR /app/apps/web
+RUN pnpm run build
+
+# Production stage
 FROM node:20-alpine
 
 # Install pnpm (the package manager used by this project)
@@ -8,30 +48,24 @@ RUN npm install -g pnpm@10.11.0
 WORKDIR /app
 
 # Copy root package files for workspace setup
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY package.json pnpm-workspace.yaml ./
 
 # Copy package.json files for all workspaces (needed for pnpm workspace resolution)
 COPY server/package.json ./server/
 COPY apps/web/package.json ./apps/web/
 COPY packages/shared/package.json ./packages/shared/
 
-# Install dependencies using pnpm (respects workspace structure)
-# Use --frozen-lockfile for reproducible builds
-RUN pnpm install --frozen-lockfile --prod=false
+# Copy lockfile if it exists (will be updated if needed)
+COPY pnpm-lock.yaml* ./
 
-# Copy the rest of the application code
+# Copy the rest of the application code (excluding frontend build artifacts)
 COPY . .
 
-# Build the shared package if it has a build script
-WORKDIR /app/packages/shared
-RUN if [ -f package.json ] && grep -q '"build"' package.json; then pnpm run build; fi
+# Install only production dependencies for the server
+RUN pnpm install --no-frozen-lockfile --prod=false
 
-# Build the web app for production (server serves static files in production)
-WORKDIR /app/apps/web
-RUN pnpm run build
-
-# Set working directory back to root
-WORKDIR /app
+# Copy the built frontend from the build stage
+COPY --from=frontend-build /app/apps/web/build ./apps/web/build
 
 # Set production environment
 ENV NODE_ENV=production

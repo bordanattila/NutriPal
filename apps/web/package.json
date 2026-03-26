@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@nutripal/shared": "workspace:*",
     "@apollo/client": "^3.11.8",
     "@ericblade/quagga2": "^1.8.4",
     "@fortawesome/fontawesome-svg-core": "^6.6.0",

@@ -3,7 +3,7 @@
  * @description Signup page that allows new users to register and log in immediately upon successful registration.
  */
 import React, { useState } from 'react';
-import api from '../utils/api';
+import api from '@nutripal/shared/src/utils/api';
 import { useNavigate } from 'react-router-dom';
 import Auth from "@nutripal/shared/src/utils/auth";
 

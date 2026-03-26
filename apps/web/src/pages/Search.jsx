@@ -4,7 +4,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import api from '../utils/api';
+import api from '@nutripal/shared/src/utils/api';
 import { useNavigate, Link } from 'react-router-dom';
 import Auth from '@nutripal/shared/src/utils/auth';
 import { useQuery } from '@apollo/client';

@@ -5,7 +5,7 @@
  */
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import api from '../utils/api';
+import api from '@nutripal/shared/src/utils/api';
 import DropdownMenu from './Dropdown';
 import Auth from '@nutripal/shared/src/utils/auth';
 import { useQuery } from '@apollo/client';
@@ -38,9 +38,7 @@ const FoodDetails = () => {
   const [fractionValue, setFractionValue] = useState(0);
   const [meal, setMeal] = useState(mealTypes[0]);
   const navigate = useNavigate();
-  const [date, setDate] = useState(DateTime.now());
-
-  const todaysDate = date.year + '-' + date.month + '-' + date.day
+  // Date is no longer needed since server calculates it
 
   /** GraphQL query to get current user data */
   const { data: logData, loading: logLoading, error: logError } = useQuery(GET_USER, {
@@ -50,7 +48,6 @@ const FoodDetails = () => {
       },
     },
     onError: () => {
-      setDate(DateTime.now());
       navigate('/login');
     },
   });
@@ -190,11 +187,11 @@ const FoodDetails = () => {
       }
 
       // Add the food entry to the DailyLog
+      // Server calculates the date automatically using America/New_York timezone
       const dailyLogResponse = await api.post('api/daily-log', {
         json: {
           user_id: userID,
           foods: [foodData._id],
-          dateCreated: todaysDate,
         },
       });
 

@@ -48,25 +48,41 @@ export default function Login() {
       console.log('Attempting login with API URL:', getApiUrl());
       console.log('Login credentials:', { username }); // Only log username for security
       
+      const loginPayload = { username, password };
+      console.log('Sending login request with payload:', { username, password: password ? '***' : 'missing' });
+      
       const response = await api.post('user/login', {
-        json: { username, password },
+        json: loginPayload,
         headers: {
           'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true', // Add ngrok header
         },
-      }).catch((error: any) => {
+      }).catch(async (error: any) => {
         console.error('Login request failed:', {
           status: error.response?.status,
           statusText: error.response?.statusText,
           url: error.response?.url,
           message: error.message
         });
+        
+        // Try to get error response body
+        try {
+          if (error.response) {
+            const errorBody = await error.response.json();
+            console.error('Error response body:', errorBody);
+            setError(errorBody.message || 'Login failed. Please check your credentials.');
+          }
+        } catch (e) {
+          console.error('Could not parse error response');
+        }
+        
         throw error;
       });
 
       console.log('API Response Status:', response.status);
       
       const data: LoginResponse = await response.json();
-      console.log('API Response Data:', data);
+      console.log('API Response Data (token present):', data?.token ? 'Yes' : 'No');
       
       if (data?.token) {
         const loginSuccess = await Auth.login(data.token);

@@ -5,7 +5,7 @@
  */
 import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import api from '../utils/api';
+import api from '@nutripal/shared/src/utils/api';
 import DropdownMenu from './Dropdown';
 import Auth from '@nutripal/shared/src/utils/auth';
 import { useQuery } from '@apollo/client';
@@ -40,9 +40,8 @@ const FoodDetails = () => {
   const [fractionValue, setFractionValue] = useState(0);
   const [meal, setMeal] = useState(mealTypes[0]);
   const navigate = useNavigate();
-  const [date, setDate] = useState(DateTime.now());
-
-  const todaysDate = date.year + '-' + date.month + '-' + date.day
+  // Date is no longer needed since server calculates it
+  // Keeping for potential future use but not using it for API calls
 
   const { data: logData, loading: logLoading, error: logError } = useQuery(GET_USER, {
     context: {
@@ -51,7 +50,6 @@ const FoodDetails = () => {
       },
     },
     onError: () => {
-      setDate(DateTime.now());
       navigate('/login');
     },
   });
@@ -69,9 +67,44 @@ const FoodDetails = () => {
   useEffect(() => {
     const fetchFoodDetails = async () => {
       setLoading(true);
+      setError(null);
       try {
+        console.log(`Fetching food details for foodId: ${foodId}, source: ${source}`);
         const response = await api.get(`api/${source}/foodById?food_id=${foodId}`);
+        
+        // Check if response is OK before parsing JSON
+        if (!response.ok) {
+          let errorText = '';
+          try {
+            errorText = await response.text();
+          } catch (e) {
+            errorText = 'Unable to read error response';
+          }
+          console.error('Error response:', response.status, errorText.substring(0, 200));
+          throw new Error(`Failed to fetch food details: ${response.status} ${response.statusText}`);
+        }
+
+        // Check content-type to ensure it's JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          let text = '';
+          try {
+            text = await response.text();
+          } catch (e) {
+            text = 'Unable to read response';
+          }
+          console.error('Non-JSON response received:', text.substring(0, 200));
+          throw new Error('Server returned non-JSON response. The API endpoint may not be configured correctly.');
+        }
+
         const responseData = await response.json();
+        
+        // Validate response structure
+        if (!responseData || !responseData.food) {
+          console.error('Invalid response structure:', responseData);
+          throw new Error('Invalid food data received from server');
+        }
+
         setFoodDetails(responseData);
         // The purpose of this line is to ensure that there is at least one serving available before proceeding to set the selected serving in the state. 
         // It prevents potential errors that could occur if the code tries to access properties of undefined or null.
@@ -82,7 +115,31 @@ const FoodDetails = () => {
         setServingArray(responseData.food.servings.serving);
       } catch (error) {
         console.error('Error fetching food details:', error);
-        setError(error);
+        
+        // Handle different types of errors
+        let errorMessage = 'Failed to load food details. Please try again.';
+        
+        if (error.name === 'HTTPError') {
+          // ky HTTPError - check if response is HTML
+          try {
+            const errorText = await error.response.text();
+            console.error('Error response body:', errorText.substring(0, 200));
+            if (errorText.includes('<!doctype') || errorText.includes('<html')) {
+              errorMessage = `Server returned an HTML page (${error.response.status}). The API endpoint may not be found. Please check the route: api/${source}/foodById?food_id=${foodId}`;
+            } else {
+              errorMessage = `Server error: ${error.response.status} ${error.response.statusText}`;
+            }
+          } catch (e) {
+            errorMessage = `Request failed: ${error.response.status} ${error.response.statusText}`;
+          }
+        } else if (error.name === 'ParseError' || (error.message && error.message.includes('JSON'))) {
+          // JSON parsing error - likely HTML response
+          errorMessage = 'Server returned an invalid response (not JSON). The API endpoint may not be configured correctly.';
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+        
+        setError(new Error(errorMessage));
       } finally {
         setLoading(false);
       }
@@ -168,11 +225,11 @@ const handleServingChange = (serving) => {
         }
 
         // Add the food entry to the DailyLog
+        // Server calculates the date automatically using America/New_York timezone
         const dailyLogResponse = await api.post('api/daily-log', {
           json: {
             user_id: userID,
             foods: [foodData._id],
-            dateCreated: todaysDate,
           },
         });
 
@@ -239,7 +296,22 @@ const handleServingChange = (serving) => {
   };
 
   if (loading || logLoading) return <div>Loading...</div>;
-  if (error || logError) return <div>Error: {error.message}</div>;
+  if (error || logError) {
+    const errorMessage = error?.message || logError?.message || 'An error occurred';
+    return (
+      <div className="p-4">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+          <strong>Error:</strong> {errorMessage}
+        </div>
+        <button 
+          onClick={() => navigate(`/${source}`)}
+          className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+        >
+          Go Back
+        </button>
+      </div>
+    );
+  }
 
 
 

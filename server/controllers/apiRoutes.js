@@ -77,7 +77,7 @@ router.get('/foodByBarcode', async (req, res) => {
         const upcA = await convertUpcEtoUpcA(query.barcode)
         const formattedBarcode = upcA.padStart(13, '0');
         const token = await getAccessTokenValue();
-        const tokenUrl = 'https://platform.fatsecret.com/rest/food/barcode/find-by-id/v1';
+        const tokenUrl = 'https://platform.fatsecret.com/rest/food/barcode/find-by-id/v2';
         const response = await axios.get(tokenUrl, {
             params: {
                 method: 'food.find_id_for_barcode',
@@ -112,7 +112,7 @@ router.get('/:sourcePage/foodById', async (req, res) => {
 
     try {
         const token = await getAccessTokenValue();
-        const tokenUrl = `https://platform.fatsecret.com/rest/food/v4?method=food.get.v4&food_id=${food_Id}&format=json`;
+        const tokenUrl = `https://platform.fatsecret.com/rest/food/v5?method=food.get.v4&food_id=${food_Id}&format=json`;
 
         const response = await axios.get(tokenUrl, {
             headers: {
@@ -160,23 +160,16 @@ router.get('/foodByDate/:user_id/date/:dateCreated', async (req, res) => {
         const selectedDate = (req.params.dateCreated);
 
         // Parse the date using Luxon (assumes the format 'yyyy-MM-dd')
+        // Interpret the date in America/New_York timezone, then convert to UTC
         const selected = DateTime.fromFormat(selectedDate, 'yyyy-MM-dd', { zone: 'America/New_York' });
 
-        // Compute the start and end of the selected day
-        const startOfDay = selected
-            .startOf('day')
-            .toUTC()
-            .toJSDate();
-        const endOfDay = selected
-            .endOf('day')
-            .toUTC()
-            .toJSDate();
-
-        const adjustedStartOfDay = new Date(startOfDay.getTime() - 4 * 60 * 60 * 1000);
+        // Compute the start and end of the selected day in UTC
+        const startOfDay = selected.startOf('day').toUTC().toJSDate();
+        const endOfDay = selected.endOf('day').toUTC().toJSDate();
 
         const recentFoods = await DailyLog.findOne({
             user_id: userId,
-            dateCreated: { $gte: adjustedStartOfDay, $lte: endOfDay }
+            dateCreated: { $gte: startOfDay, $lte: endOfDay }
         }).populate('foods')
         if (!recentFoods) {
             return res.json({ message: 'No food has been logged for this day.' });
@@ -374,23 +367,16 @@ router.post('/daily-log', async (req, res) => {
     try {
         const { user_id, foods } = req.body;
 
-        // Get current date and compute start and end of day.
-        const startOfDay = DateTime.now()
-            .setZone('America/New_York')
-            .startOf('day')
-            .toUTC()
-            .toJSDate();
-        const endOfDay = DateTime.now()
-            .setZone('America/New_York')
-            .endOf('day')
-            .toUTC()
-            .toJSDate();
+        // Get current date and compute start and end of day in America/New_York timezone
+        // Then convert to UTC for database storage
+        const now = DateTime.now().setZone('America/New_York');
+        const startOfDay = now.startOf('day').toUTC().toJSDate();
+        const endOfDay = now.endOf('day').toUTC().toJSDate();
 
-        const adjustedStartOfDay = new Date(startOfDay.getTime() - 4 * 60 * 60 * 1000);
         // Check if a DailyLog exists for this user for today.
         let dailyLog = await DailyLog.findOne({
             user_id,
-            dateCreated: { $gte: adjustedStartOfDay, $lte: endOfDay }
+            dateCreated: { $gte: startOfDay, $lte: endOfDay }
         });
         if (dailyLog) {
             // Update the existing DailyLog by appending new foods.
@@ -399,9 +385,10 @@ router.post('/daily-log', async (req, res) => {
             res.status(200).json(dailyLog);
         } else {
             // Create a new DailyLog if none exists for today.
+            // Use startOfDay which is already normalized to the start of the day in UTC
             dailyLog = new DailyLog({
                 user_id,
-                dateCreated: adjustedStartOfDay,
+                dateCreated: startOfDay,
                 foods
             });
             await dailyLog.save();
@@ -488,32 +475,24 @@ router.delete('/deleteFood/:user_id/:food_id/:date', async (req, res) => {
         const { user_id, date, food_id } = req.params;
 
         const selectedDate = DateTime.fromFormat(req.params.date, 'yyyy-MM-dd', { zone: 'America/New_York' });
-        // Compute the start and end of the selected day
-        const startOfDay = selectedDate
-            .startOf('day')
-            .toUTC()
-            .toJSDate();
-        const endOfDay = selectedDate
-            .endOf('day')
-            .toUTC()
-            .toJSDate();
-
-        const adjustedStartOfDay = new Date(startOfDay.getTime() - 4 * 60 * 60 * 1000);
+        // Compute the start and end of the selected day in UTC
+        const startOfDay = selectedDate.startOf('day').toUTC().toJSDate();
+        const endOfDay = selectedDate.endOf('day').toUTC().toJSDate();
 
         const food = await OneFood.findById(food_id);
         if (!food) {
             return res.status(404).json({ message: 'Food item not found' });
         }
         await DailyLog.findOneAndUpdate({
-
             user_id: user_id,
-            dateCreated: { $gte: adjustedStartOfDay, $lte: endOfDay }
+            dateCreated: { $gte: startOfDay, $lte: endOfDay }
         },
             { $pull: { foods: food_id } }
         );
         res.status(200).json({ message: 'Food item removed successfully' });
     } catch (error) {
         console.error('Error removing food item:', error);
+        res.status(500).json({ message: 'Error removing food item', error: error.message });
     }
 })
 
@@ -593,8 +572,8 @@ router.post('/refresh', async (req, res) => {
         
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
-        }
-        
+    }
+
         // Generate new access token
         const accessToken = signInToken({ username: user.username, email: user.email, _id: user._id });
         

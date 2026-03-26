@@ -5,13 +5,8 @@
  */
 
 import React, { useEffect, useState } from "react";
-<<<<<<< HEAD:apps/web/src/components/SavedRecipes.jsx
 import ky from 'ky';
 import Auth from '@nutripal/shared/src/utils/auth';
-=======
-import api from '../utils/api';
-import Auth from '../utils/auth';
->>>>>>> select_food:client/src/components/SavedRecipes.jsx
 import { useQuery } from '@apollo/client';
 import { GET_USER } from '@nutripal/shared/src/utils/mutations';
 import useAuth from '@nutripal/shared/src/hooks/RefreshToken';

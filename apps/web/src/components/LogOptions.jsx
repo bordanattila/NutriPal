@@ -30,30 +30,18 @@ const LogOptions = ({ userId }) => {
       navigate('/saved-recipes');   
   };
 
-<<<<<<< HEAD:apps/web/src/components/LogOptions.jsx
   /**
-   * Navigate user to the saved recipes page to log from a recipe.
+   * Navigate user to the AI assistant page.
    */
   const handleAiAssist = async () => {    
       navigate('/ai-assistant');   
   };
 
-  /**
-   * Fetch saved meals from the backend and navigate to the saved meals page with data.
-=======
     /**
    * Navigate user to the saved meals page to log from a meal.
->>>>>>> select_food:client/src/components/LogOptions.jsx
    */
     const handleLogFromMeal = async () => {    
       navigate('/saved-meals');   
-  };
-
-  /**
-   * Navigate user to the saved recipes page to log from a recipe.
-   */
-  const handleAiAssist = async () => {    
-      navigate('/ai-assistant');   
   };
 
  
@@ -78,13 +66,6 @@ const LogOptions = ({ userId }) => {
         className="w-full py-6 text-lg font-semibold text-white bg-purple-500 hover:bg-purple-600 rounded-2xl shadow-lg transition"
       >
         Log a Meal 
-      </button>
-
-      <button
-        onClick={handleAiAssist}
-        className="w-full py-6 text-lg font-semibold text-white bg-yellow-500 hover:bg-yellow-600 rounded-2xl shadow-lg transition"
-      >
-        AI Assistant
       </button>
 
       <button

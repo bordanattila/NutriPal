@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import Auth from '../utils/auth';
+import Auth from '@nutripal/shared/src/utils/auth';
 import { useQuery } from '@apollo/client';
-import { GET_USER } from '../utils/mutations';
-import useAuth from '../hooks/RefreshToken';
-import useItemCollector from '../hooks/ingredientCollector';
+import { GET_USER } from '@nutripal/shared/src/utils/mutations';
+import useAuth from '@nutripal/shared/src/hooks/RefreshToken';
+import useItemCollector from '@nutripal/shared/src/hooks/ingredientCollector';
 import FoodSearchList from '../components/FoodSearchList';
 import ItemList from '../components/ItemList';
-import api from '../utils/api';
+import api from '@nutripal/shared/src/utils/api';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 

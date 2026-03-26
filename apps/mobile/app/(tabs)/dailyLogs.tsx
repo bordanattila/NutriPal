@@ -80,26 +80,11 @@ export default function DailyLogs() {
         }
       }
 
-      // Compute the selected date - match AI assistant's approach (uses system timezone)
-      const selectedDateStr = date.toFormat('yyyy-MM-dd');
-      
-      // Get the start and end of the selected date in the system timezone
-      const selectedDateStart = date.startOf('day');
-      const selectedDateEnd = date.endOf('day');
-      
-      // Only check yesterday if the selected date is "today" (to catch foods server stored under yesterday)
-      const today = DateTime.now().toFormat('yyyy-MM-dd');
-      const yesterday = date.minus({ days: 1 }).toFormat('yyyy-MM-dd');
-      const shouldCheckYesterday = selectedDateStr === today;
+      // Compute the selected date in America/New_York timezone to match server
+      const selectedDateStr = date.setZone('America/New_York').toFormat('yyyy-MM-dd');
 
-      // Query the selected date and yesterday (if needed)
-      const queries = [fetchFor(selectedDateStr)];
-      if (shouldCheckYesterday) {
-        queries.push(fetchFor(yesterday));
-      }
-      const results = await Promise.all(queries);
-      const selectedData = results[0];
-      const yesterdayData = shouldCheckYesterday ? results[1] : { foods: [] };
+      // Query the selected date
+      const selectedData = await fetchFor(selectedDateStr);
 
       // Get cached foods only for the selected date
       const { getCachedFoods } = require('@/utils/foodCache');
@@ -108,7 +93,9 @@ export default function DailyLogs() {
       // Helper to check if a food was created on the selected date
       const isFoodForSelectedDate = (food: any): boolean => {
         if (!food.created) return false;
-        const foodCreated = DateTime.fromISO(food.created);
+        const foodCreated = DateTime.fromISO(food.created).setZone('America/New_York');
+        const selectedDateStart = date.setZone('America/New_York').startOf('day');
+        const selectedDateEnd = date.setZone('America/New_York').endOf('day');
         return foodCreated >= selectedDateStart && foodCreated <= selectedDateEnd;
       };
 
@@ -128,27 +115,9 @@ export default function DailyLogs() {
         );
         allFoods.push(...validFoods);
       }
-      
-      // If checking yesterday (for today), only include foods created today
-      if (shouldCheckYesterday && yesterdayData.foods) {
-        const existingIds = new Set(allFoods.map(f => f._id));
-        const validFoods = yesterdayData.foods.filter((f: any) => 
-          hasValidNutrition(f) && 
-          isFoodForSelectedDate(f) && 
-          !existingIds.has(f._id)
-        );
-        allFoods.push(...validFoods);
-      }
 
       // Add cached foods that match the selected date
-      // Check both the selected date's cache and yesterday's cache (if we checked yesterday)
-      const cachedDatesToCheck = [selectedDateStr];
-      if (shouldCheckYesterday) {
-        cachedDatesToCheck.push(yesterday);
-      }
-      
-      cachedDatesToCheck.forEach(cacheDate => {
-        const cachedFoods = getCachedFoods(cacheDate);
+      const cachedFoods = getCachedFoods(selectedDateStr);
         if (cachedFoods.length > 0) {
           const existingIds = new Set(allFoods.map(f => f._id));
           cachedFoods.forEach((cachedFood: any) => {
@@ -157,7 +126,6 @@ export default function DailyLogs() {
             }
           });
         }
-      });
 
       // Update state based on merged results
       if (allFoods.length > 0) {

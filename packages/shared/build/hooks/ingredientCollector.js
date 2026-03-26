@@ -13,7 +13,7 @@
  *   - remove: Function to remove an item by index.
  *   - clear: Function to remove all items and clear storage.
  */
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 export default function useItemCollector(key) {
     // React state to hold the list of items
     const [items, setItems] = useState([]);

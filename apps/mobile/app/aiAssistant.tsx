@@ -70,48 +70,29 @@ const AiAssistant = () => {
 
   useEffect(() => {
     const fetchTodaysLog = async () => {
-      if (!userId || !macroGoals || !authToken) return;
+      // Only require userId and authToken - macroGoals can be null (we'll use defaults)
+      if (!userId || !authToken) {
+        console.log('Missing userId or authToken, skipping macro calculation');
+        return;
+      }
 
-      // Query multiple dates like the dashboard does
-      // The server stores food under different dates due to timezone/date calculation differences
-      const now = DateTime.now();
+      // Query today's date using America/New_York timezone to match server
+      const now = DateTime.now().setZone('America/New_York');
       const today = now.toFormat('yyyy-MM-dd');
-      const yesterday = now.minus({ days: 1 }).toFormat('yyyy-MM-dd');
-      const tomorrow = now.plus({ days: 1 }).toFormat('yyyy-MM-dd');
-      const dayBeforeYesterday = now.minus({ days: 2 }).toFormat('yyyy-MM-dd');
       
       try {
-        // Query all dates in parallel
-        const [todayRes, yesterdayRes, tomorrowRes, dayBeforeRes] = await Promise.all([
-          api.get(`api/foodByDate/${userId}/date/${today}`, {
+        // Query today's food
+        const todayRes = await api.get(`api/foodByDate/${userId}/date/${today}`, {
             headers: { Authorization: `Bearer ${authToken}` },
-          }).catch(() => ({ json: async () => ({ foods: [] }) })),
-          api.get(`api/foodByDate/${userId}/date/${yesterday}`, {
-            headers: { Authorization: `Bearer ${authToken}` },
-          }).catch(() => ({ json: async () => ({ foods: [] }) })),
-          api.get(`api/foodByDate/${userId}/date/${tomorrow}`, {
-            headers: { Authorization: `Bearer ${authToken}` },
-          }).catch(() => ({ json: async () => ({ foods: [] }) })),
-          api.get(`api/foodByDate/${userId}/date/${dayBeforeYesterday}`, {
-            headers: { Authorization: `Bearer ${authToken}` },
-          }).catch(() => ({ json: async () => ({ foods: [] }) })),
-        ]);
+        }).catch(() => ({ json: async () => ({ foods: [] }) }));
 
-        const [todayData, yesterdayData, tomorrowData, dayBeforeData] = await Promise.all([
-          todayRes.json(),
-          yesterdayRes.json(),
-          tomorrowRes.json(),
-          dayBeforeRes.json(),
-        ]);
+        const todayData = await todayRes.json();
 
-        // Get cached foods (recently added foods that might not be in query results yet)
+        // Get cached foods for today (recently added foods that might not be in query results yet)
         const { getCachedFoods } = require('@/utils/foodCache');
         const cachedFoodsToday = getCachedFoods(today);
-        const cachedFoodsYesterday = getCachedFoods(yesterday);
-        const cachedFoodsTomorrow = getCachedFoods(tomorrow);
-        const cachedFoodsDayBefore = getCachedFoods(dayBeforeYesterday);
 
-        // Collect all foods from all dates
+        // Collect all foods from today
         const allFoods: any[] = [];
         
         // Helper to filter foods with valid nutrition data
@@ -120,31 +101,17 @@ const AiAssistant = () => {
                  (food.carbohydrate !== null || food.protein !== null || food.fat !== null);
         };
 
-        // Add foods from all dates, prioritizing today
+        // Add foods from today
         if (todayData.foods) {
           allFoods.push(...todayData.foods.filter(hasValidNutrition));
         }
-        if (tomorrowData.foods) {
-          const existingIds = new Set(allFoods.map(f => f._id));
-          allFoods.push(...tomorrowData.foods.filter((f: any) => hasValidNutrition(f) && !existingIds.has(f._id)));
-        }
-        if (dayBeforeData.foods) {
-          const existingIds = new Set(allFoods.map(f => f._id));
-          allFoods.push(...dayBeforeData.foods.filter((f: any) => hasValidNutrition(f) && !existingIds.has(f._id)));
-        }
-        if (yesterdayData.foods) {
-          const existingIds = new Set(allFoods.map(f => f._id));
-          allFoods.push(...yesterdayData.foods.filter((f: any) => hasValidNutrition(f) && !existingIds.has(f._id)));
-        }
 
-        // Add cached foods
-        [cachedFoodsToday, cachedFoodsTomorrow, cachedFoodsDayBefore, cachedFoodsYesterday].forEach(cachedFoods => {
+        // Add cached foods for today
           const existingIds = new Set(allFoods.map(f => f._id));
-          cachedFoods.forEach((cachedFood: any) => {
+        cachedFoodsToday.forEach((cachedFood: any) => {
             if (!existingIds.has(cachedFood._id)) {
               allFoods.push(cachedFood);
             }
-          });
         });
 
         const totals = {
@@ -169,15 +136,31 @@ const AiAssistant = () => {
           fat: 65
         };
 
-        const effectiveMacros = macroGoals || defaultMacros;
+        // Use macroGoals if available, otherwise use defaults
+        const effectiveMacros = macroGoals && (macroGoals.protein || macroGoals.carbs || macroGoals.fat) 
+          ? macroGoals 
+          : defaultMacros;
 
-        setRemainingMacros({
+        console.log('Effective macros (goals):', effectiveMacros);
+        console.log('Calculated remaining macros:', {
           protein: Math.max(effectiveMacros.protein - totals.protein, 0),
           carbs: Math.max(effectiveMacros.carbs - totals.carbs, 0),
           fat: Math.max(effectiveMacros.fat - totals.fat, 0),
         });
+
+        setRemainingMacros({
+          protein: Math.max((effectiveMacros.protein || 0) - totals.protein, 0),
+          carbs: Math.max((effectiveMacros.carbs || 0) - totals.carbs, 0),
+          fat: Math.max((effectiveMacros.fat || 0) - totals.fat, 0),
+        });
       } catch (err) {
         console.error('Failed to fetch food log:', err);
+        // Set remaining macros to defaults even on error, so UI can still show something
+        setRemainingMacros({
+          protein: 150,
+          carbs: 200,
+          fat: 65,
+        });
       }
     };
 

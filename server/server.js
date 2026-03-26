@@ -45,18 +45,60 @@ if (!process.env.MONGODB_URI && NODE_ENV === 'production') {
 /**
  * @desc Sets secure headers using Helmet including custom content security policy
  * Applies strict Content Security Policy (CSP) headers to limit sources for scripts, styles, etc.
+ * Note: CSP can be disabled by setting DISABLE_CSP=true in environment variables for debugging
  */
+const cspEnabled = process.env.DISABLE_CSP !== 'true';
+
 app.use(
   helmet({
-    contentSecurityPolicy: {
+    contentSecurityPolicy: cspEnabled ? {
       directives: {
         defaultSrc: ["'self'"],
-        styleSrc: ["'self'", "https://cdn.jsdelivr.net", "https://rsms.me", "'unsafe-inline'"],
-        scriptSrc: ["'self'", "https://cdn.tailwindcss.com", "https://kit.fontawesome.com"],
-        fontSrc: ["'self'", "data:"],
-        imgSrc: ["'self'", "data:", "https://platform.fatsecret.com"],
+        styleSrc: [
+          "'self'", 
+          "https://cdn.jsdelivr.net", 
+          "https://rsms.me",
+          "https://ka-f.fontawesome.com",  
+          "'unsafe-inline'"
+        ],
+        scriptSrc: [
+          "'self'", 
+          "https://cdn.tailwindcss.com", 
+          "https://kit.fontawesome.com",
+          "https://ka-f.fontawesome.com"  
+        ],
+        fontSrc: [
+          "'self'", 
+          "data:",
+          "https://ka-f.fontawesome.com"  
+        ],
+        imgSrc: [
+          "'self'", 
+          "data:", 
+          "blob:", 
+          "https://platform.fatsecret.com",
+          "https://nutripal-nutripal.apps.gaspar.ontampa.dev"
+        ],
+        connectSrc: [
+          "'self'",
+          "https://nutripal-nutripal.apps.gaspar.ontampa.dev",
+          process.env.REACT_APP_API_URL,
+          process.env.CLIENT_URL,
+          "https://ka-f.fontawesome.com",
+          "https://platform.fatsecret.com",
+          // Allow localhost for development
+          ...(NODE_ENV !== 'production' ? [
+            "http://localhost:3000",
+            "http://localhost:4000",
+            "http://localhost:8081",
+            "ws://localhost:3000",
+            "ws://localhost:4000",
+          ] : []),
+        ]
+          .filter(Boolean) // Remove undefined values
+          .filter((value, index, self) => self.indexOf(value) === index), // Remove duplicates 
       },
-    },
+    } : false, // Disable CSP if DISABLE_CSP=true
   })
 );
 
@@ -71,15 +113,20 @@ app.use(cors({
     
     const allowedOrigins = [
       process.env.CLIENT_URL,
-      'https://nutripal-hbcff5htezbqdwe9.canadacentral-01.azurewebsites.net',
+      'https://nutripal-nutripal.apps.gaspar.ontampa.dev',
       'http://localhost:3000',
       'http://localhost:8081',
       'exp://localhost',
       'exp://192.168.1.16',
     ];
     
-    // In development, allow all origins for easier mobile testing
+    // In development, allow all origins for easier mobile testing (including ngrok)
     if (NODE_ENV !== 'production') {
+      return callback(null, true);
+    }
+    
+    // Allow ngrok URLs
+    if (origin && origin.includes('ngrok')) {
       return callback(null, true);
     }
     
@@ -90,7 +137,7 @@ app.use(cors({
     }
   },
   methods: ['GET', 'POST', 'DELETE', 'PUT', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'ngrok-skip-browser-warning'],
   credentials: true
 }));
 
@@ -127,6 +174,15 @@ app.use(
 // Mount your API and user routes 
 app.use('/api', require('./controllers/apiRoutes'));
 app.use('/user', require('./controllers/userRoutes'));
+
+// Test endpoint to verify GraphQL is accessible
+app.get('/graphql', (req, res) => {
+  res.json({ 
+    message: 'GraphQL endpoint is accessible',
+    endpoint: '/graphql',
+    note: 'Use POST requests for GraphQL queries'
+  });
+});
 
 
 /**
@@ -209,7 +265,12 @@ if (NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, '../apps/web/build')));
   
   // Create a route that will serve up the `../apps/web/build/index.html` page
-  app.get('*', (req, res) => {    
+  // Exclude GraphQL and API routes from this catch-all
+  app.get('*', (req, res, next) => {
+    // Don't serve index.html for API or GraphQL routes
+    if (req.path.startsWith('/api') || req.path.startsWith('/graphql') || req.path.startsWith('/user')) {
+      return next();
+    }
     res.sendFile(path.join(__dirname, '../apps/web/build', 'index.html'));
   });
 } else {
