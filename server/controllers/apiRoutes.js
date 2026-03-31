@@ -112,7 +112,7 @@ router.get('/:sourcePage/foodById', async (req, res) => {
 
     try {
         const token = await getAccessTokenValue();
-        const tokenUrl = `https://platform.fatsecret.com/rest/food/v5?method=food.get.v4&food_id=${food_Id}&format=json`;
+        const tokenUrl = `https://platform.fatsecret.com/rest/food/v5?method=food.get.v5&food_id=${food_Id}&format=json`;
 
         const response = await axios.get(tokenUrl, {
             headers: {
