@@ -26,6 +26,9 @@ const DailyLogs = () => {
   /** @state {Array} logHistory - List of food items logged on the selected date */
   const [logHistory, setLogHistory] = useState([]);
 
+  /** @state {number} waterCups - Water intake for the selected date */
+  const [waterCups, setWaterCups] = useState(0);
+
   /** @state {string} logMessage - Fallback message when no logs are found */
   const [logMessage, setLogMessage] = useState('');
 
@@ -65,9 +68,11 @@ const DailyLogs = () => {
         // If foods exists, update logHistory; otherwise, display message
         if (responseData.foods) {
           setLogHistory(responseData.foods);
+          setWaterCups(responseData.waterCups ?? 0);
           setLogMessage('');
         } else if (responseData.message) {
           setLogHistory([]);
+          setWaterCups(0);
           setLogMessage(responseData.message);
         }
       } catch (error) {
@@ -131,6 +136,14 @@ const DailyLogs = () => {
           onChange={setDate}
         />
       </div>
+      {/* Water summary for selected date */}
+      {(logHistory.length > 0 || waterCups > 0) && (
+        <div className="flex items-center gap-2 mt-2 mb-1 text-sm text-gray-700">
+          <span className="font-semibold">Water:</span>
+          <span className="tabular-nums">{waterCups} {waterCups === 1 ? 'cup' : 'cups'}</span>
+        </div>
+      )}
+
       <div className="flex flex-col items-center justify-center w-full p-2">
         {logHistory.length > 0 ? (
           <>

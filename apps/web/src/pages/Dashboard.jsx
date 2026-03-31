@@ -3,7 +3,7 @@
  * @description Displays a dashboard with daily nutrition statistics using charts and summaries. Fetches today's food logs from the backend API.
  */
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate, useLocation } from "react-router-dom";
 import Auth from '@nutripal/shared/src/utils/auth';
 import { useQuery } from '@apollo/client';
@@ -12,6 +12,8 @@ import DonutChart from '../components/Donut';
 import useAuth from '@nutripal/shared/src/hooks/RefreshToken';
 import api from '@nutripal/shared/src/utils/api';
 import { DateTime } from "luxon";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 /**
  * @component Dashboard
@@ -33,6 +35,8 @@ const Dashboard = () => {
   const [sodiumTotal, setSodiumTotal] = useState(0);
   const [saturatedFatTotal, setSaturatedFatTotal] = useState(0);
   const [goal, setGoal] = useState(0);
+  const [waterCups, setWaterCups] = useState(0);
+  const waterPrevRef = useRef(0);
   const [refreshKey, setRefreshKey] = useState(0);
 
   /**
@@ -63,6 +67,7 @@ const Dashboard = () => {
 
   const userId = data?.user?._id;
   const calgoal = data?.user?.calorieGoal;
+  const waterGoal = data?.user?.waterGoal ?? 12;
 
   /**
    * @function fetchTodaysLog
@@ -81,11 +86,40 @@ const Dashboard = () => {
         const data = await response.json();
       console.log('📊 Dashboard: Received foods:', data.foods?.length || 0);
       setTodaysLog(data.foods || []);
+      setWaterCups(data.waterCups ?? 0);
       } catch (error) {
         console.error('Error fetching todays foods:', error);
       setTodaysLog([]);
+      setWaterCups(0);
       }
   }, [userId]);
+
+  const saveWaterIntake = useCallback(async (cups, prev) => {
+    if (!userId) return;
+    try {
+      const todaysDate = DateTime.now().setZone('America/New_York').toFormat('yyyy-MM-dd');
+      const response = await api.put('api/water-intake', {
+        json: { user_id: userId, date: todaysDate, waterCups: cups },
+      });
+      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+    } catch (error) {
+      console.error('Error saving water intake:', error);
+      setWaterCups(prev);
+      toast.error('Failed to save water intake.');
+    }
+  }, [userId]);
+
+  const adjustWater = (delta) => {
+    const prev = waterCups;
+    const next = Math.max(0, Math.min(100, waterCups + delta));
+    if (next === prev) return;
+    waterPrevRef.current = prev;
+    setWaterCups(next);
+    saveWaterIntake(next, prev);
+    if (prev < waterGoal && next >= waterGoal) {
+      toast.success(`You hit your ${waterGoal}-cup water goal!`);
+    }
+  };
 
   /**
    * @function useEffect
@@ -220,6 +254,51 @@ const Dashboard = () => {
           ))}
         </div>
       </dl>
+
+      {/* Water Intake */}
+      <div className="flex flex-col items-center mt-8 mb-10 px-4 w-full max-w-md mx-auto">
+        <h2 className="text-lg font-semibold text-gray-800 mb-3">Water Intake</h2>
+
+        {/* Controls */}
+        <div className="flex items-center gap-5 mb-4">
+          <button
+            onClick={() => adjustWater(-1)}
+            disabled={waterCups <= 0}
+            className="w-11 h-11 flex items-center justify-center rounded-full bg-teal-500 text-white text-2xl font-bold leading-none active:scale-95 transition-transform disabled:opacity-40 disabled:active:scale-100"
+            aria-label="Remove one cup"
+          >
+            −
+          </button>
+          <span className="text-3xl font-semibold min-w-[7rem] text-center tabular-nums select-none whitespace-nowrap">
+            {waterCups} {waterCups === 1 ? 'cup' : 'cups'}
+          </span>
+          <button
+            onClick={() => adjustWater(1)}
+            disabled={waterCups >= 100}
+            className="w-11 h-11 flex items-center justify-center rounded-full bg-teal-500 text-white text-2xl font-bold leading-none active:scale-95 transition-transform disabled:opacity-40 disabled:active:scale-100"
+            aria-label="Add one cup"
+          >
+            +
+          </button>
+        </div>
+
+        {/* Segmented progress bar */}
+        <div className="flex gap-1 w-full" role="progressbar" aria-valuenow={waterCups} aria-valuemin={0} aria-valuemax={waterGoal}>
+          {Array.from({ length: waterGoal }, (_, i) => (
+            <div
+              key={i}
+              className={`h-3 flex-1 rounded-sm transition-colors ${
+                i < waterCups ? 'bg-teal-500' : 'bg-gray-200'
+              }`}
+            />
+          ))}
+        </div>
+        <p className="text-sm text-gray-600 mt-1.5 tabular-nums">
+          {waterCups} / {waterGoal} {waterCups === 1 ? 'cup' : 'cups'}
+        </p>
+      </div>
+
+      <ToastContainer autoClose={2000} position="bottom-center" />
     </>
   );
 };

@@ -39,12 +39,14 @@ interface Food {
 
 interface ApiResponse {
   foods?: Food[];
+  waterCups?: number;
   message?: string;
 }
 
 export default function DailyLogs() {
   const router = useRouter();
   const [logHistory, setLogHistory] = useState<Food[]>([]);
+  const [waterCups, setWaterCups] = useState(0);
   const [logMessage, setLogMessage] = useState('');
   const [date, setDate] = useState(DateTime.now());
 
@@ -127,13 +129,16 @@ export default function DailyLogs() {
           });
         }
 
-      // Update state based on merged results
+      const serverWater = ('waterCups' in selectedData) ? (selectedData.waterCups ?? 0) : 0;
+
       if (allFoods.length > 0) {
         setLogHistory(allFoods);
+        setWaterCups(serverWater);
         setLogMessage('');
       } else {
         setLogHistory([]);
-        setLogMessage('No food has been logged for this day.');
+        setWaterCups(serverWater);
+        setLogMessage(serverWater > 0 ? '' : 'No food has been logged for this day.');
       }
     } catch (error) {
       console.error('Error fetching food logs:', error);
@@ -277,6 +282,15 @@ export default function DailyLogs() {
             onChange={setDate}
           />
 
+          {(logHistory.length > 0 || waterCups > 0) && (
+            <View style={styles.waterSummary}>
+              <MaterialCommunityIcons name="cup-water" size={18} color="rgba(255,255,255,0.8)" />
+              <Text style={styles.waterSummaryText}>
+                Water: {waterCups} {waterCups === 1 ? 'cup' : 'cups'}
+              </Text>
+            </View>
+          )}
+
           {logHistory.length > 0 ? (
             <>
               {groupedLogs.map(group => (
@@ -374,5 +388,20 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
     marginTop: 20,
+  },
+  waterSummary: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+  },
+  waterSummaryText: {
+    color: 'rgba(255, 255, 255, 0.9)',
+    fontSize: 14,
+    fontWeight: '600',
   },
 }); 

@@ -36,6 +36,15 @@ const dailyLogSchema = new Schema(
             type: Schema.Types.ObjectId,
             ref: 'OneFood'
         }],
+        /**
+         * @property {Number} waterCups - Number of cups of water logged for the day.
+         */
+        waterCups: {
+            type: Number,
+            default: 0,
+            min: [0, 'Water cups cannot be negative'],
+            max: [100, 'Water cups cannot exceed 100'],
+        },
     }
 );
 

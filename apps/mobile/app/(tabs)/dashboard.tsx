@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -25,6 +25,7 @@ interface FoodLog {
 
 interface DashboardData {
   foods: FoodLog[];
+  waterCups: number;
 }
 
 interface CustomJwtPayload extends JwtPayload {
@@ -36,6 +37,7 @@ interface CustomJwtPayload extends JwtPayload {
 
 interface ApiResponse {
   foods?: FoodLog[];
+  waterCups?: number;
   message?: string;
 }
 
@@ -47,7 +49,9 @@ function DashboardContent() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [dashboardData, setDashboardData] = useState<DashboardData>({ foods: [] });
+  const [dashboardData, setDashboardData] = useState<DashboardData>({ foods: [], waterCups: 0 });
+  const [waterCups, setWaterCups] = useState(0);
+  const waterPrevRef = useRef(0);
   
   // Get user data including calorie goal
   const { data: userData, loading: userLoading, error: userError } = useQuery(GET_USER, {
@@ -60,6 +64,7 @@ function DashboardContent() {
   });
   
   const calorieGoal = userData?.user?.calorieGoal || 2000;
+  const waterGoal = userData?.user?.waterGoal ?? 12;
   
   // State for nutrient totals
   const [totals, setTotals] = useState({
@@ -175,19 +180,51 @@ function DashboardContent() {
         }
       }
       
-      // Set the dashboard data with merged and filtered foods
+      const serverWater = ('waterCups' in todayData) ? (todayData.waterCups ?? 0) : 0;
+
       if (allFoods.length > 0) {
         console.log(`📅 Total valid foods after merge: ${allFoods.length}`);
-        setDashboardData({ foods: allFoods });
+        setDashboardData({ foods: allFoods, waterCups: serverWater });
       } else {
         console.log('📅 No valid foods found, using empty state');
-        setDashboardData({ foods: [] });
+        setDashboardData({ foods: [], waterCups: serverWater });
       }
+      setWaterCups(serverWater);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
       setError('Failed to fetch dashboard data');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const saveWaterIntake = useCallback(async (cups: number, prev: number) => {
+    try {
+      const token = await Auth.getToken();
+      const profile = await Auth.getProfile() as CustomJwtPayload;
+      const userId = profile?.data?._id || profile?.data?.id;
+      if (!token || !userId) return;
+      const todaysDate = DateTime.now().setZone('America/New_York').toFormat('yyyy-MM-dd');
+      await api.put('api/water-intake', {
+        json: { user_id: userId, date: todaysDate, waterCups: cups },
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    } catch (error) {
+      console.error('Error saving water intake:', error);
+      setWaterCups(prev);
+      Alert.alert('Error', 'Failed to save water intake.');
+    }
+  }, []);
+
+  const adjustWater = (delta: number) => {
+    const prev = waterCups;
+    const next = Math.max(0, Math.min(100, waterCups + delta));
+    if (next === prev) return;
+    waterPrevRef.current = prev;
+    setWaterCups(next);
+    saveWaterIntake(next, prev);
+    if (prev < waterGoal && next >= waterGoal) {
+      Alert.alert('Goal reached!', `You hit your ${waterGoal}-cup water goal!`);
     }
   };
 
@@ -335,6 +372,41 @@ function DashboardContent() {
               </View>
             ))}
           </View>
+
+          {/* Water Intake */}
+          <View style={styles.waterSection}>
+            <Text style={styles.waterTitle}>Water Intake</Text>
+            <View style={styles.waterControls}>
+              <TouchableOpacity
+                onPress={() => adjustWater(-1)}
+                disabled={waterCups <= 0}
+                style={[styles.waterButton, waterCups <= 0 && styles.waterButtonDisabled]}
+              >
+                <Text style={styles.waterButtonText}>−</Text>
+              </TouchableOpacity>
+              <Text style={styles.waterCount}>
+                {waterCups} {waterCups === 1 ? 'cup' : 'cups'}
+              </Text>
+              <TouchableOpacity
+                onPress={() => adjustWater(1)}
+                disabled={waterCups >= 100}
+                style={[styles.waterButton, waterCups >= 100 && styles.waterButtonDisabled]}
+              >
+                <Text style={styles.waterButtonText}>+</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.waterBar}>
+              {Array.from({ length: waterGoal }, (_, i) => (
+                <View
+                  key={i}
+                  style={[styles.waterSegment, i < waterCups ? styles.waterSegmentFilled : styles.waterSegmentEmpty]}
+                />
+              ))}
+            </View>
+            <Text style={styles.waterLabel}>
+              {waterCups} / {waterGoal} {waterCups === 1 ? 'cup' : 'cups'}
+            </Text>
+          </View>
         </ScrollView>
         <Footer />
       </LinearGradient>
@@ -436,5 +508,69 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: '#ffffff',
+  },
+  waterSection: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 20,
+  },
+  waterTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#ffffff',
+    marginBottom: 12,
+  },
+  waterControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 20,
+    marginBottom: 14,
+  },
+  waterButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  waterButtonDisabled: {
+    opacity: 0.35,
+  },
+  waterButtonText: {
+    color: '#ffffff',
+    fontSize: 24,
+    fontWeight: 'bold',
+    lineHeight: 26,
+  },
+  waterCount: {
+    color: '#ffffff',
+    fontSize: 26,
+    fontWeight: '600',
+    minWidth: 120,
+    textAlign: 'center',
+  },
+  waterBar: {
+    flexDirection: 'row',
+    gap: 3,
+    width: '100%',
+    marginBottom: 6,
+  },
+  waterSegment: {
+    flex: 1,
+    height: 10,
+    borderRadius: 3,
+  },
+  waterSegmentFilled: {
+    backgroundColor: '#5eead4',
+  },
+  waterSegmentEmpty: {
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+  },
+  waterLabel: {
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.7)',
   },
 }); 

@@ -124,7 +124,7 @@ const resolvers = {
      * @desc Updates a user's profile details (password, calorie goal, profile pic)
      * @access Private
      */
-    updateUserProfile: async (_, { userId, calorieGoal, password, profilePic, macros }, context) => {
+    updateUserProfile: async (_, { userId, calorieGoal, waterGoal, password, profilePic, macros }, context) => {
       if (!context.user) {
         throw new AuthenticationError('You need to be logged in!');
       }
@@ -137,6 +137,10 @@ const resolvers = {
       // Update fields if provided
       if (calorieGoal !== undefined && calorieGoal !== null) {
         user.calorieGoal = calorieGoal;
+      }
+
+      if (waterGoal !== undefined && waterGoal !== null) {
+        user.waterGoal = waterGoal;
       }
 
       if (macros) {

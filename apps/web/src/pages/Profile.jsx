@@ -22,6 +22,7 @@ const Profile = () => {
 
   // Form state
   const [calorieGoal, setCalorieGoal] = useState('');
+  const [waterGoal, setWaterGoal] = useState('');
   const [password, setPassword] = useState('');
   const [profilePic, setProfilePic] = useState(null);
 
@@ -80,6 +81,7 @@ const Profile = () => {
 
       // Include optional fields only if they have values
       if (calorieGoal) variables.calorieGoal = parseInt(calorieGoal);
+      if (waterGoal) variables.waterGoal = parseInt(waterGoal);
       if (password) variables.password = password;
       if (profilePic) variables.profilePic = profilePic;
       if (protein || fat || carbs) {
@@ -131,6 +133,19 @@ const Profile = () => {
             value={calorieGoal}
             onChange={(e) => setCalorieGoal(e.target.value)}
             required
+            className="border p-2 rounded"
+          />
+
+          <label htmlFor="waterGoal">Water Goal (cups/day)</label>
+          <input
+            type="number"
+            id="waterGoal"
+            name="waterGoal"
+            placeholder="Water Goal (default 12)"
+            value={waterGoal}
+            min="1"
+            max="50"
+            onChange={(e) => setWaterGoal(e.target.value)}
             className="border p-2 rounded"
           />
 

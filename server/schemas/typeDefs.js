@@ -14,6 +14,7 @@ const typeDefs = gql`
         email: String!
         password: String
         calorieGoal: Int
+        waterGoal: Int
         profilePic: String
         daily_log: [DailyLog]
         saved_meal: [Meal]
@@ -183,6 +184,7 @@ const typeDefs = gql`
         updateUserProfile(
             userId: ID!,
             calorieGoal: Int
+            waterGoal: Int
             password: String,
             profilePic: String,
             macros: MacrosInput,

@@ -57,6 +57,16 @@ const userSchema = new Schema(
     },
 
     /**
+    * @property {Number} waterGoal - Daily water intake goal in cups (default 12).
+    */
+    waterGoal: {
+      type: Number,
+      default: 12,
+      min: 1,
+      max: 50,
+    },
+
+    /**
     * @property {String} macros - Optional macro nutrients goal set by the user.
     */
     macros: {

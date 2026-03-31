@@ -497,6 +497,64 @@ router.delete('/deleteFood/:user_id/:food_id/:date', async (req, res) => {
 })
 
 /**
+ * @route PUT /api/water-intake
+ * @desc Update water intake (cups) for a user's daily log
+ * @access Private
+ */
+router.put('/water-intake', async (req, res) => {
+    try {
+        const { user_id, date, waterCups } = req.body;
+
+        if (!user_id) {
+            return res.status(400).json({ message: 'user_id is required' });
+        }
+
+        const cups = Number(waterCups);
+        if (Number.isNaN(cups) || cups < 0) {
+            return res.status(400).json({ message: 'waterCups must be a non-negative number' });
+        }
+        if (cups > 100) {
+            return res.status(400).json({ message: 'waterCups cannot exceed 100' });
+        }
+
+        // Normalize the target date using the same timezone logic as the rest of the app
+        const target = date
+            ? DateTime.fromFormat(date, 'yyyy-MM-dd', { zone: 'America/New_York' })
+            : DateTime.now().setZone('America/New_York');
+
+        if (!target.isValid) {
+            return res.status(400).json({ message: 'Invalid date format. Use yyyy-MM-dd.' });
+        }
+
+        const startOfDay = target.startOf('day').toUTC().toJSDate();
+        const endOfDay = target.endOf('day').toUTC().toJSDate();
+
+        let dailyLog = await DailyLog.findOne({
+            user_id,
+            dateCreated: { $gte: startOfDay, $lte: endOfDay }
+        });
+
+        if (dailyLog) {
+            dailyLog.waterCups = cups;
+            await dailyLog.save();
+            return res.status(200).json(dailyLog);
+        }
+
+        dailyLog = new DailyLog({
+            user_id,
+            dateCreated: startOfDay,
+            foods: [],
+            waterCups: cups,
+        });
+        await dailyLog.save();
+        return res.status(201).json(dailyLog);
+    } catch (error) {
+        console.error('Error updating water intake:', error);
+        res.status(500).json({ message: 'Error updating water intake', error: error.message });
+    }
+});
+
+/**
  * @route POST /api/ai-assist
  * @desc Sends a prompt to the AI assistant (LangChain + OpenAI)
  * @access Private
