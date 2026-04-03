@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -50,8 +50,7 @@ function DashboardContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [dashboardData, setDashboardData] = useState<DashboardData>({ foods: [], waterCups: 0 });
-  const [waterCups, setWaterCups] = useState(0);
-  const waterPrevRef = useRef(0);
+  const [waterIntakeOz, setWaterIntakeOz] = useState(0);
   
   // Get user data including calorie goal
   const { data: userData, loading: userLoading, error: userError } = useQuery(GET_USER, {
@@ -63,8 +62,23 @@ function DashboardContent() {
     }
   });
   
+  const OUNCES_PER_CUP = 8;
+  const PROGRESS_SEGMENTS = 12;
+
   const calorieGoal = userData?.user?.calorieGoal || 2000;
-  const waterGoal = userData?.user?.waterGoal ?? 12;
+  const waterUnit: string = userData?.user?.waterUnit || 'cups';
+
+  const waterGoalOz: number =
+    userData?.user?.waterGoalOz ??
+    ((userData?.user?.waterGoal ?? 12) * OUNCES_PER_CUP);
+
+  const ozToDisplay = (oz: number) => {
+    const value = waterUnit === 'oz' ? oz : oz / OUNCES_PER_CUP;
+    return Number.isInteger(value) ? value : Number(value.toFixed(1));
+  };
+  const getUnitLabel = (value: number) => waterUnit === 'oz' ? 'oz' : (value === 1 ? 'cup' : 'cups');
+
+  const waterStepOz = waterUnit === 'oz' ? 1 : OUNCES_PER_CUP;
   
   // State for nutrient totals
   const [totals, setTotals] = useState({
@@ -189,7 +203,7 @@ function DashboardContent() {
         console.log('📅 No valid foods found, using empty state');
         setDashboardData({ foods: [], waterCups: serverWater });
       }
-      setWaterCups(serverWater);
+      setWaterIntakeOz(serverWater * OUNCES_PER_CUP);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
       setError('Failed to fetch dashboard data');
@@ -198,7 +212,7 @@ function DashboardContent() {
     }
   };
 
-  const saveWaterIntake = useCallback(async (cups: number, prev: number) => {
+  const saveWaterIntake = useCallback(async (nextOz: number, prevOz: number) => {
     try {
       const token = await Auth.getToken();
       const profile = await Auth.getProfile() as CustomJwtPayload;
@@ -206,25 +220,26 @@ function DashboardContent() {
       if (!token || !userId) return;
       const todaysDate = DateTime.now().setZone('America/New_York').toFormat('yyyy-MM-dd');
       await api.put('api/water-intake', {
-        json: { user_id: userId, date: todaysDate, waterCups: cups },
+        json: { user_id: userId, date: todaysDate, waterCups: nextOz / OUNCES_PER_CUP },
         headers: { Authorization: `Bearer ${token}` },
       });
     } catch (error) {
       console.error('Error saving water intake:', error);
-      setWaterCups(prev);
+      setWaterIntakeOz(prevOz);
       Alert.alert('Error', 'Failed to save water intake.');
     }
   }, []);
 
-  const adjustWater = (delta: number) => {
-    const prev = waterCups;
-    const next = Math.max(0, Math.min(100, waterCups + delta));
-    if (next === prev) return;
-    waterPrevRef.current = prev;
-    setWaterCups(next);
-    saveWaterIntake(next, prev);
-    if (prev < waterGoal && next >= waterGoal) {
-      Alert.alert('Goal reached!', `You hit your ${waterGoal}-cup water goal!`);
+  const adjustWater = (direction: number) => {
+    const prevOz = waterIntakeOz;
+    const deltaOz = direction * waterStepOz;
+    const nextOz = Math.max(0, prevOz + deltaOz);
+    if (nextOz === prevOz) return;
+    setWaterIntakeOz(nextOz);
+    saveWaterIntake(nextOz, prevOz);
+    if (prevOz < waterGoalOz && nextOz >= waterGoalOz) {
+      const dGoal = ozToDisplay(waterGoalOz);
+      Alert.alert('Goal reached!', `You hit your ${dGoal} ${getUnitLabel(dGoal)} water goal!`);
     }
   };
 
@@ -379,32 +394,35 @@ function DashboardContent() {
             <View style={styles.waterControls}>
               <TouchableOpacity
                 onPress={() => adjustWater(-1)}
-                disabled={waterCups <= 0}
-                style={[styles.waterButton, waterCups <= 0 && styles.waterButtonDisabled]}
+                disabled={waterIntakeOz <= 0}
+                style={[styles.waterButton, waterIntakeOz <= 0 && styles.waterButtonDisabled]}
               >
                 <Text style={styles.waterButtonText}>−</Text>
               </TouchableOpacity>
               <Text style={styles.waterCount}>
-                {waterCups} {waterCups === 1 ? 'cup' : 'cups'}
+                {ozToDisplay(waterIntakeOz)} {getUnitLabel(ozToDisplay(waterIntakeOz))}
               </Text>
               <TouchableOpacity
                 onPress={() => adjustWater(1)}
-                disabled={waterCups >= 100}
-                style={[styles.waterButton, waterCups >= 100 && styles.waterButtonDisabled]}
+                style={[styles.waterButton]}
               >
                 <Text style={styles.waterButtonText}>+</Text>
               </TouchableOpacity>
             </View>
             <View style={styles.waterBar}>
-              {Array.from({ length: waterGoal }, (_, i) => (
-                <View
-                  key={i}
-                  style={[styles.waterSegment, i < waterCups ? styles.waterSegmentFilled : styles.waterSegmentEmpty]}
-                />
-              ))}
+              {Array.from({ length: PROGRESS_SEGMENTS }, (_, i) => {
+                const ratio = waterGoalOz > 0 ? Math.min(waterIntakeOz / waterGoalOz, 1) : 0;
+                const filled = Math.round(ratio * PROGRESS_SEGMENTS);
+                return (
+                  <View
+                    key={i}
+                    style={[styles.waterSegment, i < filled ? styles.waterSegmentFilled : styles.waterSegmentEmpty]}
+                  />
+                );
+              })}
             </View>
             <Text style={styles.waterLabel}>
-              {waterCups} / {waterGoal} {waterCups === 1 ? 'cup' : 'cups'}
+              {ozToDisplay(waterIntakeOz)} / {ozToDisplay(waterGoalOz)} {getUnitLabel(ozToDisplay(waterIntakeOz))}
             </Text>
           </View>
         </ScrollView>

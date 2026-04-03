@@ -15,6 +15,8 @@ const typeDefs = gql`
         password: String
         calorieGoal: Int
         waterGoal: Int
+        waterGoalOz: Int
+        waterUnit: String
         profilePic: String
         daily_log: [DailyLog]
         saved_meal: [Meal]
@@ -185,6 +187,8 @@ const typeDefs = gql`
             userId: ID!,
             calorieGoal: Int
             waterGoal: Int
+            waterGoalOz: Int
+            waterUnit: String
             password: String,
             profilePic: String,
             macros: MacrosInput,

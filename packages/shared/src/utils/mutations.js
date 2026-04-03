@@ -15,6 +15,8 @@ export const GET_USER = gql`
       username
       calorieGoal
       waterGoal
+      waterGoalOz
+      waterUnit
       macros {
         protein
         fat
@@ -53,6 +55,8 @@ mutation updateUserProfile(
   $userId: ID!
   $calorieGoal: Int
   $waterGoal: Int
+  $waterGoalOz: Int
+  $waterUnit: String
   $password: String
   $profilePic: String
   $macros: MacrosInput
@@ -61,6 +65,8 @@ mutation updateUserProfile(
     userId: $userId
     calorieGoal: $calorieGoal
     waterGoal: $waterGoal
+    waterGoalOz: $waterGoalOz
+    waterUnit: $waterUnit
     password: $password
     profilePic: $profilePic
     macros: $macros
@@ -70,6 +76,8 @@ mutation updateUserProfile(
     email
     calorieGoal
     waterGoal
+    waterGoalOz
+    waterUnit
     macros {
       protein
       fat

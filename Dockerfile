@@ -29,14 +29,17 @@ RUN pnpm install --no-frozen-lockfile --prod=false
 WORKDIR /app/packages/shared
 RUN if [ -f package.json ] && grep -q '"build"' package.json; then pnpm run build; fi
 
-# Accept build argument and set as environment variable for React build
+# Accept optional build argument to override REACT_APP_API_URL.
+# When omitted, CRA reads from apps/web/.env.production automatically.
 ARG REACT_APP_API_URL
-ENV REACT_APP_API_URL=$REACT_APP_API_URL
 
-# Build the web app for production (server serves static files in production)
-# react-scripts should be able to resolve @nutripal/shared via workspace symlinks
+# Build the web app for production
 WORKDIR /app/apps/web
-RUN pnpm run build
+RUN if [ -n "$REACT_APP_API_URL" ]; then \
+      REACT_APP_API_URL="$REACT_APP_API_URL" pnpm run build; \
+    else \
+      pnpm run build; \
+    fi
 
 # Production stage
 FROM node:20-alpine

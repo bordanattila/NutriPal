@@ -10,7 +10,7 @@ import { setContext } from '@apollo/client/link/context';
  * @description The HTTP connection to the GraphQL server
  */
 const httpLink = createHttpLink({
-  uri: process.env.REACT_APP_API_URL+'/graphql', // GraphQL endpoint
+  uri: (process.env.REACT_APP_API_URL || '') + '/graphql',
 });
 
 /**
