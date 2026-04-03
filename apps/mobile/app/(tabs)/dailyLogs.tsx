@@ -5,6 +5,8 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { DateTime } from 'luxon';
 import ky from 'ky';
+import { useQuery } from '@apollo/client';
+import { GET_USER } from '@/utils/mutations';
 import { mobileAuthService as Auth } from "@/utils/authServiceMobile";
 import Footer from '@/components/Footer';
 import Calendar from '@/components/Calendar';
@@ -49,6 +51,15 @@ export default function DailyLogs() {
   const [waterCups, setWaterCups] = useState(0);
   const [logMessage, setLogMessage] = useState('');
   const [date, setDate] = useState(DateTime.now());
+
+  const { data: userData } = useQuery(GET_USER, {
+    onError: (error) => {
+      console.error('Error fetching user data:', error);
+    }
+  });
+  const waterUnit: string = userData?.user?.waterUnit || 'cups';
+  const toDisplay = (cups: number) => waterUnit === 'oz' ? cups * 8 : cups;
+  const getUnitLabel = (value: number) => waterUnit === 'oz' ? 'oz' : (value === 1 ? 'cup' : 'cups');
 
   const fetchLogHistory = async () => {
     try {
@@ -286,7 +297,7 @@ export default function DailyLogs() {
             <View style={styles.waterSummary}>
               <MaterialCommunityIcons name="cup-water" size={18} color="rgba(255,255,255,0.8)" />
               <Text style={styles.waterSummaryText}>
-                Water: {waterCups} {waterCups === 1 ? 'cup' : 'cups'}
+                Water: {toDisplay(waterCups)} {getUnitLabel(toDisplay(waterCups))}
               </Text>
             </View>
           )}

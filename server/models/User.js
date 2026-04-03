@@ -67,6 +67,25 @@ const userSchema = new Schema(
     },
 
     /**
+    * @property {Number} waterGoalOz - Canonical daily water goal in fluid ounces.
+    */
+    waterGoalOz: {
+      type: Number,
+      default: 96,
+      min: 1,
+      max: 400,
+    },
+
+    /**
+    * @property {String} waterUnit - Display unit for water intake: "cups" or "oz".
+    */
+    waterUnit: {
+      type: String,
+      enum: ['cups', 'oz'],
+      default: 'cups',
+    },
+
+    /**
     * @property {String} macros - Optional macro nutrients goal set by the user.
     */
     macros: {

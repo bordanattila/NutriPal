@@ -48,6 +48,9 @@ const DailyLogs = () => {
   });
 
   const userId = data?.user?._id;
+  const waterUnit = data?.user?.waterUnit || 'cups';
+  const toDisplay = (cups) => waterUnit === 'oz' ? cups * 8 : cups;
+  const unitLabel = (value) => waterUnit === 'oz' ? 'oz' : (value === 1 ? 'cup' : 'cups');
 
   /**
    * @function useEffect
@@ -140,7 +143,7 @@ const DailyLogs = () => {
       {(logHistory.length > 0 || waterCups > 0) && (
         <div className="flex items-center gap-2 mt-2 mb-1 text-sm text-gray-700">
           <span className="font-semibold">Water:</span>
-          <span className="tabular-nums">{waterCups} {waterCups === 1 ? 'cup' : 'cups'}</span>
+          <span className="tabular-nums">{toDisplay(waterCups)} {unitLabel(toDisplay(waterCups))}</span>
         </div>
       )}
 

@@ -45,6 +45,7 @@ router.get('/foodByName', async (req, res) => {
     const { query } = req;
     const token = await getAccessTokenValue();
     const tokenUrl = 'https://platform.fatsecret.com/rest/foods/search/v1';
+    console.log('[FatSecret] foodByName URL:', tokenUrl, '| query:', query.searchExpression);
     const data = qs.stringify({
         method: 'foods.search',
         search_expression: query.searchExpression,
@@ -78,6 +79,7 @@ router.get('/foodByBarcode', async (req, res) => {
         const formattedBarcode = upcA.padStart(13, '0');
         const token = await getAccessTokenValue();
         const tokenUrl = 'https://platform.fatsecret.com/rest/food/barcode/find-by-id/v2';
+        console.log('[FatSecret] foodByBarcode URL:', tokenUrl, '| barcode:', formattedBarcode);
         const response = await axios.get(tokenUrl, {
             params: {
                 method: 'food.find_id_for_barcode',
@@ -113,6 +115,7 @@ router.get('/:sourcePage/foodById', async (req, res) => {
     try {
         const token = await getAccessTokenValue();
         const tokenUrl = `https://platform.fatsecret.com/rest/food/v5?method=food.get.v5&food_id=${food_Id}&format=json`;
+        console.log('[FatSecret] foodById URL:', tokenUrl);
 
         const response = await axios.get(tokenUrl, {
             headers: {
