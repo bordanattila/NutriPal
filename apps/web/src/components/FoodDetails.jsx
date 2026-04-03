@@ -145,7 +145,7 @@ const FoodDetails = () => {
       }
     };
     fetchFoodDetails();
-  }, [foodId, source, servingID, setServingID]);
+  }, [foodId, source]);
 
     /** Prepare stats for DonutChart */
   const statsForChart = selectedServing ? [
